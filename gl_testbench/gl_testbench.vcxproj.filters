@@ -16,11 +16,11 @@
     <Filter Include="Source Files\OpenGL">
       <UniqueIdentifier>{7fda8481-d7dd-4a62-a90b-96d3f03f423b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\D3D12">
-      <UniqueIdentifier>{0176506d-87cf-4c7a-aa5b-df0a896cf896}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\D3D12">
-      <UniqueIdentifier>{a66aa89a-91b0-4a2b-ac44-0961894bd3d8}</UniqueIdentifier>
+      <UniqueIdentifier>{4863d2a7-d837-4367-9d13-1c4af5cbd346}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\D3D12">
+      <UniqueIdentifier>{e83842ca-c168-40c6-8c66-0820a16ec0c0}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
