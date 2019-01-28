@@ -10,6 +10,10 @@
 #include "Texture2D.h"
 #include <math.h>
 
+/// TESTING
+#include "D3D12Manager.h"
+
+
 using namespace std;
 Renderer* renderer;
 
@@ -300,6 +304,10 @@ void shutdown() {
 
 int main(int argc, char *argv[])
 {
+	D3D12Manager testManager;
+	testManager.initialize();
+
+
 	renderer = Renderer::makeRenderer(Renderer::BACKEND::GL45);
 	renderer->initialize(800,600);
 	renderer->setWinTitle("OpenGL");

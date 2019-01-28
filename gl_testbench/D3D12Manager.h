@@ -11,6 +11,8 @@
 /// DEBUGGING
 #include <exception>
 
+/// GETHWND TESTING
+BOOL CALLBACK enumWindowsProc(HWND hWnd, LPARAM lParam);
 
 class D3D12Manager {
 private:
@@ -42,8 +44,13 @@ private:
 	ID3D12Fence *m_fence;
 	UINT64 m_fenceValue;
 
-	void getHardwareAdapter(IDXGIFactory4 * pFactory, IDXGIAdapter1 ** ppAdapter);
+	// Window- & HWND related data
 
+	// Used by Private Functions
+	void getHardwareAdapter(IDXGIFactory4 * pFactory, IDXGIAdapter1 ** ppAdapter);
+	HRESULT getHWND();
+
+	// Used by Public functions
 	void loadPipeline();
 	void loadAssets();
 
