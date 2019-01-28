@@ -18,6 +18,7 @@ private:
 
 	// Pipeline Objects
 	D3D12_VIEWPORT m_viewPort;
+	D3D12_RECT m_scissorRect;
 	IDXGISwapChain3 *m_swapChain;
 	ID3D12Device *m_device;
 
@@ -46,6 +47,9 @@ private:
 
 	void loadPipeline();
 	void loadAssets();
+
+	// Render-related functions
+	void PopulateCommandList();
 
 public:
 	D3D12Manager();

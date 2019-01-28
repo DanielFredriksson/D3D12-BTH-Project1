@@ -1,5 +1,18 @@
 #include "D3D12Manager.h"
 
+#include <exception>
+
+namespace DX
+{
+	inline void ThrowIfFailed(HRESULT hr)
+	{
+		if (FAILED(hr))
+		{
+			// Set a breakpoint on this line to catch DirectX API errors
+			throw std::exception();
+		}
+	}
+}
 
 void D3D12Manager::getHardwareAdapter(IDXGIFactory4 * pFactory, IDXGIAdapter1 ** ppAdapter)
 {
@@ -72,6 +85,24 @@ void D3D12Manager::loadPipeline()
 
 void D3D12Manager::loadAssets()
 {
+}
+
+void D3D12Manager::PopulateCommandList()
+{
+	// Command list allocators can only be reset when the associated 
+	// command lists have finished execution on the GPU; apps should use 
+	// fences to determine GPU execution progress.
+	DX::ThrowIfFailed(m_commandAllocator->Reset());
+
+	// However, when ExecuteCommandList() is called on a particular command 
+	// list, that command list can then be reset at any time and must be before 
+	// re-recording.
+	DX::ThrowIfFailed(m_commandList->Reset(m_commandAllocator, m_pipelineState));
+
+	// Set necessary state.
+	m_commandList->SetGraphicsRootSignature(m_rootSignature);
+	m_commandList->RSSetViewports(1, &m_viewPort);
+	m_commandList->RSSetScissorRects(1, &m_scissorRect);
 }
 
 D3D12Manager::D3D12Manager()
