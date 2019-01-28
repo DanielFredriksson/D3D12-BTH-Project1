@@ -161,7 +161,7 @@ void D3D12Manager::render()
 	m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 
 	/// Present the frame
-	ThrowIfFailed(m_swapChain->Present(1, 0));
+	DX::ThrowIfFailed(m_swapChain->Present(1, 0));
 
 	WaitForPreviousFrame();
 }
