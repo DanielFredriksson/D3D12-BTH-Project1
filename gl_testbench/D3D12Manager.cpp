@@ -14,6 +14,35 @@ namespace DX
 	}
 }
 
+struct CD3DX12_RESOURCE_BARRIER : public D3D12_RESOURCE_BARRIER {
+	CD3DX12_RESOURCE_BARRIER();
+	explicit CD3DX12_RESOURCE_BARRIER(const D3D12_RESOURCE_BARRIER &o);
+	CD3DX12_RESOURCE_BARRIER static inline Transition(ID3D12Resource* pResource, D3D12_RESOURCE_STATES stateBefore, D3D12_RESOURCE_STATES stateAfter, UINT subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_BARRIER_FLAGS flags = D3D12_RESOURCE_BARRIER_FLAG_NONE);
+	CD3DX12_RESOURCE_BARRIER static inline Aliasing(ID3D12Resource* pResourceBefore, ID3D12Resource* pResourceAfter);
+	CD3DX12_RESOURCE_BARRIER static inline UAV(ID3D12Resource* pResource);
+	operator const D3D12_RESOURCE_BARRIER&() const;
+};
+
+struct CD3DX12_DEFAULT {};
+extern const DECLSPEC_SELECTANY CD3DX12_DEFAULT D3D12_DEFAULT;
+
+struct CD3DX12_CPU_DESCRIPTOR_HANDLE : public D3D12_CPU_DESCRIPTOR_HANDLE {
+	CD3DX12_CPU_DESCRIPTOR_HANDLE();
+	explicit CD3DX12_CPU_DESCRIPTOR_HANDLE(const D3D12_CPU_DESCRIPTOR_HANDLE &o);
+	CD3DX12_CPU_DESCRIPTOR_HANDLE(CD3DX12_DEFAULT);
+	CD3DX12_CPU_DESCRIPTOR_HANDLE(const D3D12_CPU_DESCRIPTOR_HANDLE &other, INT offsetScaledByIncrementSize);
+	CD3DX12_CPU_DESCRIPTOR_HANDLE(const D3D12_CPU_DESCRIPTOR_HANDLE &other, INT offsetInDescriptors, UINT descriptorIncrementSize);
+	CD3DX12_CPU_DESCRIPTOR_HANDLE&  Offset(INT offsetInDescriptors, UINT descriptorIncrementSize);
+	CD3DX12_CPU_DESCRIPTOR_HANDLE&  Offset(INT offsetScaledByIncrementSize);
+	bool                            operator==(_In_ const D3D12_CPU_DESCRIPTOR_HANDLE& other) const;
+	bool                            operator!=(_In_ const D3D12_CPU_DESCRIPTOR_HANDLE& other) const;
+	CD3DX12_CPU_DESCRIPTOR_HANDLE & operator=(const D3D12_CPU_DESCRIPTOR_HANDLE &other);
+	void                            inline InitOffsetted(_In_ const D3D12_CPU_DESCRIPTOR_HANDLE &base, INT offsetScaledByIncrementSize);
+	void                            inline InitOffsetted(_In_ const D3D12_CPU_DESCRIPTOR_HANDLE &base, INT offsetInDescriptors, UINT descriptorIncrementSize);
+	void                            static inline InitOffsetted(_Out_ D3D12_CPU_DESCRIPTOR_HANDLE &handle, _In_ const D3D12_CPU_DESCRIPTOR_HANDLE &base, INT offsetScaledByIncrementSize);
+	void                            static inline InitOffsetted(_Out_ D3D12_CPU_DESCRIPTOR_HANDLE &handle, _In_ const D3D12_CPU_DESCRIPTOR_HANDLE &base, INT offsetInDescriptors, UINT descriptorIncrementSize);
+};
+
 void D3D12Manager::getHardwareAdapter(IDXGIFactory4 * pFactory, IDXGIAdapter1 ** ppAdapter)
 {
 	*ppAdapter = nullptr;
@@ -103,6 +132,24 @@ void D3D12Manager::PopulateCommandList()
 	m_commandList->SetGraphicsRootSignature(m_rootSignature);
 	m_commandList->RSSetViewports(1, &m_viewPort);
 	m_commandList->RSSetScissorRects(1, &m_scissorRect);
+
+	// Indicate that the back buffer will be used as a render target.
+	m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_frameIndex], D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
+
+	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_rtvDescriptorSize);
+	m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
+
+	// Record commands.
+	const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
+	m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+	m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
+	m_commandList->DrawInstanced(3, 1, 0, 0);
+
+	// Indicate that the back buffer will now be used to present.
+	m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_frameIndex], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
+
+	DX::ThrowIfFailed(m_commandList->Close());
 }
 
 D3D12Manager::D3D12Manager()
@@ -137,11 +184,11 @@ void D3D12Manager::render()
 	PopulateCommandList();
 
 	/// Execute the command list
-	ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
+	ID3D12CommandList* ppCommandLists[] = { m_commandList };
 	m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 
 	/// Present the frame
-	ThrowIfFailed(m_swapChain->Present(1, 0));
+	DX::ThrowIfFailed(m_swapChain->Present(1, 0));
 
 	WaitForPreviousFrame();
 }
