@@ -152,6 +152,26 @@ void D3D12Manager::PopulateCommandList()
 	DX::ThrowIfFailed(m_commandList->Close());
 }
 
+void D3D12Manager::WaitForPreviousFrame() {
+	// WAITING FOR THE FRAME TO COMPLETE BEFORE CONTINUING IS NOT BEST PRACTICE.
+	// This is code implemented as such for simplicity. More advanced samples 
+	// illustrate how to use fences for efficient resource usage.
+
+	// Signal and increment the fence value.
+	const UINT64 fence = m_fenceValue;
+	DX::ThrowIfFailed(m_commandQueue->Signal(m_fence, fence));
+	m_fenceValue++;
+
+	// Wait until the previous frame is finished.
+	if (m_fence->GetCompletedValue() < fence)
+	{
+		DX::ThrowIfFailed(m_fence->SetEventOnCompletion(fence, m_fenceEvent));
+		WaitForSingleObject(m_fenceEvent, INFINITE);
+	}
+
+	m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
+}
+
 D3D12Manager::D3D12Manager()
 {
 }
