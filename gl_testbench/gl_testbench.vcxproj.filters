@@ -93,9 +93,6 @@
     <ClCompile Include="OpenGL\VertexBufferGL.cpp">
       <Filter>Source Files\OpenGL</Filter>
     </ClCompile>
-    <ClCompile Include="D3D12Manager.cpp">
-      <Filter>Source Files\D3D12</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Renderer.h">
@@ -169,9 +166,6 @@
     </ClInclude>
     <ClInclude Include="OpenGL\VertexBufferGL.h">
       <Filter>Source Files\OpenGL</Filter>
-    </ClInclude>
-    <ClInclude Include="D3D12Manager.h">
-      <Filter>Header Files\D3D12</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

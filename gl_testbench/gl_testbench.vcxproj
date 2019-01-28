@@ -22,7 +22,7 @@
     <ProjectGuid>{0A6119F8-5444-4072-AD5C-CABCE1AF14C2}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>gl_testbench</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -149,7 +149,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ConstantBuffer.cpp" />
-    <ClCompile Include="D3D12Manager.cpp" />
     <ClCompile Include="OpenGL\ConstantBufferGL.cpp" />
     <ClCompile Include="OpenGL\MaterialGL.cpp" />
     <ClCompile Include="OpenGL\MeshGL.cpp" />
@@ -176,7 +175,6 @@
   <ItemGroup>
     <ClInclude Include="..\include\stb_image.h" />
     <ClInclude Include="ConstantBuffer.h" />
-    <ClInclude Include="D3D12Manager.h" />
     <ClInclude Include="OpenGL\ConstantBufferGL.h" />
     <ClInclude Include="OpenGL\MaterialGL.h" />
     <ClInclude Include="OpenGL\MeshGL.h" />
