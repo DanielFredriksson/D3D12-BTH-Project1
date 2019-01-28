@@ -105,6 +105,10 @@ void D3D12Manager::PopulateCommandList()
 	m_commandList->RSSetScissorRects(1, &m_scissorRect);
 }
 
+void D3D12Manager::WaitForPreviousFrame() {
+
+}
+
 D3D12Manager::D3D12Manager()
 {
 }

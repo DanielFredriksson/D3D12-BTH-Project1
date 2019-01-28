@@ -51,6 +51,8 @@ private:
 	// Render-related functions
 	void PopulateCommandList();
 
+	void WaitForPreviousFrame();
+
 public:
 	D3D12Manager();
 	~D3D12Manager();
