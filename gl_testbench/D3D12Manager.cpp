@@ -329,10 +329,15 @@ int D3D12Manager::shutdown()
 
 void D3D12Manager::setClearColor(float r, float g, float b, float a)
 {
+	m_clearColor[0] = r;
+	m_clearColor[1] = g;
+	m_clearColor[2] = b;
+	m_clearColor[3] = a;
 }
 
 void D3D12Manager::clearBuffer(unsigned int)
 {
+
 }
 
 void D3D12Manager::setRenderState(RenderState *ps)

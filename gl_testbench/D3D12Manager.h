@@ -60,6 +60,9 @@ private:
 	void getHardwareAdapter(IDXGIFactory4 * pFactory, IDXGIAdapter1 ** ppAdapter);
 	HWND *getHWND();
 
+	// Used when clearing RTV
+	float m_clearColor[4] = { 0,0,0,0 };
+
 	// Used by Public functions
 	void loadPipeline();
 	void loadAssets();
