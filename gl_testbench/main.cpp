@@ -310,13 +310,13 @@ int main(int argc, char *argv[])
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 
 	// ------  ORIGINAL  ------ 
-	renderer = Renderer::makeRenderer(Renderer::BACKEND::GL45);
-	renderer->initialize(800, 600);
-	renderer->setWinTitle("OpenGL");
-	renderer->setClearColor(0.0, 0.1, 0.1, 1.0);
-	initialiseTestbench();
-	run();
-	shutdown();
+	//renderer = Renderer::makeRenderer(Renderer::BACKEND::GL45);
+	//renderer->initialize(800, 600);
+	//renderer->setWinTitle("OpenGL");
+	//renderer->setClearColor(0.0, 0.1, 0.1, 1.0);
+	//initialiseTestbench();
+	//run();
+	//shutdown();
 	// ------------------------
 
 

@@ -236,7 +236,7 @@ D3D12Manager::~D3D12Manager()
 {
 }
 
-int D3D12Manager::initialize(unsigned int width = 800, unsigned int height = 600)
+int D3D12Manager::initialize(unsigned int width, unsigned int height)
 {
 	this->loadPipeline();
 	this->loadAssets();
@@ -298,11 +298,6 @@ ConstantBuffer * D3D12Manager::makeConstantBuffer(std::string NAME, unsigned int
 Technique * D3D12Manager::makeTechnique(Material *, RenderState *)
 {
 	return nullptr;
-}
-
-int D3D12Manager::initialize(unsigned int width, unsigned int height)
-{
-	return 0;
 }
 
 void D3D12Manager::setWinTitle(const char * title)
