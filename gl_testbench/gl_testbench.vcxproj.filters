@@ -22,6 +22,12 @@
     <Filter Include="Source Files\D3D12">
       <UniqueIdentifier>{e83842ca-c168-40c6-8c66-0820a16ec0c0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Extras">
+      <UniqueIdentifier>{34437d1a-a00e-4ded-a74a-3810fcbfaaba}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Extras">
+      <UniqueIdentifier>{704b72e9-1569-4789-9236-a2001bd522cc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -95,6 +101,9 @@
     </ClCompile>
     <ClCompile Include="D3D12Manager.cpp">
       <Filter>Source Files\D3D12</Filter>
+    </ClCompile>
+    <ClCompile Include="Locator.cpp">
+      <Filter>Source Files\Extras</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -172,6 +181,9 @@
     </ClInclude>
     <ClInclude Include="D3D12Manager.h">
       <Filter>Header Files\D3D12</Filter>
+    </ClInclude>
+    <ClInclude Include="Locator.h">
+      <Filter>Header Files\Extras</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

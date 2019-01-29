@@ -4,46 +4,51 @@
 /// GETHWND TESTING
 #include <string>
 #include <iostream>
+#include <SDL.h>		// Used for retrieving HWND from SDL	
+#include <SDL_syswm.h>	//
+#include "Locator.h"
 
-BOOL CALLBACK enumWindowsProc(HWND hWnd, LPARAM lParam)
-{
-	// Is related to minimization of windows?
-	if (!IsIconic(hWnd)) {
-		return HRESULT(true);
-	}
-
-	int length = GetWindowTextLength(hWnd);
-	if (length == 0) {
-		return HRESULT(true);
-	}
-	TCHAR* buffer;
-	int bufferSize = length + 1;
-	buffer = new TCHAR[bufferSize];
-	memset(buffer, 0, (bufferSize) * sizeof(TCHAR));
-
-	GetWindowText(hWnd, buffer, bufferSize);
-	std::string windowTitle = std::string((char*)buffer);
-
-	delete[] buffer;
-
-	std::cout << hWnd << ": " << windowTitle << std::endl;
-
-
-	// Modded Stuff
-	LPDWORD lpWord = NULL;
-	DWORD thisWindowID, currentWindowID;
-
-	currentWindowID = GetWindowThreadProcessId(hWnd, lpWord);
-	thisWindowID = GetCurrentProcessId();
-
-	if (currentWindowID == thisWindowID) {
-		// We've found the HWND!
-		int asdf = 3;
-	}
-
-	return 0;
-}
-
+HWND l_HWND;
+//
+//BOOL CALLBACK enumWindowsProc(HWND hWnd, LPARAM lParam)
+//{
+//	// Is related to minimization of windows?
+//	//if (!IsIconic(hWnd)) {
+//	//	return HRESULT(true);
+//	//}
+//
+//	// Modded Stuff
+//	LPDWORD lpWord = NULL;
+//	DWORD thisWindowID, currentWindowID;
+//	currentWindowID = GetWindowThreadProcessId(hWnd, lpWord);
+//	thisWindowID = GetCurrentProcessId();
+//
+//	if (currentWindowID == thisWindowID) {
+//		// We've found the HWND!
+//		l_HWND = hWnd;
+//		return true;
+//	}
+//
+//
+//	//int length = GetWindowTextLength(hWnd);
+//	//if (length == 0) {
+//	//	return HRESULT(true);
+//	//}
+//	//TCHAR* buffer;
+//	//int bufferSize = length + 1;
+//	//buffer = new TCHAR[bufferSize];
+//	//memset(buffer, 0, (bufferSize) * sizeof(TCHAR));
+//
+//	//GetWindowText(hWnd, buffer, bufferSize);
+//	//std::string windowTitle = std::string((char*)buffer);
+//
+//	//delete[] buffer;
+//
+//	//std::cout << hWnd << ": " << windowTitle << std::endl;
+//
+//	return 0;
+//}
+//
 
 void D3D12Manager::getHardwareAdapter(IDXGIFactory4 * pFactory, IDXGIAdapter1 ** ppAdapter)
 {
@@ -57,45 +62,30 @@ void D3D12Manager::getHardwareAdapter(IDXGIFactory4 * pFactory, IDXGIAdapter1 **
 			break;
 		}
 
-
-
 		// Check to see if the adapter supports Direct3D 12, but don't create the actual 
 		// device yet.
 		if (SUCCEEDED(D3D12CreateDevice(pAdapter, D3D_FEATURE_LEVEL_11_0, _uuidof(ID3D12Device), nullptr))) {
 			*ppAdapter = pAdapter;
 			return;
 		}
-		pAdapter->Release();
+		SafeRelease(&pAdapter);
 	}
 }
 
-HRESULT D3D12Manager::getHWND()
+HWND *D3D12Manager::getHWND()
 {
-	std::cout << "Enumerating Windows..." << std::endl;
-	BOOL enumeratingWindowsSucceeded = EnumWindows(enumWindowsProc, NULL);
-
-
-
-
-
-	// Walk through the existing windows with EnumWindows
-	WNDENUMPROC lpEnumFunc;
-	LPARAM lParam;
-	EnumWindows(lpEnumFunc, lParam);
+	// Fetch HWND from the SDL_Window via Locator
+	SDL_SysWMinfo wmInfo;
+	SDL_VERSION(&wmInfo.version);
+	SDL_GetWindowWMInfo(Locator::getSDLWindow(), &wmInfo);
 	
-	// Check their ownership iwth GetWindowThreadProcessID
-
-	// Compare the returned process ID with the one returned by GetCurrentProcessId.
-
-	// Alternatively, the handle can be saved when the window is created rather than fetched later on,
-	// However i have no clue on where we do this.
-
-	return HRESULT(true);
+	return &wmInfo.info.win.window;
 }
 
 void D3D12Manager::loadPipeline()
 {
 	///  -------  Enable the debug layer  -------
+#ifdef _DEBUG
 	ID3D12Debug *debugController;
 	if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)))) {
 		debugController->EnableDebugLayer();
@@ -103,9 +93,14 @@ void D3D12Manager::loadPipeline()
 	else {
 		throw std::exception("ERROR: Failed to getDebugInterface.");
 	}
+#endif
 
 	///  -------  Create the device  -------
-	// Factory
+	/* Factory
+	The factory is created so that we can iterate through the available adapters
+	and choose one which supports Direct3D 12. If no adapter is found, a 'warp adapter'
+	is constructed, which is a single general purpose software rasterizer.
+	*/ 
 	IDXGIFactory4 *factory;
 	if FAILED(CreateDXGIFactory1(IID_PPV_ARGS(&factory))) {
 		throw std::exception("ERROR: Failed to create DXGIFactory1");
@@ -121,6 +116,8 @@ void D3D12Manager::loadPipeline()
 	))) {
 		throw std::exception("ERROR: Failed to create Device!");
 	}
+	// Release
+
 
 	///  -------  Command Queue  -------
 	// Command Queue Description
@@ -131,31 +128,85 @@ void D3D12Manager::loadPipeline()
 	if (FAILED(m_device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_commandQueue)))) {
 		throw std::exception("ERROR: Failed to create Command Queue!");
 	}
+	// Create Command Allocator
+	if (FAILED(m_device->CreateCommandAllocator(
+		D3D12_COMMAND_LIST_TYPE_DIRECT,
+		IID_PPV_ARGS(&m_commandAllocator)
+	))) {
+		throw std::exception("ERROR: Failed to create Command Allocator!");
+	}
+	// Create Command List
+	if (FAILED(m_device->CreateCommandList(
+		0,
+		D3D12_COMMAND_LIST_TYPE_DIRECT,
+		m_commandAllocator,
+		nullptr,
+		IID_PPV_ARGS(&m_commandList)
+	))) {
+		throw std::exception("ERROR: Failed to create Command List!");
+	}
+	//Command lists are created in the recording state. Since there is nothing to
+	//record right now and the main loop expects it to be closed, we close it.
+	m_commandList->Close();
+
 
 	///  -------  Swap Chain  -------
 	// Swap Chain Description
-	DXGI_SWAP_CHAIN_DESC swapChainDesc = {};
-	swapChainDesc.BufferCount = this->frameCount;
-//	swapChainDesc.BufferDesc.Width = m_width;
-//	swapChainDesc.BufferDesc.Height = m_height;
-	swapChainDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-//	swapChainDesc.OutputWindow = Win32Application::GetHwnd();
+	DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
+	swapChainDesc.Width = 0;
+	swapChainDesc.Height = 0;
+	swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	swapChainDesc.Stereo = FALSE;
 	swapChainDesc.SampleDesc.Count = 1;
-	swapChainDesc.Windowed = TRUE;
-	// Create Swap Chain
-	IDXGISwapChain *swapChain;
-	if (FAILED((factory->CreateSwapChain(
-		m_commandQueue, 
-		&swapChainDesc, 
-		&swapChain
-	)))) {
+	swapChainDesc.SampleDesc.Quality = 0;
+	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+	swapChainDesc.BufferCount = this->frameCount;
+	swapChainDesc.Scaling = DXGI_SCALING_NONE;
+	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+	swapChainDesc.Flags = 0;
+	swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
+	/* Create Swap Chain
+	- Why do we create using a swapchain1 then queryinterface to our swapchain3?
+	*/
+	HWND *wndHandle = this->getHWND();
+	if (!IsWindow(*wndHandle)) {
+		throw std::exception("ERROR: Failed to fetch HWND!");
+	}
+	IDXGISwapChain1 *swapChain1 = nullptr;
+	if (FAILED(factory->CreateSwapChainForHwnd(
+		m_commandQueue,
+		*wndHandle,			// Most likely windowHandle which is wrong!!
+		&swapChainDesc,
+		nullptr,
+		nullptr,
+		&swapChain1
+	))) {
+		throw std::exception("ERROR: Failed to create Swap Chain!");
+	} 
+	else {
+		if (SUCCEEDED(swapChain1->QueryInterface(IID_PPV_ARGS(&m_swapChain)))) {
+			SafeRelease(&m_swapChain);
+		}
+	}
+
+	///  -------  Fence & Event Handle-------
+	// Create Fence
+	if (FAILED(m_device->CreateFence(
+		0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)
+	))) {
 		throw std::exception("ERROR: Failed to create Swap Chain!");
 	}
-	//  ThrowIfFailed(swapChain.As(&m_swapChain)); // Not sure wtf this is supposed to do
+	// Create Event Handle
+	else {
+		m_fenceValue = 1;
+		m_fenceEvent = CreateEvent(0, false, false, 0); //Create an event handle to use for GPU synchronization.
+	}
 
-	///  -------  Command Queue  -------
+	///  -------  Descriptor Heap  -------
+	D3D12_DESCRIPTOR_HEAP_DESC dheapDesc = {};
+	dheapDesc.NumDescriptors = this->frameCount;
+	dheapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+
 
 	//if (FAILED(factory->MakeWindowAssociation(Win32Application::GetHwnd(), DXGI_MWA_NO_ALT_ENTER))) {
 
@@ -185,22 +236,121 @@ D3D12Manager::~D3D12Manager()
 {
 }
 
-void D3D12Manager::initialize()
+int D3D12Manager::initialize(unsigned int width = 800, unsigned int height = 600)
 {
 	this->loadPipeline();
 	this->loadAssets();
 	this->getHWND();
+
+	return 1;
 }
 
-void D3D12Manager::render()
+
+///  ------  Inherited Functions  ------ 
+///  ------  Inherited Functions  ------ 
+///  ------  Inherited Functions  ------ 
+
+Material * D3D12Manager::makeMaterial(const std::string & name)
+{
+	return nullptr;
+}
+
+Mesh * D3D12Manager::makeMesh()
+{
+	return nullptr;
+}
+
+VertexBuffer * D3D12Manager::makeVertexBuffer(size_t size, VertexBuffer::DATA_USAGE usage)
+{
+	return nullptr;
+}
+
+Texture2D * D3D12Manager::makeTexture2D()
+{
+	return nullptr;
+}
+
+Sampler2D * D3D12Manager::makeSampler2D()
+{
+	return nullptr;
+}
+
+RenderState * D3D12Manager::makeRenderState()
+{
+	return nullptr;
+}
+
+std::string D3D12Manager::getShaderPath()
+{
+	return std::string();
+}
+
+std::string D3D12Manager::getShaderExtension()
+{
+	return std::string();
+}
+
+ConstantBuffer * D3D12Manager::makeConstantBuffer(std::string NAME, unsigned int location)
+{
+	return nullptr;
+}
+
+Technique * D3D12Manager::makeTechnique(Material *, RenderState *)
+{
+	return nullptr;
+}
+
+int D3D12Manager::initialize(unsigned int width, unsigned int height)
+{
+	return 0;
+}
+
+void D3D12Manager::setWinTitle(const char * title)
 {
 }
 
-void D3D12Manager::update()
+void D3D12Manager::present()
 {
 }
 
-void D3D12Manager::destroy()
+int D3D12Manager::shutdown()
+{
+	// Possibly might have to need to wait for GPU or things to finish before cleaning
+
+	// Possibly might have to be done in some certain order...
+	SafeRelease(&m_swapChain);
+	SafeRelease(&m_device);
+	SafeRelease(&m_commandAllocator);
+	SafeRelease(&m_commandQueue);
+	SafeRelease(&m_commandList);
+	SafeRelease(&m_rootSignature);
+	SafeRelease(&m_rtvHeap);
+	SafeRelease(&m_pipelineState);
+	SafeRelease(&m_vertexBuffer);
+	SafeRelease(&m_commandAllocator);
+
+	return 420;
+}
+
+void D3D12Manager::setClearColor(float r, float g, float b, float a)
 {
 }
+
+void D3D12Manager::clearBuffer(unsigned int)
+{
+}
+
+void D3D12Manager::setRenderState(RenderState *ps)
+{
+}
+
+void D3D12Manager::submit(Mesh * mesh)
+{
+}
+
+void D3D12Manager::frame()
+{
+}
+
+
 
