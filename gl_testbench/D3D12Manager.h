@@ -2,8 +2,8 @@
 
 
 /// D3D12
-#include <d3d12.h> 
-#include <D3dx12.h>
+#include <d3d12.h>
+
 #include <C:/Program Files (x86)/Windows Kits/10/Include/10.0.16299.0/um/d3d12.h>
 
 #include <dxgi.h>		// DirectX Graphics Infrastructure
