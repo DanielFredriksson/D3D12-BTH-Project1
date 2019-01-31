@@ -320,7 +320,7 @@ void D3D12Manager::loadPipeline()
 			&heapProperties,
 			D3D12_HEAP_FLAG_NONE,
 			&resourceDesc,
-			D3D12_RESOURCE_STATE_GENERIC_READ,
+			D3D12_RESOURCE_STATE_GENERIC_READ, 
 			nullptr,
 			IID_PPV_ARGS(&m_constantBufferResource[i])
 		))) {
@@ -333,20 +333,63 @@ void D3D12Manager::loadPipeline()
 		cbvDesc.BufferLocation = m_constantBufferResource[i]->GetGPUVirtualAddress();
 		cbvDesc.SizeInBytes = cbSizeAligned;
 		// Create Constant Buffer
-		m_device->CreateConstantBufferView(&cbvDesc, m_rtvHeap[i]->GetCPUDescriptorHandleForHeapStart());
+		m_device->CreateConstantBufferView(&cbvDesc, m_descriptorHeap[i]->GetCPUDescriptorHandleForHeapStart());
 	}
-	//}
 	
+	///  -------  Create Triangle Data  -------
+	Vertex triangleVertices[3] = {
+		0.0f, 0.5f, 0.0f,	//v0 pos
+		1.0f, 0.0f, 0.0f,	//v0 color
 
-	// Fill out a command queue description, then create the command queue
+		0.5f, -0.5f, 0.0f,	//v1
+		0.0f, 1.0f, 0.0f,	//v1 color
 
-	// Fill out a swapchain description, then create the swap chain
+		-0.5f, -0.5f, 0.0f, //v2
+		0.0f, 0.0f, 1.0f	//v2 color
+	};
 
-	// Fill out a heap description, then create a descriptor heap
+	/* Note:
+	Using upload heaps to transfer static data like vertice buffers is not recommended.
+	Every time the GPU needs it, the upload heap will be marshalled over. Please read up
+	on Default Heap Usage. An upload heap is used here for code simplicity and because
+	there are very few vertices to actually transfer.
+	*/
+	D3D12_HEAP_PROPERTIES hp = {};
+	hp.Type = D3D12_HEAP_TYPE_UPLOAD;
+	hp.CreationNodeMask = 1;
+	hp.VisibleNodeMask = 1;
 
-	// Create the render target view
+	D3D12_RESOURCE_DESC rd = {};
+	rd.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	rd.Width = sizeof(triangleVertices);
+	rd.Height = 1;
+	rd.DepthOrArraySize = 1;
+	rd.MipLevels = 1;
+	rd.SampleDesc.Count = 1;
+	rd.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 
-	// Create the command allocator
+	if (FAILED(m_device->CreateCommittedResource(
+		&hp,
+		D3D12_HEAP_FLAG_NONE,
+		&rd,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(&m_vertexBuffer)
+	))) {
+		throw std::exception("ERROR: Failed to create VertexBuffer?");
+	}
+
+	m_vertexBuffer->SetName(L"vb heap");
+
+	void* dataBegin = nullptr;
+	D3D12_RANGE range = { 0, 0 };
+	m_vertexBuffer->Map(0, &range, &dataBegin);
+	memcpy(dataBegin, triangleVertices, sizeof(triangleVertices));
+	m_vertexBuffer->Unmap(0, nullptr);
+
+	m_vertexBuffer;
+
+
 }
 
 void D3D12Manager::loadAssets()

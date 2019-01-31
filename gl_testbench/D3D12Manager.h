@@ -22,7 +22,10 @@ This function probably works by getting every windows hWnd and iterating through
 /// WHAT IS THIS FOR?
 template<class T> inline void SafeRelease(T **ppInterface);
 
-
+struct Vertex {
+	float x, y, z;
+	float r, g, b;
+};
 
 class D3D12Manager : public Renderer {
 private:
@@ -31,7 +34,7 @@ private:
 	// Pipeline Objects
 	D3D12_VIEWPORT m_viewPort;
 	IDXGISwapChain3 *m_swapChain = nullptr;
-	ID3D12Device *m_device = nullptr;
+	ID3D12Device4 *m_device = nullptr;
 
 	ID3D12Resource *m_renderTargets[frameCount];
 
@@ -39,11 +42,12 @@ private:
 	ID3D12CommandQueue *m_commandQueue;
 
 	ID3D12RootSignature *m_rootSignature = nullptr;
-	ID3D12DescriptorHeap *m_rtvHeap[frameCount];
+	ID3D12DescriptorHeap *m_rtvHeap;
 	ID3D12PipelineState *m_pipelineState = nullptr;
 	ID3D12GraphicsCommandList *m_commandList = nullptr;
 	UINT m_rtvDescriptorSize;
 
+	ID3D12DescriptorHeap *m_descriptorHeap[frameCount];
 	ID3D12Resource1 *m_constantBufferResource[frameCount];
 	ConstantBuffer *m_constantBufferCPU;
 
