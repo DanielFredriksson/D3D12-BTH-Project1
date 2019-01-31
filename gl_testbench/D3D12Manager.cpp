@@ -175,7 +175,7 @@ void D3D12Manager::loadPipeline()
 	IDXGISwapChain1 *swapChain1 = nullptr;
 	if (FAILED(factory->CreateSwapChainForHwnd(
 		m_commandQueue,
-		*wndHandle,			// Most likely windowHandle which is wrong!!
+		*wndHandle,
 		&swapChainDesc,
 		nullptr,
 		nullptr,
@@ -202,14 +202,139 @@ void D3D12Manager::loadPipeline()
 		m_fenceEvent = CreateEvent(0, false, false, 0); //Create an event handle to use for GPU synchronization.
 	}
 
-	///  -------  Descriptor Heap  -------
+	///  -------  Render Targets  -------
+	// Descriptor Heap Description
 	D3D12_DESCRIPTOR_HEAP_DESC dheapDesc = {};
 	dheapDesc.NumDescriptors = this->frameCount;
 	dheapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+	// Create Descriptor Heap
+	if (FAILED(m_device->CreateDescriptorHeap(&dheapDesc, IID_PPV_ARGS(&m_rtvHeap)))) {
+		throw std::exception("ERROR: Failed to create Descriptor Heap!");
+	}
+	// Per Frame/swapbuffer
+	m_rtvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	D3D12_CPU_DESCRIPTOR_HANDLE cdh = m_rtvHeap->GetCPUDescriptorHandleForHeapStart();
+
+	for (int i = 0; i < this->frameCount; i++) {
+		// ?
+		if (FAILED(m_swapChain->GetBuffer(i, IID_PPV_ARGS(&m_renderTargets[i])))) {
+			throw std::exception("ERROR: Failed to create Render Target!");
+		}
+		// Create target view and increment rtvDescriptorSize
+		m_device->CreateRenderTargetView(m_renderTargets[i], nullptr, cdh);
+		cdh.ptr += m_rtvDescriptorSize;
+	}
+
+	///  -------  Viewport & ScissorRect  -------
+
+	
+	
+	
+	
+	///  -------  Root Signature  -------
+	// Define descriptor range(s)
+	D3D12_DESCRIPTOR_RANGE dtRanges[1];
+	dtRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+	dtRanges[0].NumDescriptors = 1;
+	dtRanges[0].BaseShaderRegister = 0;
+	dtRanges[0].RegisterSpace = 0;
+	dtRanges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+	// Create a descriptor table
+	D3D12_ROOT_DESCRIPTOR_TABLE dt = {};
+	dt.NumDescriptorRanges = ARRAYSIZE(dtRanges);
+	dt.pDescriptorRanges = dtRanges;
+
+	// Create root parameter
+	D3D12_ROOT_PARAMETER rp[1];
+	rp[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	rp[0].DescriptorTable = dt;
+	rp[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+
+	// Root Signature Desc
+	D3D12_ROOT_SIGNATURE_DESC rsDesc = {};
+	rsDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+	rsDesc.NumParameters = ARRAYSIZE(rp);
+	rsDesc.pParameters = rp;
+	rsDesc.NumStaticSamplers = 0;
+	rsDesc.pStaticSamplers = nullptr;
+
+	// Serialize root signature
+	ID3DBlob* sBlob;
+	D3D12SerializeRootSignature(
+		&rsDesc,
+		D3D_ROOT_SIGNATURE_VERSION_1,
+		&sBlob,
+		nullptr		// Possibly want to have an error blob
+	);
+
+	// Create root signature
+	m_device->CreateRootSignature(
+		0,
+		sBlob->GetBufferPointer(),
+		sBlob->GetBufferSize(),
+		IID_PPV_ARGS(&m_rootSignature)
+	);
+
+	///  -------  Shaders & Pipeline States  -------
 
 
-	//if (FAILED(factory->MakeWindowAssociation(Win32Application::GetHwnd(), DXGI_MWA_NO_ALT_ENTER))) {
 
+
+
+	///  -------  Constant Buffers  -------
+	// Per SwapBuffer
+	for (int i = 0; i < this->frameCount; i++) {
+		// Descriptor Description
+		D3D12_DESCRIPTOR_HEAP_DESC heapDescriptorDesc = {};
+		heapDescriptorDesc.NumDescriptors = 1;
+		heapDescriptorDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+		heapDescriptorDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+		// Create Descriptor
+		if (FAILED(m_device->CreateDescriptorHeap(&heapDescriptorDesc, IID_PPV_ARGS(&m_rtvHeap)))) {
+			throw std::exception("ERROR: Failed to create Descriptor Heap!");
+		}
+	}
+
+	// Heap Properties
+	D3D12_HEAP_PROPERTIES heapProperties = {};
+	heapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
+	heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+	heapProperties.CreationNodeMask = 1;	// Used when multi-gpu
+	heapProperties.VisibleNodeMask = 1;		// Used when multi-gpu
+	heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+	// Resource Description
+	UINT cbSizeAligned = (sizeof(ConstantBuffer) + 255) & ~255; //???
+	D3D12_RESOURCE_DESC resourceDesc = {};
+	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	resourceDesc.Width = cbSizeAligned;
+	resourceDesc.Height = 1;
+	resourceDesc.DepthOrArraySize = 1;
+	resourceDesc.MipLevels = 1;
+	resourceDesc.SampleDesc.Count = 1;
+	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+
+	for (int i = 0; i < this->frameCount; i++) {
+		// Committed Resource
+		if (FAILED(m_device->CreateCommittedResource(
+			&heapProperties,
+			D3D12_HEAP_FLAG_NONE,
+			&resourceDesc,
+			D3D12_RESOURCE_STATE_GENERIC_READ,
+			nullptr,
+			IID_PPV_ARGS(&m_constantBufferResource[i])
+		))) {
+			throw std::exception("ERROR: Failed to create commited resource for CBs!");
+		}
+
+		m_constantBufferResource[i]->SetName(L"cb heap");
+		// Constant Buffer Description
+		D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
+		cbvDesc.BufferLocation = m_constantBufferResource[i]->GetGPUVirtualAddress();
+		cbvDesc.SizeInBytes = cbSizeAligned;
+		// Create Constant Buffer
+		m_device->CreateConstantBufferView(&cbvDesc, m_rtvHeap[i]->GetCPUDescriptorHandleForHeapStart());
+	}
 	//}
 	
 

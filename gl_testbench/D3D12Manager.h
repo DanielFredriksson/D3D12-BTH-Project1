@@ -39,10 +39,13 @@ private:
 	ID3D12CommandQueue *m_commandQueue;
 
 	ID3D12RootSignature *m_rootSignature = nullptr;
-	ID3D12DescriptorHeap *m_rtvHeap = nullptr;
+	ID3D12DescriptorHeap *m_rtvHeap[frameCount];
 	ID3D12PipelineState *m_pipelineState = nullptr;
 	ID3D12GraphicsCommandList *m_commandList = nullptr;
 	UINT m_rtvDescriptorSize;
+
+	ID3D12Resource1 *m_constantBufferResource[frameCount];
+	ConstantBuffer *m_constantBufferCPU;
 
 	// App Resources
 	ID3D12Resource *m_vertexBuffer = nullptr;
