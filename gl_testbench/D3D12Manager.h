@@ -12,15 +12,10 @@
 /// DEBUGGING
 #include <exception>
 
-/// GETHWND TESTING
-/*
-This function probably works by getting every windows hWnd and iterating through them
-*/
-//BOOL CALLBACK enumWindowsProc(HWND hWnd, LPARAM lParam);
-
-
 /// WHAT IS THIS FOR?
 template<class T> inline void SafeRelease(T **ppInterface);
+
+LRESULT CALLBACK wndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam); //Window Proc callback function
 
 struct Vertex {
 	float x, y, z;
@@ -62,15 +57,17 @@ private:
 	UINT64 m_fenceValue;
 
 	// Window- & HWND related data
+	HWND m_wndHandle;
 
 	// Used by Private Functions
 	void getHardwareAdapter(IDXGIFactory4 * pFactory, IDXGIAdapter1 ** ppAdapter);
-	HWND *getHWND();
 
 	// Used when clearing RTV
 	float m_clearColor[4] = { 0,0,0,0 };
 
 	// Used by Public functions
+	HWND initWindow(unsigned int width = 800, unsigned int height = 600); //Creates and returns a window
+	
 	void loadPipeline();
 	void loadAssets();
 

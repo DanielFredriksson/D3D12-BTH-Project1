@@ -1,54 +1,6 @@
 #include "D3D12Manager.h"
 
 
-/// GETHWND TESTING
-#include <string>
-#include <iostream>
-#include <SDL.h>		// Used for retrieving HWND from SDL	
-#include <SDL_syswm.h>	//
-#include "Locator.h"
-
-HWND l_HWND;
-//
-//BOOL CALLBACK enumWindowsProc(HWND hWnd, LPARAM lParam)
-//{
-//	// Is related to minimization of windows?
-//	//if (!IsIconic(hWnd)) {
-//	//	return HRESULT(true);
-//	//}
-//
-//	// Modded Stuff
-//	LPDWORD lpWord = NULL;
-//	DWORD thisWindowID, currentWindowID;
-//	currentWindowID = GetWindowThreadProcessId(hWnd, lpWord);
-//	thisWindowID = GetCurrentProcessId();
-//
-//	if (currentWindowID == thisWindowID) {
-//		// We've found the HWND!
-//		l_HWND = hWnd;
-//		return true;
-//	}
-//
-//
-//	//int length = GetWindowTextLength(hWnd);
-//	//if (length == 0) {
-//	//	return HRESULT(true);
-//	//}
-//	//TCHAR* buffer;
-//	//int bufferSize = length + 1;
-//	//buffer = new TCHAR[bufferSize];
-//	//memset(buffer, 0, (bufferSize) * sizeof(TCHAR));
-//
-//	//GetWindowText(hWnd, buffer, bufferSize);
-//	//std::string windowTitle = std::string((char*)buffer);
-//
-//	//delete[] buffer;
-//
-//	//std::cout << hWnd << ": " << windowTitle << std::endl;
-//
-//	return 0;
-//}
-//
 
 void D3D12Manager::getHardwareAdapter(IDXGIFactory4 * pFactory, IDXGIAdapter1 ** ppAdapter)
 {
@@ -72,14 +24,48 @@ void D3D12Manager::getHardwareAdapter(IDXGIFactory4 * pFactory, IDXGIAdapter1 **
 	}
 }
 
-HWND *D3D12Manager::getHWND()
+LRESULT CALLBACK wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	// Fetch HWND from the SDL_Window via Locator
-	SDL_SysWMinfo wmInfo;
-	SDL_VERSION(&wmInfo.version);
-	SDL_GetWindowWMInfo(Locator::getSDLWindow(), &wmInfo);
-	
-	return &wmInfo.info.win.window;
+	switch (message)
+	{
+	case WM_DESTROY:
+		PostQuitMessage(0);
+		break;
+	}
+
+	return DefWindowProc(hWnd, message, wParam, lParam);
+}
+
+HWND D3D12Manager::initWindow(unsigned int width, unsigned int height)
+{
+	HINSTANCE hInstance = GetModuleHandle(nullptr);
+
+	WNDCLASSEX wcex = { 0 };
+	wcex.cbSize = sizeof(WNDCLASSEX);
+	wcex.lpfnWndProc = wndProc;
+	wcex.hInstance = hInstance;
+	wcex.lpszClassName = L"D3D12_Proj";
+	if (!RegisterClassEx(&wcex))
+	{
+		return false;
+	}
+
+	RECT rc = { 0, 0, width, height };
+	AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, false);
+
+	return CreateWindowEx(
+		WS_EX_OVERLAPPEDWINDOW,
+		L"D3D12_Proj",
+		L"Direct 3D proj",
+		WS_OVERLAPPEDWINDOW,
+		CW_USEDEFAULT,
+		CW_USEDEFAULT,
+		rc.right - rc.left,
+		rc.bottom - rc.top,
+		nullptr,
+		nullptr,
+		hInstance,
+		nullptr);
 }
 
 void D3D12Manager::loadPipeline()
@@ -168,14 +154,14 @@ void D3D12Manager::loadPipeline()
 	/* Create Swap Chain
 	- Why do we create using a swapchain1 then queryinterface to our swapchain3?
 	*/
-	HWND *wndHandle = this->getHWND();
-	if (!IsWindow(*wndHandle)) {
+	//HWND *wndHandle = this->getHWND();
+	if (!IsWindow(m_wndHandle)) {
 		throw std::exception("ERROR: Failed to fetch HWND!");
 	}
 	IDXGISwapChain1 *swapChain1 = nullptr;
 	if (FAILED(factory->CreateSwapChainForHwnd(
 		m_commandQueue,
-		*wndHandle,
+		m_wndHandle,			// Most likely windowHandle which is wrong!!
 		&swapChainDesc,
 		nullptr,
 		nullptr,
@@ -406,9 +392,10 @@ D3D12Manager::~D3D12Manager()
 
 int D3D12Manager::initialize(unsigned int width, unsigned int height)
 {
+	m_wndHandle = initWindow();
+	ShowWindow(m_wndHandle, 1); //Display window, move to correct place when "game loop" has been implemented
 	this->loadPipeline();
 	this->loadAssets();
-	this->getHWND();
 
 	return 1;
 }
@@ -470,6 +457,7 @@ Technique * D3D12Manager::makeTechnique(Material *, RenderState *)
 
 void D3D12Manager::setWinTitle(const char * title)
 {
+	SetWindowTextA(m_wndHandle, title);
 }
 
 void D3D12Manager::present()
