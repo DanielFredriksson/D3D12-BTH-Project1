@@ -28,9 +28,12 @@ template<class T> inline void SafeRelease(T **ppInterface);
 class D3D12Manager : public Renderer {
 private:
 	static const UINT frameCount = 2;
+	int SCREEN_WIDTH = 900;
+	int SCREEN_HEIGHT = 600;
 
 	// Pipeline Objects
 	D3D12_VIEWPORT m_viewPort;
+	D3D12_RECT m_scissorRect;
 	IDXGISwapChain3 *m_swapChain = nullptr;
 	ID3D12Device *m_device = nullptr;
 
@@ -72,6 +75,10 @@ private:
 	void PopulateCommandList();
 
 	void WaitForPreviousFrame();
+
+	// Initialize Functions
+	void initViewportAndScissorRect();
+	void initShadersAndPipelineState();
 
 public:
 	D3D12Manager();

@@ -1,6 +1,7 @@
 #include "D3D12Manager.h"
 
 #include <exception>
+#include <d3dcompiler.h>
 
 namespace DX
 {
@@ -249,7 +250,6 @@ void D3D12Manager::loadPipeline()
 	dheapDesc.NumDescriptors = this->frameCount;
 	dheapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 
-
 	//if (FAILED(factory->MakeWindowAssociation(Win32Application::GetHwnd(), DXGI_MWA_NO_ALT_ENTER))) {
 
 	//}
@@ -324,6 +324,97 @@ void D3D12Manager::WaitForPreviousFrame() {
 	}
 
 	m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
+}
+
+void D3D12Manager::initViewportAndScissorRect()
+{
+	m_viewPort.TopLeftX = 0.0f;
+	m_viewPort.TopLeftY = 0.0f;
+	m_viewPort.Width = (float)SCREEN_WIDTH;
+	m_viewPort.Height = (float)SCREEN_HEIGHT;
+	m_viewPort.MinDepth = 0.0f;
+	m_viewPort.MaxDepth = 1.0f;
+
+	m_scissorRect.left = (long)0;
+	m_scissorRect.right = (long)SCREEN_WIDTH;
+	m_scissorRect.top = (long)0;
+	m_scissorRect.bottom = (long)SCREEN_HEIGHT;
+}
+
+void D3D12Manager::initShadersAndPipelineState()
+{
+	//////////////////////////
+	///// VERTEX SHADER /////
+	////////////////////////
+	ID3DBlob* vertexBlob;
+	D3DCompileFromFile(
+		L"VertexShader.hlsl",		// Name
+		nullptr,					// Macros (optional)
+		nullptr,					// Include Files (optional)
+		"VS_main",					// Entry Point
+		"vs_5_0",					// Shader Model (target)
+		0,							// Shader Compile Options (debugging)
+		0,							// Effect Compile Options
+		&vertexBlob,				// Double Pointer to ID3DBlob
+		nullptr						// Pointer for Error Blob-messages
+	);
+
+	//////////////////////////
+	///// PIXEL SHADER //////
+	////////////////////////
+	ID3DBlob* pixelBlob;
+	D3DCompileFromFile(
+		L"PixelShader.hlsl",		// Name
+		nullptr,					// Macros (optional)
+		nullptr,					// Include Files (optional)
+		"PS_main",					// Entry Point
+		"ps_5_0",					// Shade Model (target)
+		0,							// Shader Compile Options
+		0,							// Effect Compile Options
+		&pixelBlob,					// Double Pointer to ID3DBlob
+		nullptr						// Pointer for Error Blob-messages
+	);
+
+	// Input Layout
+	D3D12_INPUT_ELEMENT_DESC inputElementDesc[] = {
+		{ "POSITION",	0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+		{ "COLOR",		0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
+	};
+
+	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc;
+	inputLayoutDesc.pInputElementDescs = inputElementDesc;
+	inputLayoutDesc.NumElements = ARRAYSIZE(inputElementDesc);
+
+	// Pipeline State:
+	//		• Creation
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC gpsd = {};
+	//		• Specify pipeline stages
+	gpsd.pRootSignature = m_rootSignature;
+	gpsd.InputLayout = inputLayoutDesc;
+	gpsd.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	gpsd.VS.pShaderBytecode = reinterpret_cast<void*>(vertexBlob->GetBufferPointer());
+	gpsd.VS.BytecodeLength = vertexBlob->GetBufferSize();
+	gpsd.PS.pShaderBytecode = reinterpret_cast<void*>(pixelBlob->GetBufferPointer());
+	gpsd.PS.BytecodeLength = pixelBlob->GetBufferSize();
+	//		• Specify render target and depthstencil usage
+	gpsd.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	gpsd.NumRenderTargets = 1;
+	gpsd.SampleDesc.Count = 1;
+	gpsd.SampleMask = UINT_MAX;
+	//		• Specify rasterizer behaviour
+	gpsd.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+	gpsd.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+	//		• Specify blend descriptions
+	D3D12_RENDER_TARGET_BLEND_DESC defaultRTdesc = {
+		false, false,
+		D3D12_BLEND_ONE, D3D12_BLEND_ZERO, D3D12_BLEND_OP_ADD,
+		D3D12_BLEND_ONE, D3D12_BLEND_ZERO, D3D12_BLEND_OP_ADD,
+		D3D12_LOGIC_OP_NOOP, D3D12_COLOR_WRITE_ENABLE_ALL
+	};
+	for (UINT i = 0; i < D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT; i++)
+		gpsd.BlendState.RenderTarget[i] = defaultRTdesc;
+
+	m_device->CreateGraphicsPipelineState(&gpsd, IID_PPV_ARGS(&m_pipelineState));
 }
 
 D3D12Manager::D3D12Manager()
