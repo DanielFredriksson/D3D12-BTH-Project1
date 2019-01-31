@@ -340,11 +340,12 @@ void D3D12Manager::loadPipeline()
 	on Default Heap Usage. An upload heap is used here for code simplicity and because
 	there are very few vertices to actually transfer.
 	*/
+	// Heap Properties
 	D3D12_HEAP_PROPERTIES hp = {};
 	hp.Type = D3D12_HEAP_TYPE_UPLOAD;
 	hp.CreationNodeMask = 1;
 	hp.VisibleNodeMask = 1;
-
+	// Resource Description
 	D3D12_RESOURCE_DESC rd = {};
 	rd.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
 	rd.Width = sizeof(triangleVertices);
@@ -353,7 +354,7 @@ void D3D12Manager::loadPipeline()
 	rd.MipLevels = 1;
 	rd.SampleDesc.Count = 1;
 	rd.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-
+	// Create Vertex Buffer
 	if (FAILED(m_device->CreateCommittedResource(
 		&hp,
 		D3D12_HEAP_FLAG_NONE,
@@ -366,20 +367,37 @@ void D3D12Manager::loadPipeline()
 	}
 
 	m_vertexBuffer->SetName(L"vb heap");
-
+	// Copy data from triangleVertices to a void* and map it to the Vertex Buffer
 	void* dataBegin = nullptr;
 	D3D12_RANGE range = { 0, 0 };
 	m_vertexBuffer->Map(0, &range, &dataBegin);
 	memcpy(dataBegin, triangleVertices, sizeof(triangleVertices));
 	m_vertexBuffer->Unmap(0, nullptr);
-
-	m_vertexBuffer;
-
-
+	// VertexBufferView
+	m_vertexBufferView.BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
+	m_vertexBufferView.StrideInBytes = sizeof(Vertex);
+	m_vertexBufferView.SizeInBytes = sizeof(triangleVertices);
 }
 
 void D3D12Manager::loadAssets()
 {
+}
+
+void D3D12Manager::waitForGpu()
+{
+	// Currently waits the entire cpu, which could do things while
+	// we wait for the gpu.
+
+	// Signal and increment the fence value
+	const UINT64 fence = m_fenceValue;
+	m_commandQueue->Signal(m_fence, fence);
+	m_fenceValue++;
+	
+	// Wait until the command queue is done.
+	if (m_fence->GetCompletedValue() < fence) {
+		m_fence->SetEventOnCompletion(fence, m_fenceEvent);
+		WaitForSingleObject(m_fenceEvent, INFINITE);
+	}
 }
 
 D3D12Manager::D3D12Manager()

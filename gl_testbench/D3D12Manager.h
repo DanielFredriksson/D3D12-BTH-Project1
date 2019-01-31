@@ -70,6 +70,7 @@ private:
 	
 	void loadPipeline();
 	void loadAssets();
+	void waitForGpu();
 
 public:
 	D3D12Manager();
