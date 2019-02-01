@@ -1,10 +1,10 @@
-#include "D3D12Manager.h"
+#include "D3D12Renderer.h"
 
 #include <d3dcompiler.h>
 
 
 
-void D3D12Manager::getHardwareAdapter(IDXGIFactory4 * pFactory, IDXGIAdapter1 ** ppAdapter)
+void D3D12Renderer::getHardwareAdapter(IDXGIFactory4 * pFactory, IDXGIAdapter1 ** ppAdapter)
 {
 	*ppAdapter = nullptr;
 
@@ -38,7 +38,7 @@ LRESULT CALLBACK wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	return DefWindowProc(hWnd, message, wParam, lParam);
 }
 
-HWND D3D12Manager::initWindow(unsigned int width, unsigned int height)
+HWND D3D12Renderer::initWindow(unsigned int width, unsigned int height)
 {
 	HINSTANCE hInstance = GetModuleHandle(nullptr);
 
@@ -70,7 +70,7 @@ HWND D3D12Manager::initWindow(unsigned int width, unsigned int height)
 		nullptr);
 }
 
-void D3D12Manager::initShadersAndPipelineState()
+void D3D12Renderer::initShadersAndPipelineState()
 {
 	//////////////////////////
 	///// VERTEX SHADER /////
@@ -146,7 +146,7 @@ void D3D12Manager::initShadersAndPipelineState()
 	m_device->CreateGraphicsPipelineState(&gpsd, IID_PPV_ARGS(&m_pipelineState));
 }
 
-void D3D12Manager::initViewportAndScissorRect()
+void D3D12Renderer::initViewportAndScissorRect()
 {
 	m_viewPort.TopLeftX = 0.0f;
 	m_viewPort.TopLeftY = 0.0f;
@@ -161,7 +161,7 @@ void D3D12Manager::initViewportAndScissorRect()
 	m_scissorRect.bottom = (long)SCREEN_HEIGHT;
 }
 
-void D3D12Manager::loadPipeline()
+void D3D12Renderer::loadPipeline()
 {
 	///  -------  Enable the debug layer  -------
 #ifdef _DEBUG
@@ -474,11 +474,11 @@ void D3D12Manager::loadPipeline()
 	m_vertexBufferView.SizeInBytes = sizeof(triangleVertices);
 }
 
-void D3D12Manager::loadAssets()
+void D3D12Renderer::loadAssets()
 {
 }
 
-void D3D12Manager::waitForGpu()
+void D3D12Renderer::waitForGpu()
 {
 	// Currently waits the entire cpu, which could do things while
 	// we wait for the gpu.
@@ -495,20 +495,23 @@ void D3D12Manager::waitForGpu()
 	}
 }
 
-D3D12Manager::D3D12Manager()
+D3D12Renderer::D3D12Renderer()
 {
 }
 
-D3D12Manager::~D3D12Manager()
+D3D12Renderer::~D3D12Renderer()
 {
 }
 
-int D3D12Manager::initialize(unsigned int width, unsigned int height)
+int D3D12Renderer::initialize(unsigned int width, unsigned int height)
 {
-	m_wndHandle = initWindow();
+	m_wndHandle = initWindow(width, height);
 	ShowWindow(m_wndHandle, 1); //Display window, move to correct place when "game loop" has been implemented
 	this->loadPipeline();
 	this->loadAssets();
+
+	this->SCREEN_WIDTH = width;
+	this->SCREEN_HEIGHT = height;
 
 	return 1;
 }
@@ -518,66 +521,66 @@ int D3D12Manager::initialize(unsigned int width, unsigned int height)
 ///  ------  Inherited Functions  ------ 
 ///  ------  Inherited Functions  ------ 
 
-Material * D3D12Manager::makeMaterial(const std::string & name)
+Material * D3D12Renderer::makeMaterial(const std::string & name)
 {
 	return nullptr;
 }
 
-Mesh * D3D12Manager::makeMesh()
+Mesh * D3D12Renderer::makeMesh()
 {
 	return nullptr;
 }
 
-VertexBuffer * D3D12Manager::makeVertexBuffer(size_t size, VertexBuffer::DATA_USAGE usage)
+VertexBuffer * D3D12Renderer::makeVertexBuffer(size_t size, VertexBuffer::DATA_USAGE usage)
 {
 	return nullptr;
 }
 
-Texture2D * D3D12Manager::makeTexture2D()
+Texture2D * D3D12Renderer::makeTexture2D()
 {
 	return nullptr;
 }
 
-Sampler2D * D3D12Manager::makeSampler2D()
+Sampler2D * D3D12Renderer::makeSampler2D()
 {
 	return nullptr;
 }
 
-RenderState * D3D12Manager::makeRenderState()
+RenderState * D3D12Renderer::makeRenderState()
 {
 	return nullptr;
 }
 
-std::string D3D12Manager::getShaderPath()
+std::string D3D12Renderer::getShaderPath()
 {
 	return std::string();
 }
 
-std::string D3D12Manager::getShaderExtension()
+std::string D3D12Renderer::getShaderExtension()
 {
 	return std::string();
 }
 
-ConstantBuffer * D3D12Manager::makeConstantBuffer(std::string NAME, unsigned int location)
+ConstantBuffer * D3D12Renderer::makeConstantBuffer(std::string NAME, unsigned int location)
 {
 	return nullptr;
 }
 
-Technique * D3D12Manager::makeTechnique(Material *, RenderState *)
+Technique * D3D12Renderer::makeTechnique(Material *, RenderState *)
 {
 	return nullptr;
 }
 
-void D3D12Manager::setWinTitle(const char * title)
+void D3D12Renderer::setWinTitle(const char * title)
 {
 	SetWindowTextA(m_wndHandle, title);
 }
 
-void D3D12Manager::present()
+void D3D12Renderer::present()
 {
 }
 
-int D3D12Manager::shutdown()
+int D3D12Renderer::shutdown()
 {
 	// Possibly might have to need to wait for GPU or things to finish before cleaning
 
@@ -596,7 +599,7 @@ int D3D12Manager::shutdown()
 	return 420;
 }
 
-void D3D12Manager::setClearColor(float r, float g, float b, float a)
+void D3D12Renderer::setClearColor(float r, float g, float b, float a)
 {
 	m_clearColor[0] = r;
 	m_clearColor[1] = g;
@@ -604,20 +607,20 @@ void D3D12Manager::setClearColor(float r, float g, float b, float a)
 	m_clearColor[3] = a;
 }
 
-void D3D12Manager::clearBuffer(unsigned int)
+void D3D12Renderer::clearBuffer(unsigned int)
 {
 
 }
 
-void D3D12Manager::setRenderState(RenderState *ps)
+void D3D12Renderer::setRenderState(RenderState *ps)
 {
 }
 
-void D3D12Manager::submit(Mesh * mesh)
+void D3D12Renderer::submit(Mesh * mesh)
 {
 }
 
-void D3D12Manager::frame()
+void D3D12Renderer::frame()
 {
 }
 

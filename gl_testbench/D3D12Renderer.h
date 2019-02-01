@@ -22,11 +22,11 @@ struct Vertex {
 	float r, g, b;
 };
 
-class D3D12Manager : public Renderer {
+class D3D12Renderer : public Renderer {
 private:
 	static const UINT frameCount = 2;
-	const float SCREEN_WIDTH = 900.0f;
-	const float SCREEN_HEIGHT = 600.0f;
+	int SCREEN_WIDTH;
+	int SCREEN_HEIGHT;
 
 	// Pipeline Objects
 	D3D12_VIEWPORT m_viewPort;
@@ -78,8 +78,8 @@ private:
 	void waitForGpu();
 
 public:
-	D3D12Manager();
-	~D3D12Manager();
+	D3D12Renderer();
+	~D3D12Renderer();
 
 	///  ------  Inherited Functions  ------ 
 #pragma region

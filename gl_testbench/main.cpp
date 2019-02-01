@@ -11,7 +11,7 @@
 #include <math.h>
 
 /// TESTING
-#include "D3D12Manager.h"
+#include "D3D12Renderer.h"
 
 /// MEMORY LEAKS
 #include <crtdbg.h>

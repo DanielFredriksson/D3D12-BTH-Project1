@@ -99,11 +99,11 @@
     <ClCompile Include="OpenGL\VertexBufferGL.cpp">
       <Filter>Source Files\OpenGL</Filter>
     </ClCompile>
-    <ClCompile Include="D3D12Manager.cpp">
-      <Filter>Source Files\D3D12</Filter>
-    </ClCompile>
     <ClCompile Include="Locator.cpp">
       <Filter>Source Files\Extras</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D12Renderer.cpp">
+      <Filter>Source Files\D3D12</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -179,11 +179,11 @@
     <ClInclude Include="OpenGL\VertexBufferGL.h">
       <Filter>Source Files\OpenGL</Filter>
     </ClInclude>
-    <ClInclude Include="D3D12Manager.h">
-      <Filter>Header Files\D3D12</Filter>
-    </ClInclude>
     <ClInclude Include="Locator.h">
       <Filter>Header Files\Extras</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D12Renderer.h">
+      <Filter>Header Files\D3D12</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
