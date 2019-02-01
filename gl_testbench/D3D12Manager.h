@@ -25,9 +25,12 @@ struct Vertex {
 class D3D12Manager : public Renderer {
 private:
 	static const UINT frameCount = 2;
+	const float SCREEN_WIDTH = 900.0f;
+	const float SCREEN_HEIGHT = 600.0f;
 
 	// Pipeline Objects
 	D3D12_VIEWPORT m_viewPort;
+	D3D12_RECT m_scissorRect;
 	IDXGISwapChain3 *m_swapChain = nullptr;
 	ID3D12Device4 *m_device = nullptr;
 
@@ -67,7 +70,9 @@ private:
 
 	// Used by Public functions
 	HWND initWindow(unsigned int width = 800, unsigned int height = 600); //Creates and returns a window
-	
+	void initViewportAndScissorRect();
+	void initShadersAndPipelineState();
+
 	void loadPipeline();
 	void loadAssets();
 	void waitForGpu();
