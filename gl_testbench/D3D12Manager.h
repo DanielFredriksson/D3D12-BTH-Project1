@@ -13,17 +13,15 @@
 /// DEBUGGING
 #include <exception>
 
-/// GETHWND TESTING
-/*
-This function probably works by getting every windows hWnd and iterating through them
-*/
-//BOOL CALLBACK enumWindowsProc(HWND hWnd, LPARAM lParam);
-
-
 /// WHAT IS THIS FOR?
 template<class T> inline void SafeRelease(T **ppInterface);
 
+LRESULT CALLBACK wndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam); //Window Proc callback function
 
+struct Vertex {
+	float x, y, z;
+	float r, g, b;
+};
 
 class D3D12Manager : public Renderer {
 private:
@@ -35,7 +33,7 @@ private:
 	D3D12_VIEWPORT m_viewPort;
 	D3D12_RECT m_scissorRect;
 	IDXGISwapChain3 *m_swapChain = nullptr;
-	ID3D12Device *m_device = nullptr;
+	ID3D12Device4 *m_device = nullptr;
 
 	ID3D12Resource *m_renderTargets[frameCount];
 
@@ -43,10 +41,14 @@ private:
 	ID3D12CommandQueue *m_commandQueue;
 
 	ID3D12RootSignature *m_rootSignature = nullptr;
-	ID3D12DescriptorHeap *m_rtvHeap = nullptr;
+	ID3D12DescriptorHeap *m_rtvHeap;
 	ID3D12PipelineState *m_pipelineState = nullptr;
 	ID3D12GraphicsCommandList *m_commandList = nullptr;
 	UINT m_rtvDescriptorSize;
+
+	ID3D12DescriptorHeap *m_descriptorHeap[frameCount];
+	ID3D12Resource1 *m_constantBufferResource[frameCount];
+	ConstantBuffer *m_constantBufferCPU;
 
 	// App Resources
 	ID3D12Resource *m_vertexBuffer = nullptr;
@@ -59,22 +61,20 @@ private:
 	UINT64 m_fenceValue;
 
 	// Window- & HWND related data
+	HWND m_wndHandle;
 
 	// Used by Private Functions
 	void getHardwareAdapter(IDXGIFactory4 * pFactory, IDXGIAdapter1 ** ppAdapter);
-	HWND *getHWND();
 
 	// Used when clearing RTV
 	float m_clearColor[4] = { 0,0,0,0 };
 
 	// Used by Public functions
+	HWND initWindow(unsigned int width = 800, unsigned int height = 600); //Creates and returns a window
+	
 	void loadPipeline();
 	void loadAssets();
-
-	// Render-related functions
-	void PopulateCommandList();
-
-	void WaitForPreviousFrame();
+	void waitForGpu();
 
 	// Initialize Functions
 	void initViewportAndScissorRect();

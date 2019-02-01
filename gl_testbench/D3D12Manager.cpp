@@ -1,48 +1,7 @@
 #include "D3D12Manager.h"
 
-#include <exception>
 #include <d3dcompiler.h>
 
-namespace DX
-{
-	inline void ThrowIfFailed(HRESULT hr)
-	{
-		if (FAILED(hr))
-		{
-			// Set a breakpoint on this line to catch DirectX API errors
-			throw std::exception();
-		}
-	}
-}
-
-struct CD3DX12_RESOURCE_BARRIER : public D3D12_RESOURCE_BARRIER {
-	CD3DX12_RESOURCE_BARRIER();
-	explicit CD3DX12_RESOURCE_BARRIER(const D3D12_RESOURCE_BARRIER &o);
-	CD3DX12_RESOURCE_BARRIER static inline Transition(ID3D12Resource* pResource, D3D12_RESOURCE_STATES stateBefore, D3D12_RESOURCE_STATES stateAfter, UINT subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_BARRIER_FLAGS flags = D3D12_RESOURCE_BARRIER_FLAG_NONE);
-	CD3DX12_RESOURCE_BARRIER static inline Aliasing(ID3D12Resource* pResourceBefore, ID3D12Resource* pResourceAfter);
-	CD3DX12_RESOURCE_BARRIER static inline UAV(ID3D12Resource* pResource);
-	operator const D3D12_RESOURCE_BARRIER&() const;
-};
-
-struct CD3DX12_DEFAULT {};
-extern const DECLSPEC_SELECTANY CD3DX12_DEFAULT D3D12_DEFAULT;
-
-struct CD3DX12_CPU_DESCRIPTOR_HANDLE : public D3D12_CPU_DESCRIPTOR_HANDLE {
-	CD3DX12_CPU_DESCRIPTOR_HANDLE();
-	explicit CD3DX12_CPU_DESCRIPTOR_HANDLE(const D3D12_CPU_DESCRIPTOR_HANDLE &o);
-	CD3DX12_CPU_DESCRIPTOR_HANDLE(CD3DX12_DEFAULT);
-	CD3DX12_CPU_DESCRIPTOR_HANDLE(const D3D12_CPU_DESCRIPTOR_HANDLE &other, INT offsetScaledByIncrementSize);
-	CD3DX12_CPU_DESCRIPTOR_HANDLE(const D3D12_CPU_DESCRIPTOR_HANDLE &other, INT offsetInDescriptors, UINT descriptorIncrementSize);
-	CD3DX12_CPU_DESCRIPTOR_HANDLE&  Offset(INT offsetInDescriptors, UINT descriptorIncrementSize);
-	CD3DX12_CPU_DESCRIPTOR_HANDLE&  Offset(INT offsetScaledByIncrementSize);
-	bool                            operator==(_In_ const D3D12_CPU_DESCRIPTOR_HANDLE& other) const;
-	bool                            operator!=(_In_ const D3D12_CPU_DESCRIPTOR_HANDLE& other) const;
-	CD3DX12_CPU_DESCRIPTOR_HANDLE & operator=(const D3D12_CPU_DESCRIPTOR_HANDLE &other);
-	void                            inline InitOffsetted(_In_ const D3D12_CPU_DESCRIPTOR_HANDLE &base, INT offsetScaledByIncrementSize);
-	void                            inline InitOffsetted(_In_ const D3D12_CPU_DESCRIPTOR_HANDLE &base, INT offsetInDescriptors, UINT descriptorIncrementSize);
-	void                            static inline InitOffsetted(_Out_ D3D12_CPU_DESCRIPTOR_HANDLE &handle, _In_ const D3D12_CPU_DESCRIPTOR_HANDLE &base, INT offsetScaledByIncrementSize);
-	void                            static inline InitOffsetted(_Out_ D3D12_CPU_DESCRIPTOR_HANDLE &handle, _In_ const D3D12_CPU_DESCRIPTOR_HANDLE &base, INT offsetInDescriptors, UINT descriptorIncrementSize);
-};
 
 /// GETHWND TESTING
 #include <string>
@@ -115,14 +74,48 @@ void D3D12Manager::getHardwareAdapter(IDXGIFactory4 * pFactory, IDXGIAdapter1 **
 	}
 }
 
-HWND *D3D12Manager::getHWND()
+LRESULT CALLBACK wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	// Fetch HWND from the SDL_Window via Locator
-	SDL_SysWMinfo wmInfo;
-	SDL_VERSION(&wmInfo.version);
-	SDL_GetWindowWMInfo(Locator::getSDLWindow(), &wmInfo);
-	
-	return &wmInfo.info.win.window;
+	switch (message)
+	{
+	case WM_DESTROY:
+		PostQuitMessage(0);
+		break;
+	}
+
+	return DefWindowProc(hWnd, message, wParam, lParam);
+}
+
+HWND D3D12Manager::initWindow(unsigned int width, unsigned int height)
+{
+	HINSTANCE hInstance = GetModuleHandle(nullptr);
+
+	WNDCLASSEX wcex = { 0 };
+	wcex.cbSize = sizeof(WNDCLASSEX);
+	wcex.lpfnWndProc = wndProc;
+	wcex.hInstance = hInstance;
+	wcex.lpszClassName = L"D3D12_Proj";
+	if (!RegisterClassEx(&wcex))
+	{
+		return false;
+	}
+
+	RECT rc = { 0, 0, width, height };
+	AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, false);
+
+	return CreateWindowEx(
+		WS_EX_OVERLAPPEDWINDOW,
+		L"D3D12_Proj",
+		L"Direct 3D proj",
+		WS_OVERLAPPEDWINDOW,
+		CW_USEDEFAULT,
+		CW_USEDEFAULT,
+		rc.right - rc.left,
+		rc.bottom - rc.top,
+		nullptr,
+		nullptr,
+		hInstance,
+		nullptr);
 }
 
 void D3D12Manager::loadPipeline()
@@ -211,14 +204,14 @@ void D3D12Manager::loadPipeline()
 	/* Create Swap Chain
 	- Why do we create using a swapchain1 then queryinterface to our swapchain3?
 	*/
-	HWND *wndHandle = this->getHWND();
-	if (!IsWindow(*wndHandle)) {
+	//HWND *wndHandle = this->getHWND();
+	if (!IsWindow(m_wndHandle)) {
 		throw std::exception("ERROR: Failed to fetch HWND!");
 	}
 	IDXGISwapChain1 *swapChain1 = nullptr;
 	if (FAILED(factory->CreateSwapChainForHwnd(
 		m_commandQueue,
-		*wndHandle,			// Most likely windowHandle which is wrong!!
+		m_wndHandle,			// Most likely windowHandle which is wrong!!
 		&swapChainDesc,
 		nullptr,
 		nullptr,
@@ -245,85 +238,216 @@ void D3D12Manager::loadPipeline()
 		m_fenceEvent = CreateEvent(0, false, false, 0); //Create an event handle to use for GPU synchronization.
 	}
 
-	///  -------  Descriptor Heap  -------
+	///  -------  Render Targets  -------
+	// Descriptor Heap Description
 	D3D12_DESCRIPTOR_HEAP_DESC dheapDesc = {};
 	dheapDesc.NumDescriptors = this->frameCount;
 	dheapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+	// Create Descriptor Heap
+	if (FAILED(m_device->CreateDescriptorHeap(&dheapDesc, IID_PPV_ARGS(&m_rtvHeap)))) {
+		throw std::exception("ERROR: Failed to create Descriptor Heap!");
+	}
+	// Per Frame/swapbuffer
+	m_rtvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	D3D12_CPU_DESCRIPTOR_HANDLE cdh = m_rtvHeap->GetCPUDescriptorHandleForHeapStart();
 
-	//if (FAILED(factory->MakeWindowAssociation(Win32Application::GetHwnd(), DXGI_MWA_NO_ALT_ENTER))) {
+	for (int i = 0; i < this->frameCount; i++) {
+		// ?
+		if (FAILED(m_swapChain->GetBuffer(i, IID_PPV_ARGS(&m_renderTargets[i])))) {
+			throw std::exception("ERROR: Failed to create Render Target!");
+		}
+		// Create target view and increment rtvDescriptorSize
+		m_device->CreateRenderTargetView(m_renderTargets[i], nullptr, cdh);
+		cdh.ptr += m_rtvDescriptorSize;
+	}
 
-	//}
+	///  -------  Viewport & ScissorRect  -------
+
 	
+	
+	
+	
+	///  -------  Root Signature  -------
+	// Define descriptor range(s)
+	D3D12_DESCRIPTOR_RANGE dtRanges[1];
+	dtRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+	dtRanges[0].NumDescriptors = 1;
+	dtRanges[0].BaseShaderRegister = 0;
+	dtRanges[0].RegisterSpace = 0;
+	dtRanges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-	// Fill out a command queue description, then create the command queue
+	// Create a descriptor table
+	D3D12_ROOT_DESCRIPTOR_TABLE dt = {};
+	dt.NumDescriptorRanges = ARRAYSIZE(dtRanges);
+	dt.pDescriptorRanges = dtRanges;
 
-	// Fill out a swapchain description, then create the swap chain
+	// Create root parameter
+	D3D12_ROOT_PARAMETER rp[1];
+	rp[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	rp[0].DescriptorTable = dt;
+	rp[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
 
-	// Fill out a heap description, then create a descriptor heap
+	// Root Signature Desc
+	D3D12_ROOT_SIGNATURE_DESC rsDesc = {};
+	rsDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+	rsDesc.NumParameters = ARRAYSIZE(rp);
+	rsDesc.pParameters = rp;
+	rsDesc.NumStaticSamplers = 0;
+	rsDesc.pStaticSamplers = nullptr;
 
-	// Create the render target view
+	// Serialize root signature
+	ID3DBlob* sBlob;
+	D3D12SerializeRootSignature(
+		&rsDesc,
+		D3D_ROOT_SIGNATURE_VERSION_1,
+		&sBlob,
+		nullptr		// Possibly want to have an error blob
+	);
 
-	// Create the command allocator
+	// Create root signature
+	m_device->CreateRootSignature(
+		0,
+		sBlob->GetBufferPointer(),
+		sBlob->GetBufferSize(),
+		IID_PPV_ARGS(&m_rootSignature)
+	);
+
+	///  -------  Shaders & Pipeline States  -------
+
+
+
+
+
+	///  -------  Constant Buffers  -------
+	// Per SwapBuffer
+	for (int i = 0; i < this->frameCount; i++) {
+		// Descriptor Description
+		D3D12_DESCRIPTOR_HEAP_DESC heapDescriptorDesc = {};
+		heapDescriptorDesc.NumDescriptors = 1;
+		heapDescriptorDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+		heapDescriptorDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+		// Create Descriptor
+		if (FAILED(m_device->CreateDescriptorHeap(&heapDescriptorDesc, IID_PPV_ARGS(&m_rtvHeap)))) {
+			throw std::exception("ERROR: Failed to create Descriptor Heap!");
+		}
+	}
+
+	// Heap Properties
+	D3D12_HEAP_PROPERTIES heapProperties = {};
+	heapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
+	heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+	heapProperties.CreationNodeMask = 1;	// Used when multi-gpu
+	heapProperties.VisibleNodeMask = 1;		// Used when multi-gpu
+	heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+	// Resource Description
+	UINT cbSizeAligned = (sizeof(ConstantBuffer) + 255) & ~255; //???
+	D3D12_RESOURCE_DESC resourceDesc = {};
+	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	resourceDesc.Width = cbSizeAligned;
+	resourceDesc.Height = 1;
+	resourceDesc.DepthOrArraySize = 1;
+	resourceDesc.MipLevels = 1;
+	resourceDesc.SampleDesc.Count = 1;
+	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+
+	for (int i = 0; i < this->frameCount; i++) {
+		// Committed Resource
+		if (FAILED(m_device->CreateCommittedResource(
+			&heapProperties,
+			D3D12_HEAP_FLAG_NONE,
+			&resourceDesc,
+			D3D12_RESOURCE_STATE_GENERIC_READ, 
+			nullptr,
+			IID_PPV_ARGS(&m_constantBufferResource[i])
+		))) {
+			throw std::exception("ERROR: Failed to create commited resource for CBs!");
+		}
+
+		m_constantBufferResource[i]->SetName(L"cb heap");
+		// Constant Buffer Description
+		D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
+		cbvDesc.BufferLocation = m_constantBufferResource[i]->GetGPUVirtualAddress();
+		cbvDesc.SizeInBytes = cbSizeAligned;
+		// Create Constant Buffer
+		m_device->CreateConstantBufferView(&cbvDesc, m_descriptorHeap[i]->GetCPUDescriptorHandleForHeapStart());
+	}
+	
+	///  -------  Create Triangle Data  -------
+	Vertex triangleVertices[3] = {
+		0.0f, 0.5f, 0.0f,	//v0 pos
+		1.0f, 0.0f, 0.0f,	//v0 color
+
+		0.5f, -0.5f, 0.0f,	//v1
+		0.0f, 1.0f, 0.0f,	//v1 color
+
+		-0.5f, -0.5f, 0.0f, //v2
+		0.0f, 0.0f, 1.0f	//v2 color
+	};
+
+	/* Note:
+	Using upload heaps to transfer static data like vertice buffers is not recommended.
+	Every time the GPU needs it, the upload heap will be marshalled over. Please read up
+	on Default Heap Usage. An upload heap is used here for code simplicity and because
+	there are very few vertices to actually transfer.
+	*/
+	// Heap Properties
+	D3D12_HEAP_PROPERTIES hp = {};
+	hp.Type = D3D12_HEAP_TYPE_UPLOAD;
+	hp.CreationNodeMask = 1;
+	hp.VisibleNodeMask = 1;
+	// Resource Description
+	D3D12_RESOURCE_DESC rd = {};
+	rd.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	rd.Width = sizeof(triangleVertices);
+	rd.Height = 1;
+	rd.DepthOrArraySize = 1;
+	rd.MipLevels = 1;
+	rd.SampleDesc.Count = 1;
+	rd.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+	// Create Vertex Buffer
+	if (FAILED(m_device->CreateCommittedResource(
+		&hp,
+		D3D12_HEAP_FLAG_NONE,
+		&rd,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(&m_vertexBuffer)
+	))) {
+		throw std::exception("ERROR: Failed to create VertexBuffer?");
+	}
+
+	m_vertexBuffer->SetName(L"vb heap");
+	// Copy data from triangleVertices to a void* and map it to the Vertex Buffer
+	void* dataBegin = nullptr;
+	D3D12_RANGE range = { 0, 0 };
+	m_vertexBuffer->Map(0, &range, &dataBegin);
+	memcpy(dataBegin, triangleVertices, sizeof(triangleVertices));
+	m_vertexBuffer->Unmap(0, nullptr);
+	// VertexBufferView
+	m_vertexBufferView.BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
+	m_vertexBufferView.StrideInBytes = sizeof(Vertex);
+	m_vertexBufferView.SizeInBytes = sizeof(triangleVertices);
 }
 
 void D3D12Manager::loadAssets()
 {
 }
 
-void D3D12Manager::PopulateCommandList()
+void D3D12Manager::waitForGpu()
 {
-	// Command list allocators can only be reset when the associated 
-	// command lists have finished execution on the GPU; apps should use 
-	// fences to determine GPU execution progress.
-	DX::ThrowIfFailed(m_commandAllocator->Reset());
+	// Currently waits the entire cpu, which could do things while
+	// we wait for the gpu.
 
-	// However, when ExecuteCommandList() is called on a particular command 
-	// list, that command list can then be reset at any time and must be before 
-	// re-recording.
-	DX::ThrowIfFailed(m_commandList->Reset(m_commandAllocator, m_pipelineState));
-
-	// Set necessary state.
-	m_commandList->SetGraphicsRootSignature(m_rootSignature);
-	m_commandList->RSSetViewports(1, &m_viewPort);
-	m_commandList->RSSetScissorRects(1, &m_scissorRect);
-
-	// Indicate that the back buffer will be used as a render target.
-	m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_frameIndex], D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
-
-	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_rtvDescriptorSize);
-	m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
-
-	// Record commands.
-	const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
-	m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
-	m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
-	m_commandList->DrawInstanced(3, 1, 0, 0);
-
-	// Indicate that the back buffer will now be used to present.
-	m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_frameIndex], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
-
-	DX::ThrowIfFailed(m_commandList->Close());
-}
-
-void D3D12Manager::WaitForPreviousFrame() {
-	// WAITING FOR THE FRAME TO COMPLETE BEFORE CONTINUING IS NOT BEST PRACTICE.
-	// This is code implemented as such for simplicity. More advanced samples 
-	// illustrate how to use fences for efficient resource usage.
-
-	// Signal and increment the fence value.
+	// Signal and increment the fence value
 	const UINT64 fence = m_fenceValue;
-	DX::ThrowIfFailed(m_commandQueue->Signal(m_fence, fence));
+	m_commandQueue->Signal(m_fence, fence);
 	m_fenceValue++;
-
-	// Wait until the previous frame is finished.
-	if (m_fence->GetCompletedValue() < fence)
-	{
-		DX::ThrowIfFailed(m_fence->SetEventOnCompletion(fence, m_fenceEvent));
+	
+	// Wait until the command queue is done.
+	if (m_fence->GetCompletedValue() < fence) {
+		m_fence->SetEventOnCompletion(fence, m_fenceEvent);
 		WaitForSingleObject(m_fenceEvent, INFINITE);
 	}
-
-	m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 }
 
 void D3D12Manager::initViewportAndScissorRect()
@@ -427,9 +551,10 @@ D3D12Manager::~D3D12Manager()
 
 int D3D12Manager::initialize(unsigned int width, unsigned int height)
 {
+	m_wndHandle = initWindow();
+	ShowWindow(m_wndHandle, 1); //Display window, move to correct place when "game loop" has been implemented
 	this->loadPipeline();
 	this->loadAssets();
-	this->getHWND();
 
 	return 1;
 }
@@ -491,6 +616,7 @@ Technique * D3D12Manager::makeTechnique(Material *, RenderState *)
 
 void D3D12Manager::setWinTitle(const char * title)
 {
+	SetWindowTextA(m_wndHandle, title);
 }
 
 void D3D12Manager::present()
@@ -545,17 +671,17 @@ void D3D12Manager::setRenderState(RenderState *ps)
 	// CODE-OBSERVED ------------------
 	// --------------------------------
 
-	/// Record all the commands we need to render the scene into the command list.
-	PopulateCommandList();
+	///// Record all the commands we need to render the scene into the command list.
+	//PopulateCommandList();
 
-	/// Execute the command list
-	ID3D12CommandList* ppCommandLists[] = { m_commandList };
-	m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+	///// Execute the command list
+	//ID3D12CommandList* ppCommandLists[] = { m_commandList };
+	//m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 
-	/// Present the frame
-	DX::ThrowIfFailed(m_swapChain->Present(1, 0));
+	///// Present the frame
+	//DX::ThrowIfFailed(m_swapChain->Present(1, 0));
 
-	WaitForPreviousFrame();
+	//WaitForPreviousFrame();
 }
 
 void D3D12Manager::submit(Mesh * mesh)
