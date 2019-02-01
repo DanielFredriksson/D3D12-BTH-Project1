@@ -161,10 +161,8 @@ void D3D12Renderer::initViewportAndScissorRect()
 	m_scissorRect.bottom = (long)SCREEN_HEIGHT;
 }
 
-void D3D12Renderer::loadPipeline()
+void D3D12Renderer::enableDebugLayer()
 {
-	///  -------  Enable the debug layer  -------
-#ifdef _DEBUG
 	ID3D12Debug *debugController;
 	if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)))) {
 		debugController->EnableDebugLayer();
@@ -172,21 +170,21 @@ void D3D12Renderer::loadPipeline()
 	else {
 		throw std::exception("ERROR: Failed to getDebugInterface.");
 	}
-#endif
+}
 
-	///  -------  Create the device  -------
+void D3D12Renderer::initDevice()
+{
 	/* Factory
 	The factory is created so that we can iterate through the available adapters
 	and choose one which supports Direct3D 12. If no adapter is found, a 'warp adapter'
 	is constructed, which is a single general purpose software rasterizer.
-	*/ 
-	IDXGIFactory4 *factory;
-	if FAILED(CreateDXGIFactory1(IID_PPV_ARGS(&factory))) {
+	*/
+	if FAILED(CreateDXGIFactory1(IID_PPV_ARGS(&m_factory))) {
 		throw std::exception("ERROR: Failed to create DXGIFactory1");
 	}
 	// Hardware Adapter
 	IDXGIAdapter1 *hardwareAdapter;
-	this->getHardwareAdapter(factory, &hardwareAdapter);
+	this->getHardwareAdapter(m_factory, &hardwareAdapter);
 	// Create Device
 	if (FAILED(D3D12CreateDevice(
 		hardwareAdapter,
@@ -196,9 +194,10 @@ void D3D12Renderer::loadPipeline()
 		throw std::exception("ERROR: Failed to create Device!");
 	}
 	// Release
+}
 
-
-	///  -------  Command Queue  -------
+void D3D12Renderer::initCommandQueue()
+{
 	// Command Queue Description
 	D3D12_COMMAND_QUEUE_DESC queueDesc = {};
 	queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
@@ -227,9 +226,10 @@ void D3D12Renderer::loadPipeline()
 	//Command lists are created in the recording state. Since there is nothing to
 	//record right now and the main loop expects it to be closed, we close it.
 	m_commandList->Close();
+}
 
-
-	///  -------  Swap Chain  -------
+void D3D12Renderer::initSwapChain()
+{
 	// Swap Chain Description
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
 	swapChainDesc.Width = 0;
@@ -252,7 +252,7 @@ void D3D12Renderer::loadPipeline()
 		throw std::exception("ERROR: Failed to fetch HWND!");
 	}
 	IDXGISwapChain1 *swapChain1 = nullptr;
-	if (FAILED(factory->CreateSwapChainForHwnd(
+	if (FAILED(m_factory->CreateSwapChainForHwnd(
 		m_commandQueue,
 		m_wndHandle,			// Most likely windowHandle which is wrong!!
 		&swapChainDesc,
@@ -261,14 +261,16 @@ void D3D12Renderer::loadPipeline()
 		&swapChain1
 	))) {
 		throw std::exception("ERROR: Failed to create Swap Chain!");
-	} 
+	}
 	else {
 		if (SUCCEEDED(swapChain1->QueryInterface(IID_PPV_ARGS(&m_swapChain)))) {
 			SafeRelease(&m_swapChain);
 		}
 	}
+}
 
-	///  -------  Fence & Event Handle-------
+void D3D12Renderer::initFenceAndEventHandle()
+{
 	// Create Fence
 	if (FAILED(m_device->CreateFence(
 		0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)
@@ -280,8 +282,10 @@ void D3D12Renderer::loadPipeline()
 		m_fenceValue = 1;
 		m_fenceEvent = CreateEvent(0, false, false, 0); //Create an event handle to use for GPU synchronization.
 	}
+}
 
-	///  -------  Render Targets  -------
+void D3D12Renderer::initRenderTargets()
+{
 	// Descriptor Heap Description
 	D3D12_DESCRIPTOR_HEAP_DESC dheapDesc = {};
 	dheapDesc.NumDescriptors = this->frameCount;
@@ -294,7 +298,8 @@ void D3D12Renderer::loadPipeline()
 	m_rtvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	D3D12_CPU_DESCRIPTOR_HANDLE cdh = m_rtvHeap->GetCPUDescriptorHandleForHeapStart();
 
-	HRESULT hr = m_device->CreateDescriptorHeap(&dheapDesc, IID_PPV_ARGS(&m_rtvHeap));
+	/// S T E F A N S     C O D E
+	//HRESULT hr = m_device->CreateDescriptorHeap(&dheapDesc, IID_PPV_ARGS(&m_rtvHeap));
 
 	for (int i = 0; i < this->frameCount; i++) {
 		/// S T E F A N S     C O D E
@@ -311,11 +316,10 @@ void D3D12Renderer::loadPipeline()
 		m_device->CreateRenderTargetView(m_renderTargets[i], nullptr, cdh);
 		cdh.ptr += m_rtvDescriptorSize;
 	}
+}
 
-	///  -------  Viewport & ScissorRect  -------
-	this->initViewportAndScissorRect();
-
-	///  -------  Root Signature  -------
+void D3D12Renderer::initRootSignature()
+{
 	// Define descriptor range(s)
 	D3D12_DESCRIPTOR_RANGE dtRanges[1];
 	dtRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
@@ -359,11 +363,10 @@ void D3D12Renderer::loadPipeline()
 		sBlob->GetBufferSize(),
 		IID_PPV_ARGS(&m_rootSignature)
 	);
+}
 
-	///  -------  Shaders & Pipeline States  -------
-	this->initShadersAndPipelineState();
-
-	///  -------  Constant Buffers  -------
+void D3D12Renderer::initConstantBuffers()
+{
 	// Per SwapBuffer
 	for (int i = 0; i < this->frameCount; i++) {
 		// Descriptor Description
@@ -401,7 +404,7 @@ void D3D12Renderer::loadPipeline()
 			&heapProperties,
 			D3D12_HEAP_FLAG_NONE,
 			&resourceDesc,
-			D3D12_RESOURCE_STATE_GENERIC_READ, 
+			D3D12_RESOURCE_STATE_GENERIC_READ,
 			nullptr,
 			IID_PPV_ARGS(&m_constantBufferResource[i])
 		))) {
@@ -416,7 +419,24 @@ void D3D12Renderer::loadPipeline()
 		// Create Constant Buffer
 		m_device->CreateConstantBufferView(&cbvDesc, m_descriptorHeap[i]->GetCPUDescriptorHandleForHeapStart());
 	}
-	
+}
+
+void D3D12Renderer::loadPipeline()
+{
+#ifdef _DEBUG
+	this->enableDebugLayer();
+#endif
+
+	this->initDevice();
+	this->initCommandQueue();
+	this->initSwapChain();
+	this->initFenceAndEventHandle();
+	this->initRenderTargets();
+	this->initViewportAndScissorRect();
+	this->initRootSignature();
+	this->initShadersAndPipelineState();
+	this->initConstantBuffers();
+
 	///  -------  Create Triangle Data  -------
 	Vertex triangleVertices[3] = {
 		0.0f, 0.5f, 0.0f,	//v0 pos
@@ -503,20 +523,6 @@ D3D12Renderer::~D3D12Renderer()
 {
 }
 
-int D3D12Renderer::initialize(unsigned int width, unsigned int height)
-{
-	m_wndHandle = initWindow(width, height);
-	ShowWindow(m_wndHandle, 1); //Display window, move to correct place when "game loop" has been implemented
-	this->loadPipeline();
-	this->loadAssets();
-
-	this->SCREEN_WIDTH = width;
-	this->SCREEN_HEIGHT = height;
-
-	return 1;
-}
-
-
 ///  ------  Inherited Functions  ------ 
 ///  ------  Inherited Functions  ------ 
 ///  ------  Inherited Functions  ------ 
@@ -570,6 +576,20 @@ Technique * D3D12Renderer::makeTechnique(Material *, RenderState *)
 {
 	return nullptr;
 }
+
+int D3D12Renderer::initialize(unsigned int width, unsigned int height)
+{
+	m_wndHandle = initWindow(width, height);
+	ShowWindow(m_wndHandle, 1); //Display window, move to correct place when "game loop" has been implemented
+	this->loadPipeline();
+	this->loadAssets();
+
+	this->SCREEN_WIDTH = width;
+	this->SCREEN_HEIGHT = height;
+
+	return 1;
+}
+
 
 void D3D12Renderer::setWinTitle(const char * title)
 {

@@ -150,6 +150,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ConstantBuffer.cpp" />
+    <ClCompile Include="D3D12Material.cpp" />
     <ClCompile Include="D3D12Renderer.cpp" />
     <ClCompile Include="Locator.cpp" />
     <ClCompile Include="OpenGL\ConstantBufferGL.cpp" />
@@ -178,6 +179,7 @@
   <ItemGroup>
     <ClInclude Include="..\include\stb_image.h" />
     <ClInclude Include="ConstantBuffer.h" />
+    <ClInclude Include="D3D12Material.h" />
     <ClInclude Include="D3D12Renderer.h" />
     <ClInclude Include="Locator.h" />
     <ClInclude Include="OpenGL\ConstantBufferGL.h" />

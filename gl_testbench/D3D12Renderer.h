@@ -33,6 +33,7 @@ private:
 	D3D12_RECT m_scissorRect;
 	IDXGISwapChain3 *m_swapChain = nullptr;
 	ID3D12Device4 *m_device = nullptr;
+	IDXGIFactory4 *m_factory = nullptr;
 
 	ID3D12Resource *m_renderTargets[frameCount];
 
@@ -68,10 +69,18 @@ private:
 	// Used when clearing RTV
 	float m_clearColor[4] = { 0,0,0,0 };
 
-	// Used by Public functions
+	// Init sub-functions
 	HWND initWindow(unsigned int width = 800, unsigned int height = 600); //Creates and returns a window
+	void enableDebugLayer();
+	void initDevice();
+	void initCommandQueue();
+	void initSwapChain();
+	void initFenceAndEventHandle();
+	void initRenderTargets();
 	void initViewportAndScissorRect();
+	void initRootSignature();
 	void initShadersAndPipelineState();
+	void initConstantBuffers();
 
 	void loadPipeline();
 	void loadAssets();
