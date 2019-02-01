@@ -2,6 +2,7 @@
 
 #include <d3dcompiler.h>
 
+#include "D3D12Mesh.h"
 
 
 void D3D12Renderer::getHardwareAdapter(IDXGIFactory4 * pFactory, IDXGIAdapter1 ** ppAdapter)
@@ -534,7 +535,7 @@ Material * D3D12Renderer::makeMaterial(const std::string & name)
 
 Mesh * D3D12Renderer::makeMesh()
 {
-	return nullptr;
+	return new D3D12Mesh();
 }
 
 VertexBuffer * D3D12Renderer::makeVertexBuffer(size_t size, VertexBuffer::DATA_USAGE usage)
