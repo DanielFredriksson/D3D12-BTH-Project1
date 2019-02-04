@@ -17,11 +17,11 @@ struct Color {
 	float r, g, b, a;
 };
 
+enum class ShaderType { VS = 0, PS = 1, GS = 2, CS = 3 };
+
 class Material
 {
 public:
-
-	enum class ShaderType { VS = 0, PS = 1, GS = 2, CS = 3 };
 
 	Material() : isValid(false) {};
 	virtual ~Material() {};
