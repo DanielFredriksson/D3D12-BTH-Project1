@@ -50,11 +50,14 @@ int D3D12Material::compileShader(ShaderType type, std::string& errString)
 	//COMPILE_LOG(newShader, Shader, err2);
 	//shaderObjects[shaderIdx] = newShader;
 	//return 0;
+
+	return 0;
 }
 
-std::vector<std::string> expandShaderText(std::string& shaderText, ShaderType type)
+std::vector<std::string> expandShaderText(std::string& shaderText, Material::ShaderType type)
 {
-
+	std::vector<std::string> temp;
+	return temp;
 }
 
 
@@ -97,7 +100,24 @@ void D3D12Material::setDiffuse(Color c)
 
 int D3D12Material::compileMaterial(std::string& errString)
 {
+	// Remove all shaders
+	this->removeShader(ShaderType::PS);
+	this->removeShader(ShaderType::VS);
+	this->removeShader(ShaderType::GS);
+	this->removeShader(ShaderType::CS);
 
+	// Compile all shaders
+	std::string error;
+	if (0 < compileShader(ShaderType::VS, error)) {
+		errString = error;
+		return -1;
+	}
+	if (0 < compileShader(ShaderType::PS, error)) {
+		errString = error;
+		return -1;
+	}
+
+	return 0;
 }
 
 void D3D12Material::addConstantBuffer(std::string name, unsigned int location)
@@ -112,7 +132,7 @@ void D3D12Material::updateConstantBuffer(const void* data, size_t size, unsigned
 
 int D3D12Material::enable()
 {
-
+	return 0;
 }
 
 void D3D12Material::disable()
