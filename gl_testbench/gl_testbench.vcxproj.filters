@@ -114,6 +114,9 @@
     <ClCompile Include="D3D12Material.cpp">
       <Filter>Source Files\D3D12</Filter>
     </ClCompile>
+    <ClCompile Include="D3D12ConstantBuffer.cpp">
+      <Filter>Source Files\D3D12</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Renderer.h">
@@ -201,6 +204,9 @@
       <Filter>Header Files\D3D12</Filter>
     </ClInclude>
     <ClInclude Include="D3D12Material.h">
+      <Filter>Header Files\D3D12</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D12ConstantBuffer.h">
       <Filter>Header Files\D3D12</Filter>
     </ClInclude>
   </ItemGroup>

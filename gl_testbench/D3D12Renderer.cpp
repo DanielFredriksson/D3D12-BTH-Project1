@@ -3,6 +3,7 @@
 #include <d3dcompiler.h>
 
 #include "D3D12Mesh.h"
+#include "D3D12ConstantBuffer.h"
 
 
 void D3D12Renderer::getHardwareAdapter(IDXGIFactory4 * pFactory, IDXGIAdapter1 ** ppAdapter)
@@ -570,12 +571,13 @@ std::string D3D12Renderer::getShaderExtension()
 
 ConstantBuffer * D3D12Renderer::makeConstantBuffer(std::string NAME, unsigned int location)
 {
-	return nullptr;
+	return new D3D12ConstantBuffer(NAME, location, m_device, frameCount, m_rtvHeap);
 }
 
-Technique * D3D12Renderer::makeTechnique(Material *, RenderState *)
+Technique * D3D12Renderer::makeTechnique(Material *m, RenderState *r)
 {
-	return nullptr;
+	Technique* t = new Technique(m, r);
+	return t;
 }
 
 int D3D12Renderer::initialize(unsigned int width, unsigned int height)
