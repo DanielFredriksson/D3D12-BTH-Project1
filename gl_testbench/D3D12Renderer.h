@@ -4,7 +4,7 @@
 
 /// D3D12
 #include <d3d12.h> 
-#include <C:/Program Files (x86)/Windows Kits/10/Include/10.0.16299.0/um/d3d12.h>
+//#include <C:/Program Files (x86)/Windows Kits/10/Include/10.0.16299.0/um/d3d12.h>
 
 #include <dxgi.h>		// DirectX Graphics Infrastructure
 #include <dxgi1_4.h>	// Enables IDXGIFactory4
@@ -86,6 +86,8 @@ private:
 	void loadAssets();
 	void waitForGpu();
 
+	void printError(ID3DBlob* errorBlob);
+
 public:
 	D3D12Renderer();
 	~D3D12Renderer();
@@ -124,7 +126,8 @@ template<class T>
 inline void SafeRelease(T ** ppInterface)
 {
 	if (*ppInterface != NULL) {
-		(*ppInterface)->Release();
-		(*ppInterface) = NULL;
+		if ((*ppInterface)->Release() == 0) {
+			(*ppInterface) = NULL;
+		}
 	}
 }

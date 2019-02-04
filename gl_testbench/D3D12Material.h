@@ -2,14 +2,15 @@
 #define D3D12_MATERIAL_H
 
 #include "Material.h"
+#include <string>
 
 class D3D12Material : public Material
 {
 private:
-
+	std::string name;
 
 public:
-	D3D12Material() : Material() { ; }
+	D3D12Material(std::string name) : Material() { this->name = name; }
 	virtual ~D3D12Material() {};
 
 	// set shader name, DOES NOT COMPILE

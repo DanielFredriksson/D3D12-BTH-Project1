@@ -3,6 +3,7 @@
 #include <d3dcompiler.h>
 
 #include "D3D12Mesh.h"
+#include "D3D12Material.h"
 
 
 void D3D12Renderer::getHardwareAdapter(IDXGIFactory4 * pFactory, IDXGIAdapter1 ** ppAdapter)
@@ -76,8 +77,9 @@ void D3D12Renderer::initShadersAndPipelineState()
 	//////////////////////////
 	///// VERTEX SHADER /////
 	////////////////////////
-	ID3DBlob* vertexBlob;
-	D3DCompileFromFile(
+	ID3DBlob* vertexBlob = nullptr;
+	ID3DBlob* errorBlob = nullptr;
+	if (FAILED(D3DCompileFromFile(
 		L"VertexShader.hlsl",		// Name
 		nullptr,					// Macros (optional)
 		nullptr,					// Include Files (optional)
@@ -86,14 +88,17 @@ void D3D12Renderer::initShadersAndPipelineState()
 		0,							// Shader Compile Options (debugging)
 		0,							// Effect Compile Options
 		&vertexBlob,				// Double Pointer to ID3DBlob
-		nullptr						// Pointer for Error Blob-messages
-	);
+		&errorBlob						// Pointer for Error Blob-messages
+	))) {
+		this->printError(errorBlob);
+	}
 
 	//////////////////////////
 	///// PIXEL SHADER //////
 	////////////////////////
 	ID3DBlob* pixelBlob;
-	D3DCompileFromFile(
+	errorBlob = nullptr;
+	if (FAILED(D3DCompileFromFile(
 		L"PixelShader.hlsl",		// Name
 		nullptr,					// Macros (optional)
 		nullptr,					// Include Files (optional)
@@ -102,8 +107,10 @@ void D3D12Renderer::initShadersAndPipelineState()
 		0,							// Shader Compile Options
 		0,							// Effect Compile Options
 		&pixelBlob,					// Double Pointer to ID3DBlob
-		nullptr						// Pointer for Error Blob-messages
-	);
+		&errorBlob						// Pointer for Error Blob-messages
+	))) {
+		this->printError(errorBlob);
+	}
 
 	// Input Layout
 	D3D12_INPUT_ELEMENT_DESC inputElementDesc[] = {
@@ -376,7 +383,7 @@ void D3D12Renderer::initConstantBuffers()
 		heapDescriptorDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 		heapDescriptorDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 		// Create Descriptor
-		if (FAILED(m_device->CreateDescriptorHeap(&heapDescriptorDesc, IID_PPV_ARGS(&m_rtvHeap)))) {
+		if (FAILED(m_device->CreateDescriptorHeap(&heapDescriptorDesc, IID_PPV_ARGS(&m_descriptorHeap[i])))) {
 			throw std::exception("ERROR: Failed to create Descriptor Heap!");
 		}
 	}
@@ -418,6 +425,11 @@ void D3D12Renderer::initConstantBuffers()
 		cbvDesc.BufferLocation = m_constantBufferResource[i]->GetGPUVirtualAddress();
 		cbvDesc.SizeInBytes = cbSizeAligned;
 		// Create Constant Buffer
+
+		cbvDesc.SizeInBytes;
+		D3D12_CPU_DESCRIPTOR_HANDLE handleTest = m_descriptorHeap[i]->GetCPUDescriptorHandleForHeapStart();
+
+
 		m_device->CreateConstantBufferView(&cbvDesc, m_descriptorHeap[i]->GetCPUDescriptorHandleForHeapStart());
 	}
 }
@@ -516,6 +528,11 @@ void D3D12Renderer::waitForGpu()
 	}
 }
 
+void D3D12Renderer::printError(ID3DBlob* errorBlob)
+{
+	MessageBoxA(0, (char*)errorBlob->GetBufferPointer(), "", 0);
+}
+
 D3D12Renderer::D3D12Renderer()
 {
 }
@@ -530,7 +547,9 @@ D3D12Renderer::~D3D12Renderer()
 
 Material * D3D12Renderer::makeMaterial(const std::string & name)
 {
-	return nullptr;
+	return new D3D12Material(
+		name
+	);
 }
 
 Mesh * D3D12Renderer::makeMesh()

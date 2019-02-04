@@ -28,6 +28,9 @@
     <Filter Include="Source Files\Extras">
       <UniqueIdentifier>{704b72e9-1569-4789-9236-a2001bd522cc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\HLSL">
+      <UniqueIdentifier>{c2829abb-4b95-4f21-80c0-3405c8db7eeb}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -211,5 +214,13 @@
     <None Include="..\assets\GL45\VertexShader.glsl">
       <Filter>Resource Files</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="VertexShader.hlsl">
+      <Filter>Source Files\HLSL</Filter>
+    </FxCompile>
+    <FxCompile Include="PixelShader.hlsl">
+      <Filter>Source Files\HLSL</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>
