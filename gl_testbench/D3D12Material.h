@@ -21,6 +21,8 @@ private:
 	// opengl program object
 	std::string name;
 	unsigned int program;
+
+	std::wstring stringToWString(const std::string& s);
 	int compileShader(ShaderType type, std::string& errString);
 	std::vector<std::string> expandShaderText(std::string& shaderText, ShaderType type);
 
