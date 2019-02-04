@@ -2,12 +2,27 @@
 #define D3D12_MATERIAL_H
 
 #include "Material.h"
+#include <stdio.h>
+#include <vector>
 #include <string>
 
 class D3D12Material : public Material
 {
 private:
+	// map from ShaderType to GL_VERTEX_SHADER, should be static.
+	unsigned int mapShaderEnum[4];
+
+	std::string shaderNames[4];
+
+	// opengl shader object
+	unsigned int shaderObjects[4] = { 0,0,0,0 };
+
+	// TODO: change to PIPELINE
+	// opengl program object
 	std::string name;
+	unsigned int program;
+	int compileShader(ShaderType type, std::string& errString);
+	std::vector<std::string> expandShaderText(std::string& shaderText, ShaderType type);
 
 public:
 	D3D12Material(std::string name) : Material() { this->name = name; }
