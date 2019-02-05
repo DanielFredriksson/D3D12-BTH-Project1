@@ -41,7 +41,7 @@ int D3D12Material::compileShader(ShaderType type, std::string& errString)
 	for (auto it = this->shaderDefines.at(type).begin(); it != this->shaderDefines.at(type).end(); it++)
 		shaderDefinesData += *it;
 
-	// Combine all of the 'define data' with the 'shader data'
+	// Combine all of the 'define data' with the 'shader data' saving as 'LPCVOID'
 	LPCVOID shaderSrcData = static_cast<LPCVOID>((shaderDefinesData + shaderText).c_str());
 
 
@@ -53,9 +53,9 @@ int D3D12Material::compileShader(ShaderType type, std::string& errString)
 
 
 
-	//////////////////////////////////////////////////
-	//     PARAMETER #2 ('Source Data LENGTH')     //
-	////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////
+	//     PARAMETER #6, #7 ('Entry Point', 'Shader Model')     //
+	/////////////////////////////////////////////////////////////
 	std::string entryPointString;
 	std::string shaderModelString;
 
@@ -83,40 +83,65 @@ int D3D12Material::compileShader(ShaderType type, std::string& errString)
 	LPCSTR entryPoint = entryPointString.c_str();
 	LPCSTR shaderModel = shaderModelString.c_str();
 
+
+
+	///////////////////////////////////////////////
+	//     PARAMETER #10, #11 ('Blob Data')     //
+	/////////////////////////////////////////////
 	ID3DBlob* shaderDataBlob;
+	ID3DBlob* errorDataBlob;
+
 	D3DCompile(
 		shaderSrcData,		// A pointer to uncompiled shader data; either ASCII HLSL code or a compiled effect.
 		shaderSrcDataLength,// Length of 'shaderSrcData'
 		nullptr,			// You can use this parameter for strings that specify error messages.
 		nullptr,			// An array of NULL-terminated macro definitions
 		nullptr,			// Optional. A pointer to an ID3DInclude for handling include files (ALREADY ADDED TO 'shaderSrcData')
-		entryPoint,
-		shaderModel,
+		entryPoint,			// The name of the shader entry point function where shader execution begins.
+		shaderModel,		// A string that specifies the shader target or set of shader features to compile against.
+		0,					// Flags defined by D3D compile constants.
+		0,					// Flags defined by D3D compile effect constants.
+		&shaderDataBlob,	// A pointer to a variable that receives a pointer to the ID3DBlob interface that you can use to access the compiled code.
+		&errorDataBlob		// A pointer to a variable that receives a pointer to the ID3DBlob interface that you can use to access compiler error messages.
+	);
+	MessageBoxA(0, (char*)errorDataBlob->GetBufferPointer(), "", 0); // Error handling
 
-	)
+	// THE SHADER HAS NOW BEEN SUCCESSFULLY CREATED ! ! !
 
-	this->shaderDefines
+	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc;
+	inputLayoutDesc.pInputElementDescs = inputElementDesc;
+	inputLayoutDesc.NumElements = ARRAYSIZE(inputElementDesc);
 
-	// make final vector<string> with shader source + defines + GLSL version
-	// in theory this uses move semantics (compiler does it automagically)
-	std::vector<std::string> shaderLines = expandShaderText(shaderText, type);
+	// Pipeline State:
+	//		• Creation
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC gpsd = {};
+	//		• Specify pipeline stages
+	gpsd.pRootSignature = m_rootSignature;
+	gpsd.InputLayout = inputLayoutDesc;
+	gpsd.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	gpsd.VS.pShaderBytecode = reinterpret_cast<void*>(vertexBlob->GetBufferPointer());
+	gpsd.VS.BytecodeLength = vertexBlob->GetBufferSize();
+	gpsd.PS.pShaderBytecode = reinterpret_cast<void*>(pixelBlob->GetBufferPointer());
+	gpsd.PS.BytecodeLength = pixelBlob->GetBufferSize();
+	//		• Specify render target and depthstencil usage
+	gpsd.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	gpsd.NumRenderTargets = 1;
+	gpsd.SampleDesc.Count = 1;
+	gpsd.SampleMask = UINT_MAX;
+	//		• Specify rasterizer behaviour
+	gpsd.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+	gpsd.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+	//		• Specify blend descriptions
+	D3D12_RENDER_TARGET_BLEND_DESC defaultRTdesc = {
+		false, false,
+		D3D12_BLEND_ONE, D3D12_BLEND_ZERO, D3D12_BLEND_OP_ADD,
+		D3D12_BLEND_ONE, D3D12_BLEND_ZERO, D3D12_BLEND_OP_ADD,
+		D3D12_LOGIC_OP_NOOP, D3D12_COLOR_WRITE_ENABLE_ALL
+	};
+	for (UINT i = 0; i < D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT; i++)
+		gpsd.BlendState.RenderTarget[i] = defaultRTdesc;
 
-	// OpenGL wants an array of GLchar* with null terminated strings 
-	const GLchar** tempShaderLines = new const GLchar*[shaderLines.size()];
-	int i = 0;
-	for (std::string& text : shaderLines)
-		tempShaderLines[i++] = text.c_str();
-
-	GLuint newShader = glCreateShader(mapShaderEnum[shaderIdx]);
-	glShaderSource(newShader, shaderLines.size(), tempShaderLines, nullptr);
-	// ask GL to compile this
-	glCompileShader(newShader);
-	// print error or anything...
-	INFO_OUT(newShader, Shader);
-	std::string err2;
-	COMPILE_LOG(newShader, Shader, err2);
-	shaderObjects[shaderIdx] = newShader;
-	return 0;
+	m_device->CreateGraphicsPipelineState(&gpsd, IID_PPV_ARGS(&m_pipelineState));
 }
 
 //std::vector<std::string> D3D12Material::expandShaderText(std::string& shaderText, Material::ShaderType type)
