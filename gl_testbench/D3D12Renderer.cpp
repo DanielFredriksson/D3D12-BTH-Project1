@@ -151,7 +151,7 @@ void D3D12Renderer::initShadersAndPipelineState()
 	for (UINT i = 0; i < D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT; i++)
 		gpsd.BlendState.RenderTarget[i] = defaultRTdesc;
 
-	m_device->CreateGraphicsPipelineState(&gpsd, IID_PPV_ARGS(&m_pipelineState));
+	m_device->CreateGraphicsPipelineState(&gpsd, IID_PPV_ARGS(&this->m_pipelineState));
 }
 
 void D3D12Renderer::initViewportAndScissorRect()
@@ -581,12 +581,12 @@ RenderState * D3D12Renderer::makeRenderState()
 
 std::string D3D12Renderer::getShaderPath()
 {
-	return std::string();
+	return std::string("../Shaders/");
 }
 
 std::string D3D12Renderer::getShaderExtension()
 {
-	return std::string();
+	return std::string(".hlsl");
 }
 
 ConstantBuffer * D3D12Renderer::makeConstantBuffer(std::string NAME, unsigned int location)

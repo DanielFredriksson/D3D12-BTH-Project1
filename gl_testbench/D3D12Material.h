@@ -6,13 +6,20 @@
 #include <vector>
 #include <string>
 
+#include <d3d12.h> 
+#include <d3dcompiler.h>
+#include <dxgi.h>		// DirectX Graphics Infrastructure
+
 class D3D12Material : public Material
 {
 private:
 	// map from ShaderType to GL_VERTEX_SHADER, should be static.
 	unsigned int mapShaderEnum[4];
-
 	std::string shaderNames[4];
+
+	ID3DBlob* m_shaderDataBlob_PS = nullptr;
+	ID3DBlob* m_shaderDataBlob_VS = nullptr;
+	ID3D12PipelineState *m_pipelineState = nullptr;
 
 	// opengl shader object
 	unsigned int shaderObjects[4] = { 0,0,0,0 };
@@ -22,7 +29,6 @@ private:
 	std::string name;
 	unsigned int program;
 
-	std::wstring stringToWString(const std::string& s);
 	int compileShader(ShaderType type, std::string& errString);
 	std::vector<std::string> expandShaderText(std::string& shaderText, ShaderType type);
 
