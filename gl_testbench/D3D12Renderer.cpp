@@ -1,10 +1,10 @@
 #include "D3D12Renderer.h"
 
 #include <d3dcompiler.h>
-
 #include "D3D12Mesh.h"
 #include "D3D12Material.h"
 
+#include "Locator.h"
 
 void D3D12Renderer::getHardwareAdapter(IDXGIFactory4 * pFactory, IDXGIAdapter1 ** ppAdapter)
 {
@@ -371,6 +371,8 @@ void D3D12Renderer::initRootSignature()
 		sBlob->GetBufferSize(),
 		IID_PPV_ARGS(&m_rootSignature)
 	);
+
+	Locator::provide(this->m_rootSignature);
 }
 
 void D3D12Renderer::initConstantBuffers()

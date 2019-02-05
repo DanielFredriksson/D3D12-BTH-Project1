@@ -108,40 +108,42 @@ int D3D12Material::compileShader(ShaderType type, std::string& errString)
 
 	// THE SHADER HAS NOW BEEN SUCCESSFULLY CREATED ! ! !
 
-	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc;
-	inputLayoutDesc.pInputElementDescs = inputElementDesc;
-	inputLayoutDesc.NumElements = ARRAYSIZE(inputElementDesc);
+	//D3D12_INPUT_LAYOUT_DESC inputLayoutDesc;
+	//inputLayoutDesc.pInputElementDescs = inputElementDesc;
+	//inputLayoutDesc.NumElements = ARRAYSIZE(inputElementDesc);
 
-	// Pipeline State:
-	//		• Creation
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC gpsd = {};
-	//		• Specify pipeline stages
-	gpsd.pRootSignature = m_rootSignature;
-	gpsd.InputLayout = inputLayoutDesc;
-	gpsd.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-	gpsd.VS.pShaderBytecode = reinterpret_cast<void*>(vertexBlob->GetBufferPointer());
-	gpsd.VS.BytecodeLength = vertexBlob->GetBufferSize();
-	gpsd.PS.pShaderBytecode = reinterpret_cast<void*>(pixelBlob->GetBufferPointer());
-	gpsd.PS.BytecodeLength = pixelBlob->GetBufferSize();
-	//		• Specify render target and depthstencil usage
-	gpsd.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-	gpsd.NumRenderTargets = 1;
-	gpsd.SampleDesc.Count = 1;
-	gpsd.SampleMask = UINT_MAX;
-	//		• Specify rasterizer behaviour
-	gpsd.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
-	gpsd.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
-	//		• Specify blend descriptions
-	D3D12_RENDER_TARGET_BLEND_DESC defaultRTdesc = {
-		false, false,
-		D3D12_BLEND_ONE, D3D12_BLEND_ZERO, D3D12_BLEND_OP_ADD,
-		D3D12_BLEND_ONE, D3D12_BLEND_ZERO, D3D12_BLEND_OP_ADD,
-		D3D12_LOGIC_OP_NOOP, D3D12_COLOR_WRITE_ENABLE_ALL
-	};
-	for (UINT i = 0; i < D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT; i++)
-		gpsd.BlendState.RenderTarget[i] = defaultRTdesc;
+	//// Pipeline State:
+	////		• Creation
+	//D3D12_GRAPHICS_PIPELINE_STATE_DESC gpsd = {};
+	////		• Specify pipeline stages
+	//gpsd.pRootSignature = m_rootSignature;
+	//gpsd.InputLayout = inputLayoutDesc;
+	//gpsd.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	//gpsd.VS.pShaderBytecode = reinterpret_cast<void*>(vertexBlob->GetBufferPointer());
+	//gpsd.VS.BytecodeLength = vertexBlob->GetBufferSize();
+	//gpsd.PS.pShaderBytecode = reinterpret_cast<void*>(pixelBlob->GetBufferPointer());
+	//gpsd.PS.BytecodeLength = pixelBlob->GetBufferSize();
+	////		• Specify render target and depthstencil usage
+	//gpsd.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	//gpsd.NumRenderTargets = 1;
+	//gpsd.SampleDesc.Count = 1;
+	//gpsd.SampleMask = UINT_MAX;
+	////		• Specify rasterizer behaviour
+	//gpsd.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+	//gpsd.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+	////		• Specify blend descriptions
+	//D3D12_RENDER_TARGET_BLEND_DESC defaultRTdesc = {
+	//	false, false,
+	//	D3D12_BLEND_ONE, D3D12_BLEND_ZERO, D3D12_BLEND_OP_ADD,
+	//	D3D12_BLEND_ONE, D3D12_BLEND_ZERO, D3D12_BLEND_OP_ADD,
+	//	D3D12_LOGIC_OP_NOOP, D3D12_COLOR_WRITE_ENABLE_ALL
+	//};
+	//for (UINT i = 0; i < D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT; i++)
+	//	gpsd.BlendState.RenderTarget[i] = defaultRTdesc;
 
-	m_device->CreateGraphicsPipelineState(&gpsd, IID_PPV_ARGS(&m_pipelineState));
+	//m_device->CreateGraphicsPipelineState(&gpsd, IID_PPV_ARGS(&m_pipelineState));
+
+	return 0;
 }
 
 //std::vector<std::string> D3D12Material::expandShaderText(std::string& shaderText, Material::ShaderType type)
@@ -156,7 +158,7 @@ int D3D12Material::compileShader(ShaderType type, std::string& errString)
 	 PUBLIC FUNCTIONS
 +-+-+-+-+-+-+-+-+-+-+-+*/
 
-void D3D12Material::setShader(const std::string& shaderFileName, ShaderType type)
+void D3D12Material::setShader(const std::string& shaderFileName, Material::ShaderType type)
 {
 	if (shaderFileNames.find(type) != shaderFileNames.end())
 		removeShader(type);
@@ -164,7 +166,7 @@ void D3D12Material::setShader(const std::string& shaderFileName, ShaderType type
 	shaderFileNames[type] = shaderFileName;
 }
 
-void D3D12Material::removeShader(ShaderType type)
+void D3D12Material::removeShader(Material::ShaderType type)
 {
 	unsigned int shaderType = this->shaderObjects[static_cast<unsigned int>(type)];
 
@@ -182,32 +184,32 @@ void D3D12Material::removeShader(ShaderType type)
 	//};
 }
 
-//void D3D12Material::setDiffuse(Color c)
-//{
-//
-//}
+void D3D12Material::setDiffuse(Color c)
+{
 
-//int D3D12Material::compileMaterial(std::string& errString)
-//{
-//
-//}
+}
 
-//void D3D12Material::addConstantBuffer(std::string name, unsigned int location)
-//{
-//
-//}
+int D3D12Material::compileMaterial(std::string& errString)
+{
+	return 0;
+}
 
-//void D3D12Material::updateConstantBuffer(const void* data, size_t size, unsigned int location)
-//{
-//
-//}
+void D3D12Material::addConstantBuffer(std::string name, unsigned int location)
+{
 
-//int D3D12Material::enable()
-//{
-//
-//}
+}
 
-//void D3D12Material::disable()
-//{
-//
-//}
+void D3D12Material::updateConstantBuffer(const void* data, size_t size, unsigned int location)
+{
+
+}
+
+int D3D12Material::enable()
+{
+	return 0;
+}
+
+void D3D12Material::disable()
+{
+
+}
