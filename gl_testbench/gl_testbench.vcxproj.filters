@@ -102,9 +102,6 @@
     <ClCompile Include="Locator.cpp">
       <Filter>Source Files\Extras</Filter>
     </ClCompile>
-    <ClCompile Include="D3D12Renderer.cpp">
-      <Filter>Source Files\D3D12</Filter>
-    </ClCompile>
     <ClCompile Include="D3D12Mesh.cpp">
       <Filter>Source Files\D3D12</Filter>
     </ClCompile>
@@ -118,6 +115,9 @@
       <Filter>Source Files\D3D12</Filter>
     </ClCompile>
     <ClCompile Include="D3D12Test.cpp">
+      <Filter>Source Files\D3D12</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D12Renderer.cpp">
       <Filter>Source Files\D3D12</Filter>
     </ClCompile>
   </ItemGroup>
@@ -197,9 +197,6 @@
     <ClInclude Include="Locator.h">
       <Filter>Header Files\Extras</Filter>
     </ClInclude>
-    <ClInclude Include="D3D12Renderer.h">
-      <Filter>Header Files\D3D12</Filter>
-    </ClInclude>
     <ClInclude Include="D3D12Mesh.h">
       <Filter>Header Files\D3D12</Filter>
     </ClInclude>
@@ -213,6 +210,9 @@
       <Filter>Header Files\D3D12</Filter>
     </ClInclude>
     <ClInclude Include="D3D12Test.h">
+      <Filter>Header Files\D3D12</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D12Renderer.h">
       <Filter>Header Files\D3D12</Filter>
     </ClInclude>
   </ItemGroup>

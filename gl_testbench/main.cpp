@@ -311,13 +311,13 @@ int main(int argc, char *argv[])
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 
 	// ------  ORIGINAL  ------ 
-	//renderer = Renderer::makeRenderer(Renderer::BACKEND::GL45);
-	//renderer->initialize(800, 600);
-	//renderer->setWinTitle("OpenGL");
-	//renderer->setClearColor(0.0, 0.1, 0.1, 1.0);
-	//initialiseTestbench();
-	//run();
-	//shutdown();
+	/*renderer = Renderer::makeRenderer(Renderer::BACKEND::GL45);
+	renderer->initialize(800, 600);
+	renderer->setWinTitle("OpenGL");
+	renderer->setClearColor(0.0, 0.1, 0.1, 1.0);
+	initialiseTestbench();
+	run();
+	shutdown();*/
 	// ------------------------
 
 
@@ -334,9 +334,9 @@ int main(int argc, char *argv[])
 
 	// ------  TEST  ------ 
 	renderer = Renderer::makeRenderer(Renderer::BACKEND::DX12TEST);
+	renderer->initialize(800, 600);
 	renderer->setWinTitle("Direct3D 12");
 	renderer->setClearColor(0.0f, 0.1f, 0.1f, 1.0f);
-	renderer->initialize(800, 600);
 
 	//initialiseTestbench();
 	//run();

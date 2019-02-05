@@ -78,6 +78,8 @@ private:
 
 	float m_clearColor[4] = { 0,0,0,0 };
 
+	ConstantBuffer* m_testBuffer;
+
 #pragma endregion
 
 #pragma region MemberFunctions

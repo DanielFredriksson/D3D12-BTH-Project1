@@ -271,54 +271,57 @@ void D3D12Test::CreateViewportAndScissorRect()
 #pragma region CreateConstantBufferResources
 void D3D12Test::CreateConstantBufferResources()
 {
-	for (int i = 0; i < NUM_SWAP_BUFFERS; i++)
-	{
-		D3D12_DESCRIPTOR_HEAP_DESC heapDescriptorDesc = {};
-		heapDescriptorDesc.NumDescriptors = 1;
-		heapDescriptorDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-		heapDescriptorDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-		gDevice5->CreateDescriptorHeap(&heapDescriptorDesc, IID_PPV_ARGS(&gDescriptorHeap[i]));
-	}
+	m_testBuffer = makeConstantBuffer("test", 5);
+	m_testBuffer->setData(&gConstantBufferCPU, sizeof(ConstantBufferData), nullptr, 5);
 
-	UINT cbSizeAligned = (sizeof(ConstantBufferData) + 255) & ~255;	// 256-byte aligned CB.
+	//for (int i = 0; i < NUM_SWAP_BUFFERS; i++)
+	//{
+	//	D3D12_DESCRIPTOR_HEAP_DESC heapDescriptorDesc = {};
+	//	heapDescriptorDesc.NumDescriptors = 1;
+	//	heapDescriptorDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	//	heapDescriptorDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	//	gDevice5->CreateDescriptorHeap(&heapDescriptorDesc, IID_PPV_ARGS(&gDescriptorHeap[i]));
+	//}
 
-
-	D3D12_HEAP_PROPERTIES heapProperties = {};
-	heapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
-	heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-	heapProperties.CreationNodeMask = 1; //used when multi-gpu
-	heapProperties.VisibleNodeMask = 1; //used when multi-gpu
-	heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+	//UINT cbSizeAligned = (sizeof(ConstantBufferData) + 255) & ~255;	// 256-byte aligned CB.
 
 
-	D3D12_RESOURCE_DESC resourceDesc = {};
-	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-	resourceDesc.Width = cbSizeAligned;
-	resourceDesc.Height = 1;
-	resourceDesc.DepthOrArraySize = 1;
-	resourceDesc.MipLevels = 1;
-	resourceDesc.SampleDesc.Count = 1;
-	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+	//D3D12_HEAP_PROPERTIES heapProperties = {};
+	//heapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
+	//heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+	//heapProperties.CreationNodeMask = 1; //used when multi-gpu
+	//heapProperties.VisibleNodeMask = 1; //used when multi-gpu
+	//heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
 
-	//Create a resource heap, descriptor heap, and pointer to cbv for each frame
-	for (int i = 0; i < NUM_SWAP_BUFFERS; i++)
-	{
-		gDevice5->CreateCommittedResource(
-			&heapProperties,
-			D3D12_HEAP_FLAG_NONE,
-			&resourceDesc,
-			D3D12_RESOURCE_STATE_GENERIC_READ,
-			nullptr,
-			IID_PPV_ARGS(&gConstantBufferResource[i])
-		);
 
-		gConstantBufferResource[i]->SetName(L"cb heap");
+	//D3D12_RESOURCE_DESC resourceDesc = {};
+	//resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	//resourceDesc.Width = cbSizeAligned;
+	//resourceDesc.Height = 1;
+	//resourceDesc.DepthOrArraySize = 1;
+	//resourceDesc.MipLevels = 1;
+	//resourceDesc.SampleDesc.Count = 1;
+	//resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 
-		D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
-		cbvDesc.BufferLocation = gConstantBufferResource[i]->GetGPUVirtualAddress();
-		cbvDesc.SizeInBytes = cbSizeAligned;
-		gDevice5->CreateConstantBufferView(&cbvDesc, gDescriptorHeap[i]->GetCPUDescriptorHandleForHeapStart());
-	}
+	////Create a resource heap, descriptor heap, and pointer to cbv for each frame
+	//for (int i = 0; i < NUM_SWAP_BUFFERS; i++)
+	//{
+	//	gDevice5->CreateCommittedResource(
+	//		&heapProperties,
+	//		D3D12_HEAP_FLAG_NONE,
+	//		&resourceDesc,
+	//		D3D12_RESOURCE_STATE_GENERIC_READ,
+	//		nullptr,
+	//		IID_PPV_ARGS(&gConstantBufferResource[i])
+	//	);
+
+	//	gConstantBufferResource[i]->SetName(L"cb heap");
+
+	//	D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
+	//	cbvDesc.BufferLocation = gConstantBufferResource[i]->GetGPUVirtualAddress();
+	//	cbvDesc.SizeInBytes = cbSizeAligned;
+	//	gDevice5->CreateConstantBufferView(&cbvDesc, gDescriptorHeap[i]->GetCPUDescriptorHandleForHeapStart());
+	//}
 }
 #pragma endregion
 
@@ -519,15 +522,17 @@ void D3D12Test::Update(int backBufferIndex)
 	}
 
 	//Update GPU memory
-	void* mappedMem = nullptr;
-	D3D12_RANGE readRange = { 0, 0 }; //We do not intend to read this resource on the CPU.
-	if (SUCCEEDED(gConstantBufferResource[backBufferIndex]->Map(0, &readRange, &mappedMem)))
-	{
-		memcpy(mappedMem, &gConstantBufferCPU, sizeof(ConstantBufferData));
+	m_testBuffer->setData(&gConstantBufferCPU, sizeof(ConstantBufferData), nullptr, 5);
 
-		D3D12_RANGE writeRange = { 0, sizeof(ConstantBufferData) };
-		gConstantBufferResource[backBufferIndex]->Unmap(0, &writeRange);
-	}
+	//void* mappedMem = nullptr;
+	//D3D12_RANGE readRange = { 0, 0 }; //We do not intend to read this resource on the CPU.
+	//if (SUCCEEDED(gConstantBufferResource[backBufferIndex]->Map(0, &readRange, &mappedMem)))
+	//{
+	//	memcpy(mappedMem, &gConstantBufferCPU, sizeof(ConstantBufferData));
+
+	//	D3D12_RANGE writeRange = { 0, sizeof(ConstantBufferData) };
+	//	gConstantBufferResource[backBufferIndex]->Unmap(0, &writeRange);
+	//}
 }
 #pragma endregion
 
@@ -539,16 +544,18 @@ void D3D12Test::Render(int backBufferIndex)
 	gCommandAllocator->Reset();
 	gCommandList4->Reset(gCommandAllocator, gPipeLineState);
 
-	//Set constant buffer descriptor heap
-	ID3D12DescriptorHeap* descriptorHeaps[] = { gDescriptorHeap[backBufferIndex] };
-	gCommandList4->SetDescriptorHeaps(ARRAYSIZE(descriptorHeaps), descriptorHeaps);
+	////Set constant buffer descriptor heap
+	//ID3D12DescriptorHeap* descriptorHeaps[] = { gDescriptorHeap[backBufferIndex] };
+	//gCommandList4->SetDescriptorHeaps(ARRAYSIZE(descriptorHeaps), descriptorHeaps);
 
 	//Set root signature
 	gCommandList4->SetGraphicsRootSignature(gRootSignature);
 
-	//Set root descriptor table to index 0 in previously set root signature
-	gCommandList4->SetGraphicsRootDescriptorTable(0,
-		gDescriptorHeap[backBufferIndex]->GetGPUDescriptorHandleForHeapStart());
+	////Set root descriptor table to index 0 in previously set root signature
+	//gCommandList4->SetGraphicsRootDescriptorTable(0,
+	//	gDescriptorHeap[backBufferIndex]->GetGPUDescriptorHandleForHeapStart());
+
+	m_testBuffer->bind(nullptr);
 
 	//Set necessary states.
 	gCommandList4->RSSetViewports(1, &gViewport);
@@ -654,7 +661,7 @@ std::string D3D12Test::getShaderExtension()
 
 ConstantBuffer * D3D12Test::makeConstantBuffer(std::string NAME, unsigned int location)
 {
-	return new D3D12ConstantBuffer(NAME, location, gDevice5, gSwapChain4);
+	return new D3D12ConstantBuffer(NAME, location, gDevice5, gSwapChain4, gCommandList4);
 }
 
 Technique * D3D12Test::makeTechnique(Material *m, RenderState *r)

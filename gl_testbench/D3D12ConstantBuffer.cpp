@@ -1,10 +1,10 @@
 #include "D3D12ConstantBuffer.h"
 
-D3D12ConstantBuffer::D3D12ConstantBuffer(std::string NAME, unsigned int location, ID3D12Device4 *device, IDXGISwapChain3 *swapChain)
+D3D12ConstantBuffer::D3D12ConstantBuffer(std::string NAME, unsigned int location, ID3D12Device4 *device, IDXGISwapChain3 *swapChain, ID3D12GraphicsCommandList3* commandList4)
 {
 	m_device = device;
-	//m_commandQueue = commandQueue;
 	m_swapChain = swapChain;
+	m_commandList4 = commandList4;
 
 	m_name = NAME;
 	m_location = location;
@@ -94,5 +94,13 @@ void D3D12ConstantBuffer::setData(const void * data, size_t size, Material * m, 
 
 void D3D12ConstantBuffer::bind(Material *)
 {
+	int backBufferIndex = m_swapChain->GetCurrentBackBufferIndex();
 
+	//Set constant buffer descriptor heap
+	ID3D12DescriptorHeap* descriptorHeaps[] = { m_descriptorHeap[backBufferIndex] };
+	m_commandList4->SetDescriptorHeaps(ARRAYSIZE(descriptorHeaps), descriptorHeaps);
+
+	//Set root descriptor table to index 0 in previously set root signature
+	m_commandList4->SetGraphicsRootDescriptorTable(0,
+		m_descriptorHeap[backBufferIndex]->GetGPUDescriptorHandleForHeapStart());
 }
