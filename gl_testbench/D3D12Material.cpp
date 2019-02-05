@@ -52,7 +52,7 @@ int D3D12Material::compileShader(ShaderType type, std::string& errString)
 	//return 0;
 }
 
-std::vector<std::string> expandShaderText(std::string& shaderText, ShaderType type)
+std::vector<std::string> expandShaderText(std::string& shaderText, Material::ShaderType type)
 {
 
 }
