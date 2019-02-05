@@ -571,7 +571,7 @@ std::string D3D12Renderer::getShaderExtension()
 
 ConstantBuffer * D3D12Renderer::makeConstantBuffer(std::string NAME, unsigned int location)
 {
-	return new D3D12ConstantBuffer(NAME, location, m_device, frameCount, m_rtvHeap);
+	return new D3D12ConstantBuffer(NAME, location, m_device, m_swapChain);
 }
 
 Technique * D3D12Renderer::makeTechnique(Material *m, RenderState *r)
@@ -645,7 +645,6 @@ void D3D12Renderer::submit(Mesh * mesh)
 
 void D3D12Renderer::frame()
 {
+
 }
-
-
 
