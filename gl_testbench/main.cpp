@@ -12,6 +12,7 @@
 
 /// TESTING
 #include "D3D12Renderer.h"
+#include "D3D12Test.h"
 
 /// MEMORY LEAKS
 #include <crtdbg.h>
@@ -321,15 +322,26 @@ int main(int argc, char *argv[])
 
 
 	// ------  MODIFIED  ------ 
-	renderer = Renderer::makeRenderer(Renderer::BACKEND::DX12);
-	renderer->initialize(800, 600);
-	renderer->setWinTitle("Direct3D 12");
-	renderer->setClearColor(0.0f, 0.1f, 0.1f, 1.0f);
+	//renderer = Renderer::makeRenderer(Renderer::BACKEND::DX12);
+	//renderer->initialize(800, 600);
+	//renderer->setWinTitle("Direct3D 12");
+	//renderer->setClearColor(0.0f, 0.1f, 0.1f, 1.0f);
 
 	//initialiseTestbench();
 	//run();
 	//shutdown();
 	// ------------------------
+
+	// ------  TEST  ------ 
+	renderer = Renderer::makeRenderer(Renderer::BACKEND::DX12TEST);
+	renderer->setWinTitle("Direct3D 12");
+	renderer->setClearColor(0.0f, 0.1f, 0.1f, 1.0f);
+	renderer->initialize(800, 600);
+
+	//initialiseTestbench();
+	//run();
+	//shutdown();
+	// --------------------
 
 
 	return 0;
