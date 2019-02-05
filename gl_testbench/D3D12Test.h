@@ -69,8 +69,8 @@ private:
 		float colorChannel[4];
 	};
 
-	ID3D12DescriptorHeap*	gDescriptorHeap[NUM_SWAP_BUFFERS] = {};
-	ID3D12Resource1*		gConstantBufferResource[NUM_SWAP_BUFFERS] = {};
+	/*ID3D12DescriptorHeap*	gDescriptorHeap[NUM_SWAP_BUFFERS] = {};
+	ID3D12Resource1*		gConstantBufferResource[NUM_SWAP_BUFFERS] = {};*/
 	ConstantBufferData		gConstantBufferCPU = {};
 #pragma endregion
 

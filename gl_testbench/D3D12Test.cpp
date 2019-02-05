@@ -734,8 +734,8 @@ int D3D12Test::initialize(unsigned int width, unsigned int height)
 	SafeRelease2(&gRenderTargetsHeap);
 	for (int i = 0; i < NUM_SWAP_BUFFERS; i++)
 	{
-		SafeRelease2(&gDescriptorHeap[i]);
-		SafeRelease2(&gConstantBufferResource[i]);
+		/*SafeRelease2(&gDescriptorHeap[i]);
+		SafeRelease2(&gConstantBufferResource[i]);*/
 		SafeRelease2(&gRenderTargets[i]);
 	}
 
