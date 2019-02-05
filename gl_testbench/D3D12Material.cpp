@@ -9,7 +9,7 @@
 	PRIVATE FUNCTIONS
 +-+-+-+-+-+-+-+-+-+-+-+*/
 
-int D3D12Material::compileShader(ShaderType type, std::string& errString)
+int D3D12Material::compileShader(Material::ShaderType type, std::string& errString)
 {
 	//// index in the the array "shaderObject[]";
 	//GLuint shaderIdx = (GLuint)type;
@@ -50,12 +50,14 @@ int D3D12Material::compileShader(ShaderType type, std::string& errString)
 	//COMPILE_LOG(newShader, Shader, err2);
 	//shaderObjects[shaderIdx] = newShader;
 	//return 0;
+
+	return 0;
 }
 
-std::vector<std::string> expandShaderText(std::string& shaderText, ShaderType type)
-{
-
-}
+//std::vector<std::string> expandShaderText(std::string& shaderText, Material::ShaderType type)
+//{
+//
+//}
 
 
 
@@ -64,7 +66,7 @@ std::vector<std::string> expandShaderText(std::string& shaderText, ShaderType ty
 	 PUBLIC FUNCTIONS
 +-+-+-+-+-+-+-+-+-+-+-+*/
 
-void D3D12Material::setShader(const std::string& shaderFileName, ShaderType type)
+void D3D12Material::setShader(const std::string& shaderFileName, Material::ShaderType type)
 {
 	if (shaderFileNames.find(type) != shaderFileNames.end())
 	{
@@ -73,7 +75,7 @@ void D3D12Material::setShader(const std::string& shaderFileName, ShaderType type
 	shaderFileNames[type] = shaderFileName;
 }
 
-void D3D12Material::removeShader(ShaderType type)
+void D3D12Material::removeShader(Material::ShaderType type)
 {
 	//int shaderType = shaderObject
 
@@ -97,7 +99,7 @@ void D3D12Material::setDiffuse(Color c)
 
 int D3D12Material::compileMaterial(std::string& errString)
 {
-
+	return 0;
 }
 
 void D3D12Material::addConstantBuffer(std::string name, unsigned int location)
@@ -112,7 +114,7 @@ void D3D12Material::updateConstantBuffer(const void* data, size_t size, unsigned
 
 int D3D12Material::enable()
 {
-
+	return 0;
 }
 
 void D3D12Material::disable()
