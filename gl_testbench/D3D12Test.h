@@ -81,6 +81,7 @@ private:
 	ConstantBuffer* m_testConstantBuffer;
 	VertexBuffer* m_testVertexBuffer;
 
+
 #pragma endregion
 
 #pragma region MemberFunctions

@@ -1,6 +1,6 @@
 struct VSIn
 {
-	float3 pos		: POS;
+	float3 pos		: POSITION;
 	float3 color	: COLOR;
 };
 
