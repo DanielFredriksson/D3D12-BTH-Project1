@@ -1,19 +1,25 @@
-struct VS_INPUT
+struct VSIn
 {
-    float4 pos : POSITION;
-    float4 color: COLOR;
+	float3 pos		: POSITION;
+	float3 color	: COLOR;
 };
 
-struct VS_OUTPUT
+struct VSOut
 {
-    float4 pos: SV_POSITION;
-    float4 color: COLOR;
+	float4 pos		: SV_POSITION;
+	float4 color	: COLOR;
 };
 
-VS_OUTPUT main(VS_INPUT input)
+cbuffer CB : register(b0)
 {
-    VS_OUTPUT output;
-    output.pos = float4(input.pos, 1.0f);
-    output.color = input.color;
-    return output;
+	float R, G, B, A;
+}
+
+VSOut VS_main( VSIn input, uint index : SV_VertexID )
+{
+	VSOut output	= (VSOut)0;
+	output.pos		= float4( input.pos, 1.0f );
+	output.color	= float4(R, G, B, A);
+
+	return output;
 }

@@ -9,6 +9,8 @@ class Locator {
 private:
 	static SDL_Window* gWindow;
 	static ID3D12RootSignature* gRootSignature;
+	static ID3D12Device4* gDevice;
+	static ID3D12PipelineState* gPipelineState;
 
 public:
 	Locator() {}
@@ -19,7 +21,14 @@ public:
 		gWindow = window;
 	}
 	static void provide(ID3D12RootSignature* rootSignature) {
-		gRootSignature;
+		gRootSignature = rootSignature;
+	}
+	static void provide(ID3D12Device4* device) {
+		gDevice = device;
+	}
+	static void provide(ID3D12PipelineState* pipelineState) {
+		gPipelineState = pipelineState;
+
 	}
 
 	// GET
@@ -28,5 +37,11 @@ public:
 	}
 	static ID3D12RootSignature* getRootSignature() {
 		return gRootSignature;
+	}
+	static ID3D12Device4* getDevice() {
+		return gDevice;
+	}
+	static ID3D12PipelineState* getPipelineState() {
+		return gPipelineState;
 	}
 };

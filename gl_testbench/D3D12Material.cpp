@@ -3,6 +3,7 @@
 #include <d3d12.h> 
 #include <d3dcompiler.h>
 #include <dxgi.h>		// DirectX Graphics Infrastructure
+
 #include <windows.h>
 #include <streambuf>
 #include <sstream>
@@ -44,15 +45,15 @@ int D3D12Material::compileShader(ShaderType type, std::string& errString)
 	for (auto it = this->shaderDefines.at(type).begin(); it != this->shaderDefines.at(type).end(); it++)
 		shaderDefinesData += *it;
 
-	// Combine all of the 'define data' with the 'shader data' saving as 'LPCVOID'
-	LPCVOID shaderSrcData = static_cast<LPCVOID>((shaderDefinesData + shaderText).c_str());
+	// Extra step, just in case
+	std::string allDataToBeConverted = (shaderDefinesData + shaderText);
 
 
 
 	//////////////////////////////////////////////////
 	//     PARAMETER #2 ('Source Data LENGTH')     //
 	////////////////////////////////////////////////
-	SIZE_T shaderSrcDataLength = shaderText.length();
+	SIZE_T shaderSrcDataLength = static_cast<SIZE_T>(allDataToBeConverted.length());
 
 
 
@@ -83,8 +84,8 @@ int D3D12Material::compileShader(ShaderType type, std::string& errString)
 		shaderModelString = "cs_5_0";
 	}
 
-	LPCSTR entryPoint = entryPointString.c_str();
-	LPCSTR shaderModel = shaderModelString.c_str();
+	LPCSTR entryPoint = static_cast<LPCSTR>(entryPointString.c_str());
+	LPCSTR shaderModel = static_cast<LPCSTR>(shaderModelString.c_str());
 
 
 
@@ -94,8 +95,8 @@ int D3D12Material::compileShader(ShaderType type, std::string& errString)
 	ID3DBlob* shaderDataBlob;
 	ID3DBlob* errorDataBlob;
 
-	D3DCompile(
-		shaderSrcData,		// A pointer to uncompiled shader data; either ASCII HLSL code or a compiled effect.
+	if (FAILED(D3DCompile(
+		allDataToBeConverted.data(), // A pointer to uncompiled shader data; either ASCII HLSL code or a compiled effect.
 		shaderSrcDataLength,// Length of 'shaderSrcData'
 		nullptr,			// You can use this parameter for strings that specify error messages.
 		nullptr,			// An array of NULL-terminated macro definitions
@@ -106,8 +107,10 @@ int D3D12Material::compileShader(ShaderType type, std::string& errString)
 		0,					// Flags defined by D3D compile effect constants.
 		&shaderDataBlob,	// A pointer to a variable that receives a pointer to the ID3DBlob interface that you can use to access the compiled code.
 		&errorDataBlob		// A pointer to a variable that receives a pointer to the ID3DBlob interface that you can use to access compiler error messages.
-	);
-	MessageBoxA(0, (char*)errorDataBlob->GetBufferPointer(), "", 0); // Error handling
+	)))
+	{
+		MessageBoxA(0, (char*)errorDataBlob->GetBufferPointer(), "", 0); // Error handling
+	}
 
 	// THE SHADER HAS NOW BEEN SUCCESSFULLY CREATED ! ! !
 
@@ -233,10 +236,8 @@ int D3D12Material::compileMaterial(std::string& errString)
 	for (UINT i = 0; i < D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT; i++)
 		gpsd.BlendState.RenderTarget[i] = defaultRTdesc;
 
-	ID3D12Device* tempDevice;
-	Locator::getRootSignature()->GetDevice(IID_PPV_ARGS(&tempDevice));
-
-	tempDevice->CreateGraphicsPipelineState(&gpsd, IID_PPV_ARGS(&this->m_pipelineState));
+	ID3D12PipelineState* tempPointer = Locator::getPipelineState();
+	Locator::getDevice()->CreateGraphicsPipelineState(&gpsd, IID_PPV_ARGS(&tempPointer));
 
 	return 0;
 }
@@ -258,5 +259,6 @@ int D3D12Material::enable()
 
 void D3D12Material::disable()
 {
-
+	this->m_shaderDataBlob_VS->Release();
+	this->m_shaderDataBlob_PS->Release();
 }

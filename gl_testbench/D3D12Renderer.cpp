@@ -99,7 +99,7 @@ void D3D12Renderer::initShadersAndPipelineState()
 	ID3DBlob* pixelBlob;
 	errorBlob = nullptr;
 	if (FAILED(D3DCompileFromFile(
-		L"PixelShader.hlsl",		// Name
+		L"FragmentShader.hlsl",		// Name
 		nullptr,					// Macros (optional)
 		nullptr,					// Include Files (optional)
 		"PS_main",					// Entry Point
@@ -152,6 +152,8 @@ void D3D12Renderer::initShadersAndPipelineState()
 		gpsd.BlendState.RenderTarget[i] = defaultRTdesc;
 
 	m_device->CreateGraphicsPipelineState(&gpsd, IID_PPV_ARGS(&this->m_pipelineState));
+
+	Locator::provide(this->m_pipelineState);
 }
 
 void D3D12Renderer::initViewportAndScissorRect()
@@ -201,6 +203,8 @@ void D3D12Renderer::initDevice()
 	))) {
 		throw std::exception("ERROR: Failed to create Device!");
 	}
+
+	Locator::provide(this->m_device);
 	// Release
 }
 
@@ -581,7 +585,7 @@ RenderState * D3D12Renderer::makeRenderState()
 
 std::string D3D12Renderer::getShaderPath()
 {
-	return std::string("../Shaders/");
+	return std::string("../gl_testbench/");
 }
 
 std::string D3D12Renderer::getShaderExtension()
