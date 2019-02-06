@@ -598,9 +598,10 @@ ConstantBuffer * D3D12Renderer::makeConstantBuffer(std::string NAME, unsigned in
 	return nullptr;
 }
 
-Technique * D3D12Renderer::makeTechnique(Material *, RenderState *)
+Technique * D3D12Renderer::makeTechnique(Material *m, RenderState *r)
 {
-	return nullptr;
+	Technique* t = new Technique(m, r);
+	return t;
 }
 
 int D3D12Renderer::initialize(unsigned int width, unsigned int height)
@@ -668,7 +669,6 @@ void D3D12Renderer::submit(Mesh * mesh)
 
 void D3D12Renderer::frame()
 {
+
 }
-
-
 
