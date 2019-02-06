@@ -80,6 +80,7 @@ private:
 
 	ConstantBuffer* m_testBuffer;
 
+
 #pragma endregion
 
 #pragma region MemberFunctions

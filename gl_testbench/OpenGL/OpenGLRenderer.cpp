@@ -103,12 +103,10 @@ int OpenGLRenderer::initialize(unsigned int width, unsigned int height) {
 	window = SDL_CreateWindow("OpenGL", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_OPENGL);
 	context = SDL_GL_CreateContext(window);
 	SDL_GL_MakeCurrent(window, context);
-	Locator::provide(window);	// Provide to Locator - STUDENT MADE CODE.
 
 	/// ------------- TESTING
 	SDL_SysWMinfo wmInfo;
 	SDL_VERSION(&wmInfo.version);
-	SDL_GetWindowWMInfo(Locator::getSDLWindow(), &wmInfo);
 	wmInfo.info.win.window;
 	/// ------------- TESTING
 

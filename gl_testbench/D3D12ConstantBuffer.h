@@ -7,7 +7,7 @@
 
 class D3D12ConstantBuffer : public ConstantBuffer {
 public:
-	D3D12ConstantBuffer(std::string NAME, unsigned int location, ID3D12Device4 *device, IDXGISwapChain3 *swapChain, ID3D12GraphicsCommandList3*	commandList4);
+	D3D12ConstantBuffer(std::string NAME, unsigned int location);
 	~D3D12ConstantBuffer();
 	void setData(const void* data, size_t size, Material* m, unsigned int location);
 	void bind(Material*);

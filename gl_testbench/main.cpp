@@ -333,6 +333,7 @@ int main(int argc, char *argv[])
 	// ------------------------
 
 	// ------  TEST  ------ 
+	//renderer = Renderer::makeRenderer(Renderer::BACKEND::DX12);
 	renderer = Renderer::makeRenderer(Renderer::BACKEND::DX12TEST);
 	renderer->initialize(800, 600);
 	renderer->setWinTitle("Direct3D 12");

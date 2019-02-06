@@ -244,12 +244,12 @@ int D3D12Material::compileMaterial(std::string& errString)
 
 void D3D12Material::addConstantBuffer(std::string name, unsigned int location)
 {
-
+	this->constantBuffers[location] = new D3D12ConstantBuffer(name, location);
 }
 
 void D3D12Material::updateConstantBuffer(const void* data, size_t size, unsigned int location)
 {
-
+	this->constantBuffers[location]->setData(data, size, this, location);
 }
 
 int D3D12Material::enable()
@@ -259,6 +259,5 @@ int D3D12Material::enable()
 
 void D3D12Material::disable()
 {
-	this->m_shaderDataBlob_VS->Release();
-	this->m_shaderDataBlob_PS->Release();
+
 }

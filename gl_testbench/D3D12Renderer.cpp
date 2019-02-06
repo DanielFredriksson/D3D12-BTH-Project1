@@ -279,6 +279,8 @@ void D3D12Renderer::initSwapChain()
 			SafeRelease(&m_swapChain);
 		}
 	}
+
+	Locator::provide(this->m_swapChain);
 }
 
 void D3D12Renderer::initFenceAndEventHandle()

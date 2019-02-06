@@ -1,10 +1,11 @@
 #include "D3D12ConstantBuffer.h"
+#include "Locator.h"
 
-D3D12ConstantBuffer::D3D12ConstantBuffer(std::string NAME, unsigned int location, ID3D12Device4 *device, IDXGISwapChain3 *swapChain, ID3D12GraphicsCommandList3* commandList4)
+D3D12ConstantBuffer::D3D12ConstantBuffer(std::string NAME, unsigned int location)
 {
-	m_device = device;
-	m_swapChain = swapChain;
-	m_commandList4 = commandList4;
+	m_device = Locator::getDevice();
+	m_swapChain = Locator::getSwapChain();
+	m_commandList4 = Locator::getCommandList();
 
 	m_name = NAME;
 	m_location = location;
