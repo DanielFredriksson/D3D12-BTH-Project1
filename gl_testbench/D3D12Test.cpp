@@ -738,7 +738,7 @@ Mesh * D3D12Test::makeMesh()
 
 VertexBuffer * D3D12Test::makeVertexBuffer(size_t size, VertexBuffer::DATA_USAGE usage)
 {
-	return new D3D12VertexBuffer(size, gDevice5, gCommandList4);
+	return new D3D12VertexBuffer(size);
 }
 
 Texture2D * D3D12Test::makeTexture2D()

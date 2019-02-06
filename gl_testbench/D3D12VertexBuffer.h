@@ -16,7 +16,7 @@ private:
 	D3D12_VERTEX_BUFFER_VIEW	m_vertexBufferView = {};
 
 public:
-	D3D12VertexBuffer(size_t size, ID3D12Device4 *device, ID3D12GraphicsCommandList3* commandList4);
+	D3D12VertexBuffer(size_t size);
 	virtual ~D3D12VertexBuffer();
 	
 	virtual void setData(const void* data, size_t size, size_t offset);
