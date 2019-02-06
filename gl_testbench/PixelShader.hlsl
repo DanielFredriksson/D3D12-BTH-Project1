@@ -1,10 +1,10 @@
-struct VSout
+struct VSOut
 {
-	float4 position : SV_POSITION;
-	float4 color	: COLOR0;
+	float4 pos		: SV_POSITION;
+	float4 color	: COLOR;
 };
 
-float4 PS_main(VSout input) : SV_TARGET0 
+float4 PS_main( VSOut input ) : SV_TARGET0
 {
 	return input.color;
 }
