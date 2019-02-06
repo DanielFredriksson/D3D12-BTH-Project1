@@ -60,17 +60,12 @@ private:
 	ID3D12RootSignature*		gRootSignature = nullptr;
 	ID3D12PipelineState*		gPipeLineState = nullptr;
 
-	//ID3D12Resource1*			gVertexBufferResource = nullptr;
-	//D3D12_VERTEX_BUFFER_VIEW	gVertexBufferView = {};
-
 #pragma region ConstantBufferGlobals
 	struct ConstantBufferData
 	{
 		float colorChannel[4];
 	};
 
-	/*ID3D12DescriptorHeap*	gDescriptorHeap[NUM_SWAP_BUFFERS] = {};
-	ID3D12Resource1*		gConstantBufferResource[NUM_SWAP_BUFFERS] = {};*/
 	ConstantBufferData		gConstantBufferCPU = {};
 #pragma endregion
 
