@@ -1,8 +1,9 @@
 #include "D3D12Test.h"
 
-
+//make* function dependencies
 #include "D3D12Mesh.h"
 #include "D3D12ConstantBuffer.h"
+#include "D3D12VertexBuffer.h"
 
 #pragma region wndProc2
 LRESULT CALLBACK wndProc2(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -271,8 +272,8 @@ void D3D12Test::CreateViewportAndScissorRect()
 #pragma region CreateConstantBufferResources
 void D3D12Test::CreateConstantBufferResources()
 {
-	m_testBuffer = makeConstantBuffer("test", 5);
-	m_testBuffer->setData(&gConstantBufferCPU, sizeof(ConstantBufferData), nullptr, 5);
+	m_testConstantBuffer = makeConstantBuffer("test", 5);
+	m_testConstantBuffer->setData(&gConstantBufferCPU, sizeof(ConstantBufferData), nullptr, 5);
 
 	//for (int i = 0; i < NUM_SWAP_BUFFERS; i++)
 	//{
@@ -452,7 +453,7 @@ void D3D12Test::CreateShadersAndPiplelineState()
 #pragma region CreateTriangleData
 void D3D12Test::CreateTriangleData()
 {
-	Vertex triangleVertices[3] =
+	Vertex triangleVertices[6] =
 	{
 		0.0f, 0.5f, 0.0f,	//v0 pos
 		1.0f, 0.0f, 0.0f,	//v0 color
@@ -461,50 +462,20 @@ void D3D12Test::CreateTriangleData()
 		0.0f, 1.0f, 0.0f,	//v1 color
 
 		-0.5f, -0.5f, 0.0f, //v2
-		0.0f, 0.0f, 1.0f	//v2 color
+		0.0f, 0.0f, 1.0f,	//v2 color
+
+		1.0f, 0.5f, 0.0f,	//v0 pos
+		1.0f, 0.0f, 0.0f,	//v0 color
+
+		1.5f, -0.5f, 0.0f,	//v1
+		0.0f, 1.0f, 0.0f,	//v1 color
+
+		0.5f, -0.5f, 0.0f, //v2
+		0.0f, 0.0f, 1.0f,	//v2 color
 	};
 
-	//Note: using upload heaps to transfer static data like vert buffers is not 
-	//recommended. Every time the GPU needs it, the upload heap will be marshalled 
-	//over. Please read up on Default Heap usage. An upload heap is used here for 
-	//code simplicity and because there are very few vertices to actually transfer.
-	D3D12_HEAP_PROPERTIES hp = {};
-	hp.Type = D3D12_HEAP_TYPE_UPLOAD;
-	hp.CreationNodeMask = 1;
-	hp.VisibleNodeMask = 1;
-
-	D3D12_RESOURCE_DESC rd = {};
-	rd.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-	rd.Width = sizeof(triangleVertices);
-	rd.Height = 1;
-	rd.DepthOrArraySize = 1;
-	rd.MipLevels = 1;
-	rd.SampleDesc.Count = 1;
-	rd.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-
-	//Creates both a resource and an implicit heap, such that the heap is big enough
-	//to contain the entire resource and the resource is mapped to the heap. 
-	gDevice5->CreateCommittedResource(
-		&hp,
-		D3D12_HEAP_FLAG_NONE,
-		&rd,
-		D3D12_RESOURCE_STATE_GENERIC_READ,
-		nullptr,
-		IID_PPV_ARGS(&gVertexBufferResource));
-
-	gVertexBufferResource->SetName(L"vb heap");
-
-	//Copy the triangle data to the vertex buffer.
-	void* dataBegin = nullptr;
-	D3D12_RANGE range = { 0, 0 }; //We do not intend to read this resource on the CPU.
-	gVertexBufferResource->Map(0, &range, &dataBegin);
-	memcpy(dataBegin, triangleVertices, sizeof(triangleVertices));
-	gVertexBufferResource->Unmap(0, nullptr);
-
-	//Initialize vertex buffer view, used in the render call.
-	gVertexBufferView.BufferLocation = gVertexBufferResource->GetGPUVirtualAddress();
-	gVertexBufferView.StrideInBytes = sizeof(Vertex);
-	gVertexBufferView.SizeInBytes = sizeof(triangleVertices);
+	m_testVertexBuffer = makeVertexBuffer(sizeof(triangleVertices), VertexBuffer::DATA_USAGE::STATIC);
+	m_testVertexBuffer->setData(triangleVertices, sizeof(triangleVertices), sizeof(Vertex));
 }
 #pragma endregion
 
@@ -522,17 +493,7 @@ void D3D12Test::Update(int backBufferIndex)
 	}
 
 	//Update GPU memory
-	m_testBuffer->setData(&gConstantBufferCPU, sizeof(ConstantBufferData), nullptr, 5);
-
-	//void* mappedMem = nullptr;
-	//D3D12_RANGE readRange = { 0, 0 }; //We do not intend to read this resource on the CPU.
-	//if (SUCCEEDED(gConstantBufferResource[backBufferIndex]->Map(0, &readRange, &mappedMem)))
-	//{
-	//	memcpy(mappedMem, &gConstantBufferCPU, sizeof(ConstantBufferData));
-
-	//	D3D12_RANGE writeRange = { 0, sizeof(ConstantBufferData) };
-	//	gConstantBufferResource[backBufferIndex]->Unmap(0, &writeRange);
-	//}
+	m_testConstantBuffer->setData(&gConstantBufferCPU, sizeof(ConstantBufferData), nullptr, 5);
 }
 #pragma endregion
 
@@ -544,18 +505,10 @@ void D3D12Test::Render(int backBufferIndex)
 	gCommandAllocator->Reset();
 	gCommandList4->Reset(gCommandAllocator, gPipeLineState);
 
-	////Set constant buffer descriptor heap
-	//ID3D12DescriptorHeap* descriptorHeaps[] = { gDescriptorHeap[backBufferIndex] };
-	//gCommandList4->SetDescriptorHeaps(ARRAYSIZE(descriptorHeaps), descriptorHeaps);
-
 	//Set root signature
 	gCommandList4->SetGraphicsRootSignature(gRootSignature);
 
-	////Set root descriptor table to index 0 in previously set root signature
-	//gCommandList4->SetGraphicsRootDescriptorTable(0,
-	//	gDescriptorHeap[backBufferIndex]->GetGPUDescriptorHandleForHeapStart());
-
-	m_testBuffer->bind(nullptr);
+	m_testConstantBuffer->bind(nullptr);
 
 	//Set necessary states.
 	gCommandList4->RSSetViewports(1, &gViewport);
@@ -579,9 +532,9 @@ void D3D12Test::Render(int backBufferIndex)
 	gCommandList4->ClearRenderTargetView(cdh, clearColor, 0, nullptr);
 
 	gCommandList4->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	gCommandList4->IASetVertexBuffers(0, 1, &gVertexBufferView);
+	m_testVertexBuffer->bind(0, 1, 0);
 
-	gCommandList4->DrawInstanced(3, 1, 0, 0);
+	gCommandList4->DrawInstanced(6, 2, 0, 0); //6 Vertices, 2 triangles, start with vertex 0 and triangle 0
 
 	//Indicate that the back buffer will now be used to present.
 	SetResourceTransitionBarrier(gCommandList4,
@@ -609,7 +562,8 @@ void D3D12Test::Render(int backBufferIndex)
 #pragma region publicFuncs
 //----Public functions----
 D3D12Test::D3D12Test() {
-
+	m_testConstantBuffer = nullptr;
+	m_testVertexBuffer = nullptr;
 }
 
 D3D12Test::~D3D12Test() {
@@ -631,7 +585,7 @@ Mesh * D3D12Test::makeMesh()
 
 VertexBuffer * D3D12Test::makeVertexBuffer(size_t size, VertexBuffer::DATA_USAGE usage)
 {
-	return nullptr;
+	return new D3D12VertexBuffer(size, gDevice5, gCommandList4);
 }
 
 Texture2D * D3D12Test::makeTexture2D()
@@ -734,15 +688,13 @@ int D3D12Test::initialize(unsigned int width, unsigned int height)
 	SafeRelease2(&gRenderTargetsHeap);
 	for (int i = 0; i < NUM_SWAP_BUFFERS; i++)
 	{
-		/*SafeRelease2(&gDescriptorHeap[i]);
-		SafeRelease2(&gConstantBufferResource[i]);*/
 		SafeRelease2(&gRenderTargets[i]);
 	}
 
 	SafeRelease2(&gRootSignature);
 	SafeRelease2(&gPipeLineState);
 
-	SafeRelease2(&gVertexBufferResource);
+	shutdown();
 
 	return 1;
 }
@@ -759,6 +711,13 @@ void D3D12Test::present()
 
 int D3D12Test::shutdown()
 {
+	if (m_testConstantBuffer != nullptr) {
+		delete m_testConstantBuffer;
+	}
+
+	if (m_testVertexBuffer != nullptr) {
+		delete m_testVertexBuffer;
+	}
 	return 420;
 }
 

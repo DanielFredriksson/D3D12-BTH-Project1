@@ -16,7 +16,14 @@ D3D12ConstantBuffer::D3D12ConstantBuffer(std::string NAME, unsigned int location
 
 D3D12ConstantBuffer::~D3D12ConstantBuffer()
 {
-
+	for (int i = 0; i < 2; i++) {
+		if (m_descriptorHeap[i] != NULL) {
+			m_descriptorHeap[i]->Release();
+		}
+		if (m_constantBufferResource[i] != NULL) {
+			m_constantBufferResource[i]->Release();
+		}
+	}
 }
 
 void D3D12ConstantBuffer::setData(const void * data, size_t size, Material * m, unsigned int location)
@@ -52,7 +59,7 @@ void D3D12ConstantBuffer::setData(const void * data, size_t size, Material * m, 
 
 		//Create a resource heap, descriptor heap, and pointer to cbv for each frame
 		for (int i = 0; i < m_frameCount; i++) {
-			// Committed Resource
+			// Committed Resource - creates implicit heap with the heapProperties
 			if (FAILED(m_device->CreateCommittedResource(
 				&heapProperties,
 				D3D12_HEAP_FLAG_NONE,

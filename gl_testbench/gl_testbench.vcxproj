@@ -155,6 +155,7 @@
     <ClCompile Include="D3D12Material.cpp" />
     <ClCompile Include="D3D12Renderer.cpp" />
     <ClCompile Include="D3D12Test.cpp" />
+    <ClCompile Include="D3D12VertexBuffer.cpp" />
     <ClCompile Include="Locator.cpp" />
     <ClCompile Include="OpenGL\ConstantBufferGL.cpp" />
     <ClCompile Include="OpenGL\MaterialGL.cpp" />
@@ -189,6 +190,7 @@
     <ClInclude Include="D3D12Renderer.h" />
     <ClInclude Include="D3D12Test.h" />
     <ClInclude Include="D3D12Transform.h" />
+    <ClInclude Include="D3D12VertexBuffer.h" />
     <ClInclude Include="Locator.h" />
     <ClInclude Include="OpenGL\ConstantBufferGL.h" />
     <ClInclude Include="OpenGL\MaterialGL.h" />
