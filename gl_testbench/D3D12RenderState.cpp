@@ -20,5 +20,10 @@ void D3D12RenderState::set(D3D12_GRAPHICS_PIPELINE_STATE_DESC *gpsd) {
 	//Set m_wireFrame to graphics pipeline state desc
 
 	//		• Specify rasterizer behaviour
-	gpsd->RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+	if (m_wireFrame == true) {
+		gpsd->RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
+	}
+	else {
+		gpsd->RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+	}
 }

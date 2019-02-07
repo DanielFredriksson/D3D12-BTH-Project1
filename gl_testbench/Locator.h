@@ -41,7 +41,7 @@ public:
 	static ID3D12Device4* getDevice() {
 		return gDevice;
 	}
-	static ID3D12PipelineState* getPipelineState() {
+	static ID3D12PipelineState* getPipelineState() { //Remove this since it will be a seperate one for each technique, add commandAllocator instead
 		return gPipelineState;
 	}
 	static IDXGISwapChain3* getSwapChain() {

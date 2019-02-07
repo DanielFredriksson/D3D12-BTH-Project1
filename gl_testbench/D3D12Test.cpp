@@ -333,7 +333,6 @@ void D3D12Test::CreateRootSignature()
 #pragma region CreateShadersAndPipelineState
 void D3D12Test::CreateShadersAndPiplelineState()
 {
-	//WHY DOESN'T THIS WORK??
 	m_testMaterial = makeMaterial("testMaterial");
 	m_testMaterial->setShader("VertexShader.hlsl", Material::ShaderType::VS);
 	m_testMaterial->setShader("PixelShader.hlsl", Material::ShaderType::PS);
@@ -351,7 +350,7 @@ void D3D12Test::CreateShadersAndPiplelineState()
 	inputLayoutDesc.pInputElementDescs = inputElementDesc;
 	inputLayoutDesc.NumElements = ARRAYSIZE(inputElementDesc);
 
-	////// Pipline State //////
+	////// Pipline State description//////
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC gpsd = {};
 
 	//Specify pipeline stages: 
@@ -369,10 +368,9 @@ void D3D12Test::CreateShadersAndPiplelineState()
 	gpsd.SampleDesc.Count = 1;
 	gpsd.SampleMask = UINT_MAX;
 
-	//Specify rasterizer behaviour. 
-
-	//Do this in renderState instead
+	//Specify rasterizer behaviour. (render state)
 	m_testRenderState = makeRenderState();
+	m_testRenderState->setWireFrame(false);
 	D3D12RenderState * tempRS = static_cast<D3D12RenderState*> (m_testRenderState);
 
 	tempRS->set(&gpsd);
@@ -687,6 +685,7 @@ void D3D12Test::clearBuffer(unsigned int)
 
 void D3D12Test::setRenderState(RenderState *ps)
 {
+	
 }
 
 void D3D12Test::submit(Mesh * mesh)
