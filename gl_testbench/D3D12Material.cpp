@@ -208,24 +208,22 @@ int D3D12Material::compileMaterial(std::string& errString)
 	inputLayoutDesc.NumElements = ARRAYSIZE(inputElementDesc);
 
 	// Pipeline State:
-	//		• Creation
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC gpsd = {};
 	//		• Specify pipeline stages
-	gpsd.pRootSignature = Locator::getRootSignature();
-	gpsd.InputLayout = inputLayoutDesc;
-	gpsd.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-	gpsd.VS.pShaderBytecode = reinterpret_cast<void*>(this->m_shaderDataBlob_VS->GetBufferPointer());
-	gpsd.VS.BytecodeLength = this->m_shaderDataBlob_VS->GetBufferSize();
-	gpsd.PS.pShaderBytecode = reinterpret_cast<void*>(this->m_shaderDataBlob_PS->GetBufferPointer());
-	gpsd.PS.BytecodeLength = this->m_shaderDataBlob_PS->GetBufferSize();
+	this->gpsd.pRootSignature = Locator::getRootSignature();
+	this->gpsd.InputLayout = inputLayoutDesc;
+	this->gpsd.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	this->gpsd.VS.pShaderBytecode = reinterpret_cast<void*>(this->m_shaderDataBlob_VS->GetBufferPointer());
+	this->gpsd.VS.BytecodeLength = this->m_shaderDataBlob_VS->GetBufferSize();
+	this->gpsd.PS.pShaderBytecode = reinterpret_cast<void*>(this->m_shaderDataBlob_PS->GetBufferPointer());
+	this->gpsd.PS.BytecodeLength = this->m_shaderDataBlob_PS->GetBufferSize();
 	//		• Specify render target and depthstencil usage
-	gpsd.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-	gpsd.NumRenderTargets = 1;
-	gpsd.SampleDesc.Count = 1;
-	gpsd.SampleMask = UINT_MAX;
+	this->gpsd.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	this->gpsd.NumRenderTargets = 1;
+	this->gpsd.SampleDesc.Count = 1;
+	this->gpsd.SampleMask = UINT_MAX;
 	//		• Specify rasterizer behaviour
-	gpsd.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
-	gpsd.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+	this->gpsd.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+	this->gpsd.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
 	//		• Specify blend descriptions
 	D3D12_RENDER_TARGET_BLEND_DESC defaultRTdesc = {
 		false, false,
@@ -234,10 +232,7 @@ int D3D12Material::compileMaterial(std::string& errString)
 		D3D12_LOGIC_OP_NOOP, D3D12_COLOR_WRITE_ENABLE_ALL
 	};
 	for (UINT i = 0; i < D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT; i++)
-		gpsd.BlendState.RenderTarget[i] = defaultRTdesc;
-
-	ID3D12PipelineState* tempPointer = Locator::getPipelineState();
-	Locator::getDevice()->CreateGraphicsPipelineState(&gpsd, IID_PPV_ARGS(&tempPointer));
+		this->gpsd.BlendState.RenderTarget[i] = defaultRTdesc;
 
 	return 0;
 }
@@ -254,6 +249,9 @@ void D3D12Material::updateConstantBuffer(const void* data, size_t size, unsigned
 
 int D3D12Material::enable()
 {
+	ID3D12PipelineState* tempPointer = Locator::getPipelineState();
+	Locator::getDevice()->CreateGraphicsPipelineState(&this->gpsd, IID_PPV_ARGS(&tempPointer));
+
 	return 0;
 }
 
