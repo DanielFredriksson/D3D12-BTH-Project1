@@ -154,6 +154,7 @@
     <ClCompile Include="D3D12Mesh.cpp" />
     <ClCompile Include="D3D12Material.cpp" />
     <ClCompile Include="D3D12Renderer.cpp" />
+    <ClCompile Include="D3D12RenderState.cpp" />
     <ClCompile Include="D3D12Test.cpp" />
     <ClCompile Include="D3D12VertexBuffer.cpp" />
     <ClCompile Include="Locator.cpp" />
@@ -188,6 +189,7 @@
     <ClInclude Include="D3D12Mesh.h" />
     <ClInclude Include="D3D12Material.h" />
     <ClInclude Include="D3D12Renderer.h" />
+    <ClInclude Include="D3D12RenderState.h" />
     <ClInclude Include="D3D12Test.h" />
     <ClInclude Include="D3D12Transform.h" />
     <ClInclude Include="D3D12VertexBuffer.h" />
