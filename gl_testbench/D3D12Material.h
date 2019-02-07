@@ -6,13 +6,20 @@
 #include <vector>
 #include <string>
 
+#include <d3d12.h> 
+#include <d3dcompiler.h>
+#include <dxgi.h>		// DirectX Graphics Infrastructure
+#include "D3D12ConstantBuffer.h"
+
 class D3D12Material : public Material
 {
 private:
 	// map from ShaderType to GL_VERTEX_SHADER, should be static.
 	unsigned int mapShaderEnum[4];
-
 	std::string shaderNames[4];
+
+	ID3DBlob* m_shaderDataBlob_PS = nullptr;
+	ID3DBlob* m_shaderDataBlob_VS = nullptr;
 
 	// opengl shader object
 	unsigned int shaderObjects[4] = { 0,0,0,0 };
@@ -21,12 +28,14 @@ private:
 	// opengl program object
 	std::string name;
 	unsigned int program;
+
 	int compileShader(ShaderType type, std::string& errString);
 	std::vector<std::string> expandShaderText(std::string& shaderText, ShaderType type);
+	std::map<unsigned int, D3D12ConstantBuffer*> constantBuffers;
 
 public:
 	D3D12Material(std::string name) : Material() { this->name = name; }
-	virtual ~D3D12Material() {};
+	virtual ~D3D12Material() { this->m_shaderDataBlob_VS->Release(); this->m_shaderDataBlob_PS->Release(); };
 
 	// set shader name, DOES NOT COMPILE
 	virtual void setShader(const std::string& shaderFileName, ShaderType type);

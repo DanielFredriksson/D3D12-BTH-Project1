@@ -31,6 +31,9 @@
     <Filter Include="Source Files\HLSL">
       <UniqueIdentifier>{c2829abb-4b95-4f21-80c0-3405c8db7eeb}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Guides">
+      <UniqueIdentifier>{7557e884-43f9-4fff-9297-e074e5eb6e19}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -105,9 +108,6 @@
     <ClCompile Include="Locator.cpp">
       <Filter>Source Files\Extras</Filter>
     </ClCompile>
-    <ClCompile Include="D3D12Renderer.cpp">
-      <Filter>Source Files\D3D12</Filter>
-    </ClCompile>
     <ClCompile Include="D3D12Mesh.cpp">
       <Filter>Source Files\D3D12</Filter>
     </ClCompile>
@@ -115,6 +115,18 @@
       <Filter>Source Files\D3D12</Filter>
     </ClCompile>
     <ClCompile Include="D3D12Material.cpp">
+      <Filter>Source Files\D3D12</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D12ConstantBuffer.cpp">
+      <Filter>Source Files\D3D12</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D12Test.cpp">
+      <Filter>Source Files\D3D12</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D12Renderer.cpp">
+      <Filter>Source Files\D3D12</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D12VertexBuffer.cpp">
       <Filter>Source Files\D3D12</Filter>
     </ClCompile>
   </ItemGroup>
@@ -194,9 +206,6 @@
     <ClInclude Include="Locator.h">
       <Filter>Header Files\Extras</Filter>
     </ClInclude>
-    <ClInclude Include="D3D12Renderer.h">
-      <Filter>Header Files\D3D12</Filter>
-    </ClInclude>
     <ClInclude Include="D3D12Mesh.h">
       <Filter>Header Files\D3D12</Filter>
     </ClInclude>
@@ -204,6 +213,18 @@
       <Filter>Header Files\D3D12</Filter>
     </ClInclude>
     <ClInclude Include="D3D12Material.h">
+      <Filter>Header Files\D3D12</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D12ConstantBuffer.h">
+      <Filter>Header Files\D3D12</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D12Test.h">
+      <Filter>Header Files\D3D12</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D12Renderer.h">
+      <Filter>Header Files\D3D12</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D12VertexBuffer.h">
       <Filter>Header Files\D3D12</Filter>
     </ClInclude>
   </ItemGroup>
@@ -222,5 +243,10 @@
     <FxCompile Include="PixelShader.hlsl">
       <Filter>Source Files\HLSL</Filter>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="HowToCommandListsAndBundles.txt">
+      <Filter>Guides</Filter>
+    </Text>
   </ItemGroup>
 </Project>

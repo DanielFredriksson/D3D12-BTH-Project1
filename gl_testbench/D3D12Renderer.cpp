@@ -1,10 +1,10 @@
 #include "D3D12Renderer.h"
 
 #include <d3dcompiler.h>
-
 #include "D3D12Mesh.h"
 #include "D3D12Material.h"
 
+#include "Locator.h"
 
 void D3D12Renderer::getHardwareAdapter(IDXGIFactory4 * pFactory, IDXGIAdapter1 ** ppAdapter)
 {
@@ -99,7 +99,7 @@ void D3D12Renderer::initShadersAndPipelineState()
 	ID3DBlob* pixelBlob;
 	errorBlob = nullptr;
 	if (FAILED(D3DCompileFromFile(
-		L"PixelShader.hlsl",		// Name
+		L"FragmentShader.hlsl",		// Name
 		nullptr,					// Macros (optional)
 		nullptr,					// Include Files (optional)
 		"PS_main",					// Entry Point
@@ -151,7 +151,9 @@ void D3D12Renderer::initShadersAndPipelineState()
 	for (UINT i = 0; i < D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT; i++)
 		gpsd.BlendState.RenderTarget[i] = defaultRTdesc;
 
-	m_device->CreateGraphicsPipelineState(&gpsd, IID_PPV_ARGS(&m_pipelineState));
+	m_device->CreateGraphicsPipelineState(&gpsd, IID_PPV_ARGS(&this->m_pipelineState));
+
+	Locator::provide(this->m_pipelineState);
 }
 
 void D3D12Renderer::initViewportAndScissorRect()
@@ -201,6 +203,8 @@ void D3D12Renderer::initDevice()
 	))) {
 		throw std::exception("ERROR: Failed to create Device!");
 	}
+
+	Locator::provide(this->m_device);
 	// Release
 }
 
@@ -275,6 +279,8 @@ void D3D12Renderer::initSwapChain()
 			SafeRelease(&m_swapChain);
 		}
 	}
+
+	Locator::provide(this->m_swapChain);
 }
 
 void D3D12Renderer::initFenceAndEventHandle()
@@ -371,6 +377,8 @@ void D3D12Renderer::initRootSignature()
 		sBlob->GetBufferSize(),
 		IID_PPV_ARGS(&m_rootSignature)
 	);
+
+	Locator::provide(this->m_rootSignature);
 }
 
 void D3D12Renderer::initConstantBuffers()
@@ -579,12 +587,12 @@ RenderState * D3D12Renderer::makeRenderState()
 
 std::string D3D12Renderer::getShaderPath()
 {
-	return std::string();
+	return std::string("../gl_testbench/");
 }
 
 std::string D3D12Renderer::getShaderExtension()
 {
-	return std::string();
+	return std::string(".hlsl");
 }
 
 ConstantBuffer * D3D12Renderer::makeConstantBuffer(std::string NAME, unsigned int location)
@@ -592,9 +600,10 @@ ConstantBuffer * D3D12Renderer::makeConstantBuffer(std::string NAME, unsigned in
 	return nullptr;
 }
 
-Technique * D3D12Renderer::makeTechnique(Material *, RenderState *)
+Technique * D3D12Renderer::makeTechnique(Material *m, RenderState *r)
 {
-	return nullptr;
+	Technique* t = new Technique(m, r);
+	return t;
 }
 
 int D3D12Renderer::initialize(unsigned int width, unsigned int height)
@@ -662,7 +671,6 @@ void D3D12Renderer::submit(Mesh * mesh)
 
 void D3D12Renderer::frame()
 {
+	
 }
-
-
 
