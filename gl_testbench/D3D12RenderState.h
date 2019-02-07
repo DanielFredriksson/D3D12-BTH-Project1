@@ -1,5 +1,7 @@
 #pragma once
 
+#include <d3d12.h> 
+
 #include "RenderState.h"
 
 class D3D12RenderState : public RenderState {
@@ -13,4 +15,6 @@ public:
 	virtual void setWireFrame(bool state);
 
 	virtual void set();
+
+	void set(D3D12_GRAPHICS_PIPELINE_STATE_DESC *gpsd);
 };

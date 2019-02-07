@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <windows.h>
 #include <d3d12.h>
 
@@ -75,7 +76,8 @@ private:
 
 	ConstantBuffer* m_testConstantBuffer;
 	VertexBuffer* m_testVertexBuffer;
-
+	Material* m_testMaterial;
+	RenderState* m_testRenderState;
 
 #pragma endregion
 

@@ -3,8 +3,10 @@
 
 //make* function dependencies
 #include "D3D12Mesh.h"
+#include "D3D12Material.h"
 #include "D3D12ConstantBuffer.h"
 #include "D3D12VertexBuffer.h"
+#include "D3D12RenderState.h"
 
 #pragma region wndProc2
 LRESULT CALLBACK wndProc2(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -331,182 +333,13 @@ void D3D12Test::CreateRootSignature()
 #pragma region CreateShadersAndPipelineState
 void D3D12Test::CreateShadersAndPiplelineState()
 {
-	///////////////////////////////////////////
-//     PARAMETER #1 ('Source Data')     //
-/////////////////////////////////////////
-
-	std::string shaderDataRaw = R"(#define POSITION 0
-#define NORMAL 1
-#define TEXTCOORD 2
-#define TRANSLATION 5
-#define TRANSLATION_NAME TranslationBlock
-#define DIFFUSE_TINT 6
-#define DIFFUSE_TINT_NAME DiffuseColor
-struct VSIn
-{
-	float3 pos		: POS;
-	float3 color	: COLOR;
-};
-
-struct VSOut
-{
-	float4 pos		: SV_POSITION;
-	float4 color	: COLOR;
-};
-
-cbuffer CB : register(b0)
-{
-	float R, G, B, A;
-}
-
-VSOut VS_main( VSIn input, uint index : SV_VertexID )
-{
-	VSOut output	= (VSOut)0;
-	output.pos		= float4( input.pos, 1.0f );
-	output.color	= float4(R, G, B, A);
-
-	return output;
-})";
-
-	// Extra step, just in case
-
-	//////////////////////////////////////////////////
-	//     PARAMETER #2 ('Source Data LENGTH')     //
-	////////////////////////////////////////////////
-	SIZE_T shaderSrcDataLength = static_cast<SIZE_T>(shaderDataRaw.length());
-
-
-
-	///////////////////////////////////////////////////////////////
-	//     PARAMETER #6, #7 ('Entry Point', 'Shader Model')     //
-	/////////////////////////////////////////////////////////////
-	std::string entryPointString;
-	std::string shaderModelString;
-
-
-		entryPointString = "VS_main";
-		shaderModelString = "vs_5_0";
-
-	LPCSTR entryPoint = static_cast<LPCSTR>(entryPointString.c_str());
-	LPCSTR shaderModel = static_cast<LPCSTR>(shaderModelString.c_str());
-
-
-
-	///////////////////////////////////////////////
-	//     PARAMETER #10, #11 ('Blob Data')     //
-	/////////////////////////////////////////////
-	ID3DBlob* VS_shaderDataBlob;
-	ID3DBlob* errorDataBlob;
-
-	if (FAILED(D3DCompile(
-		shaderDataRaw.data(), // A pointer to uncompiled shader data; either ASCII HLSL code or a compiled effect.
-		shaderSrcDataLength,// Length of 'shaderSrcData'
-		nullptr,			// You can use this parameter for strings that specify error messages.
-		nullptr,			// An array of NULL-terminated macro definitions
-		nullptr,			// Optional. A pointer to an ID3DInclude for handling include files (ALREADY ADDED TO 'shaderSrcData')
-		entryPoint,			// The name of the shader entry point function where shader execution begins.
-		shaderModel,		// A string that specifies the shader target or set of shader features to compile against.
-		0,					// Flags defined by D3D compile constants.
-		0,					// Flags defined by D3D compile effect constants.
-		&VS_shaderDataBlob,	// A pointer to a variable that receives a pointer to the ID3DBlob interface that you can use to access the compiled code.
-		&errorDataBlob		// A pointer to a variable that receives a pointer to the ID3DBlob interface that you can use to access compiler error messages.
-	)))
-	{
-		MessageBoxA(0, (char*)errorDataBlob->GetBufferPointer(), "", 0); // Error handling
-	}
-
-	//////// Shader Compiles //////
-	//ID3DBlob* vertexBlob;
-	//D3DCompileFromFile(
-	//	L"VertexShader.hlsl", // filename
-	//	nullptr,		// optional macros
-	//	nullptr,		// optional include files
-	//	"VS_main",		// entry point
-	//	"vs_5_0",		// shader model (target)
-	//	0,				// shader compile options			// here DEBUGGING OPTIONS
-	//	0,				// effect compile options
-	//	&vertexBlob,	// double pointer to ID3DBlob		
-	//	nullptr			// pointer for Error Blob messages.
-	//					// how to use the Error blob, see here
-	//					// https://msdn.microsoft.com/en-us/library/windows/desktop/hh968107(v=vs.85).aspx
-	//);
-
-		///////////////////////////////////////////
-//     PARAMETER #1 ('Source Data')     //
-/////////////////////////////////////////
-	shaderDataRaw = R"(#define POSITION 0
-#define NORMAL 1
-#define TEXTCOORD 2
-#define TRANSLATION 5
-#define TRANSLATION_NAME TranslationBlock
-#define DIFFUSE_TINT 6
-#define DIFFUSE_TINT_NAME DiffuseColor
-struct VSOut
-{
-	float4 pos		: SV_POSITION;
-	float4 color	: COLOR;
-};
-
-float4 PS_main( VSOut input ) : SV_TARGET0
-{
-	return input.color;
-})";
-
-	//////////////////////////////////////////////////
-	//     PARAMETER #2 ('Source Data LENGTH')     //
-	////////////////////////////////////////////////
-	shaderSrcDataLength = static_cast<SIZE_T>(shaderDataRaw.length());
-
-
-
-	///////////////////////////////////////////////////////////////
-	//     PARAMETER #6, #7 ('Entry Point', 'Shader Model')     //
-	/////////////////////////////////////////////////////////////
-	entryPointString = "PS_main";
-	shaderModelString = "ps_5_0";
-
-	entryPoint = static_cast<LPCSTR>(entryPointString.c_str());
-	shaderModel = static_cast<LPCSTR>(shaderModelString.c_str());
-
-
-
-	///////////////////////////////////////////////
-	//     PARAMETER #10, #11 ('Blob Data')     //
-	/////////////////////////////////////////////
-
-	ID3DBlob* PS_shaderDataBlob;
-
-	if (FAILED(D3DCompile(
-		shaderDataRaw.data(), // A pointer to uncompiled shader data; either ASCII HLSL code or a compiled effect.
-		shaderSrcDataLength,// Length of 'shaderSrcData'
-		nullptr,			// You can use this parameter for strings that specify error messages.
-		nullptr,			// An array of NULL-terminated macro definitions
-		nullptr,			// Optional. A pointer to an ID3DInclude for handling include files (ALREADY ADDED TO 'shaderSrcData')
-		entryPoint,			// The name of the shader entry point function where shader execution begins.
-		shaderModel,		// A string that specifies the shader target or set of shader features to compile against.
-		0,					// Flags defined by D3D compile constants.
-		0,					// Flags defined by D3D compile effect constants.
-		&PS_shaderDataBlob,	// A pointer to a variable that receives a pointer to the ID3DBlob interface that you can use to access the compiled code.
-		&errorDataBlob		// A pointer to a variable that receives a pointer to the ID3DBlob interface that you can use to access compiler error messages.
-	)))
-	{
-		MessageBoxA(0, (char*)errorDataBlob->GetBufferPointer(), "", 0); // Error handling
-	}
-
-	//ID3DBlob* pixelBlob;
-	//D3DCompileFromFile(
-	//	L"PixelShader.hlsl", // filename
-	//	nullptr,		// optional macros
-	//	nullptr,		// optional include files
-	//	"PS_main",		// entry point
-	//	"ps_5_0",		// shader model (target)
-	//	0,				// shader compile options			// here DEBUGGING OPTIONS
-	//	0,				// effect compile options
-	//	&pixelBlob,		// double pointer to ID3DBlob		
-	//	nullptr			// pointer for Error Blob messages.
-	//					// how to use the Error blob, see here
-	//					// https://msdn.microsoft.com/en-us/library/windows/desktop/hh968107(v=vs.85).aspx
-	//);
+	//WHY DOESN'T THIS WORK??
+	m_testMaterial = makeMaterial("testMaterial");
+	m_testMaterial->setShader("VertexShader.hlsl", Material::ShaderType::VS);
+	m_testMaterial->setShader("PixelShader.hlsl", Material::ShaderType::PS);
+	std::string errorString;
+	m_testMaterial->compileMaterial(errorString);
+	std::cout << errorString << "\n";
 
 	////// Input Layout //////
 	D3D12_INPUT_ELEMENT_DESC inputElementDesc[] = {
@@ -521,14 +354,13 @@ float4 PS_main( VSOut input ) : SV_TARGET0
 	////// Pipline State //////
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC gpsd = {};
 
-	//Specify pipeline stages:
+	//Specify pipeline stages: 
 	gpsd.pRootSignature = gRootSignature;
 	gpsd.InputLayout = inputLayoutDesc;
 	gpsd.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-	gpsd.VS.pShaderBytecode = reinterpret_cast<void*>(VS_shaderDataBlob->GetBufferPointer());
-	gpsd.VS.BytecodeLength = VS_shaderDataBlob->GetBufferSize();
-	gpsd.PS.pShaderBytecode = reinterpret_cast<void*>(PS_shaderDataBlob->GetBufferPointer());
-	gpsd.PS.BytecodeLength = PS_shaderDataBlob->GetBufferSize();
+
+	D3D12Material *tempMat = static_cast<D3D12Material*> (m_testMaterial);
+	tempMat->enable(&gpsd);
 
 	//Specify render target and depthstencil usage.
 	gpsd.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -537,8 +369,13 @@ float4 PS_main( VSOut input ) : SV_TARGET0
 	gpsd.SampleDesc.Count = 1;
 	gpsd.SampleMask = UINT_MAX;
 
-	//Specify rasterizer behaviour.
-	gpsd.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+	//Specify rasterizer behaviour. 
+
+	//Do this in renderState instead
+	m_testRenderState = makeRenderState();
+	D3D12RenderState * tempRS = static_cast<D3D12RenderState*> (m_testRenderState);
+
+	tempRS->set(&gpsd);
 	gpsd.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
 
 	//Specify blend descriptions.
@@ -668,6 +505,8 @@ void D3D12Test::Render(int backBufferIndex)
 D3D12Test::D3D12Test() {
 	m_testConstantBuffer = nullptr;
 	m_testVertexBuffer = nullptr;
+	m_testMaterial = nullptr;
+	m_testRenderState = nullptr;
 }
 
 D3D12Test::~D3D12Test() {
@@ -679,7 +518,7 @@ D3D12Test::~D3D12Test() {
 #pragma region InheritedFunctions
 Material * D3D12Test::makeMaterial(const std::string & name)
 {
-	return nullptr;
+	return new D3D12Material(name);
 }
 
 Mesh * D3D12Test::makeMesh()
@@ -704,17 +543,17 @@ Sampler2D * D3D12Test::makeSampler2D()
 
 RenderState * D3D12Test::makeRenderState()
 {
-	return nullptr;
+	return new D3D12RenderState();
 }
 
 std::string D3D12Test::getShaderPath()
 {
-	return std::string();
+	return "";
 }
 
 std::string D3D12Test::getShaderExtension()
 {
-	return std::string();
+	return ".hlsl";
 }
 
 ConstantBuffer * D3D12Test::makeConstantBuffer(std::string NAME, unsigned int location)
@@ -821,6 +660,14 @@ int D3D12Test::shutdown()
 
 	if (m_testVertexBuffer != nullptr) {
 		delete m_testVertexBuffer;
+	}
+
+	if (m_testMaterial != nullptr) {
+		delete m_testMaterial;
+	}
+
+	if (m_testRenderState != nullptr) {
+		delete m_testRenderState;
 	}
 	return 420;
 }

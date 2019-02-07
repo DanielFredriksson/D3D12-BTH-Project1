@@ -109,6 +109,8 @@ void D3D12ConstantBuffer::bind(Material *)
 	m_commandList4->SetDescriptorHeaps(ARRAYSIZE(descriptorHeaps), descriptorHeaps);
 
 	//Set root descriptor table to index 0 in previously set root signature
-	m_commandList4->SetGraphicsRootDescriptorTable(0,
-		m_descriptorHeap[backBufferIndex]->GetGPUDescriptorHandleForHeapStart());
+	m_commandList4->SetGraphicsRootDescriptorTable(
+		0,
+		m_descriptorHeap[backBufferIndex]->GetGPUDescriptorHandleForHeapStart()
+	);
 }
