@@ -129,6 +129,9 @@
     <ClCompile Include="D3D12Sampler2D.cpp">
       <Filter>Source Files\D3D12</Filter>
     </ClCompile>
+    <ClCompile Include="D3D12Texture2D.cpp">
+      <Filter>Source Files\D3D12</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Renderer.h">
@@ -228,6 +231,9 @@
       <Filter>Header Files\D3D12</Filter>
     </ClInclude>
     <ClInclude Include="D3D12Sampler2D.h">
+      <Filter>Header Files\D3D12</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D12Texture2D.h">
       <Filter>Header Files\D3D12</Filter>
     </ClInclude>
   </ItemGroup>
