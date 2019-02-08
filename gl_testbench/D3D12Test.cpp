@@ -63,13 +63,13 @@ void D3D12Test::WaitForGpu()
 
 	//Signal and increment the fence value.
 	const UINT64 fence = gFenceValue;
-	gCommandQueue->Signal(gFence, fence);
+	ThrowIfFailed(gCommandQueue->Signal(gFence, fence));
 	gFenceValue++;
 
 	//Wait until command queue is done.
 	if (gFence->GetCompletedValue() < fence)
 	{
-		gFence->SetEventOnCompletion(fence, gEventHandle);
+		ThrowIfFailed(gFence->SetEventOnCompletion(fence, gEventHandle));
 		WaitForSingleObject(gEventHandle, INFINITE);
 	}
 }
@@ -108,10 +108,8 @@ void D3D12Test::CreateDirect3DDevice(HWND wndHandle)
 #else
 	HMODULE mD3D12 = GetModuleHandle(L"D3D12.dll");
 	PFN_D3D12_GET_DEBUG_INTERFACE f = (PFN_D3D12_GET_DEBUG_INTERFACE)GetProcAddress(mD3D12, "D3D12GetDebugInterface");
-	if (SUCCEEDED(f(IID_PPV_ARGS(&debugController))))
-	{
-		debugController->EnableDebugLayer();
-	}
+	ThrowIfFailed(f(IID_PPV_ARGS(&debugController)));
+	debugController->EnableDebugLayer();
 	SafeRelease2(&debugController);
 #endif
 #endif
@@ -120,7 +118,7 @@ void D3D12Test::CreateDirect3DDevice(HWND wndHandle)
 	IDXGIFactory6*	factory = nullptr;
 	IDXGIAdapter1*	adapter = nullptr;
 	//First a factory is created to iterate through the adapters available.
-	CreateDXGIFactory(IID_PPV_ARGS(&factory));
+	ThrowIfFailed(CreateDXGIFactory(IID_PPV_ARGS(&factory)));
 	for (UINT adapterIndex = 0;; ++adapterIndex)
 	{
 		adapter = nullptr;
@@ -151,8 +149,8 @@ void D3D12Test::CreateDirect3DDevice(HWND wndHandle)
 	else
 	{
 		//Create warp device if no adapter was found.
-		factory->EnumWarpAdapter(IID_PPV_ARGS(&adapter));
-		D3D12CreateDevice(adapter, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&gDevice5));
+		ThrowIfFailed(factory->EnumWarpAdapter(IID_PPV_ARGS(&adapter)));
+		ThrowIfFailed(D3D12CreateDevice(adapter, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&gDevice5)));
 	}
 
 	SafeRelease2(&factory);
@@ -164,26 +162,27 @@ void D3D12Test::CreateCommandInterfacesAndSwapChain(HWND wndHandle)
 {
 	//Describe and create the command queue.
 	D3D12_COMMAND_QUEUE_DESC cqd = {};
-	gDevice5->CreateCommandQueue(&cqd, IID_PPV_ARGS(&gCommandQueue));
+	ThrowIfFailed(gDevice5->CreateCommandQueue(&cqd, IID_PPV_ARGS(&gCommandQueue)));
 
 	//Create command allocator. The command allocator object corresponds
 	//to the underlying allocations in which GPU commands are stored.
-	gDevice5->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&gCommandAllocator));
+	ThrowIfFailed(gDevice5->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&gCommandAllocator)));
 
 	//Create command list.
-	gDevice5->CreateCommandList(
+	ThrowIfFailed(gDevice5->CreateCommandList(
 		0,
 		D3D12_COMMAND_LIST_TYPE_DIRECT,
 		gCommandAllocator,
 		nullptr,
-		IID_PPV_ARGS(&gCommandList4));
+		IID_PPV_ARGS(&gCommandList4)
+	));
 
 	//Command lists are created in the recording state. Since there is nothing to
 	//record right now and the main loop expects it to be closed, we close it.
-	gCommandList4->Close();
+	ThrowIfFailed(gCommandList4->Close());
 
 	IDXGIFactory5*	factory = nullptr;
-	CreateDXGIFactory(IID_PPV_ARGS(&factory));
+	ThrowIfFailed(CreateDXGIFactory(IID_PPV_ARGS(&factory)));
 
 	//Create swap chain.
 	DXGI_SWAP_CHAIN_DESC1 scDesc = {};
@@ -201,18 +200,18 @@ void D3D12Test::CreateCommandInterfacesAndSwapChain(HWND wndHandle)
 	scDesc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
 
 	IDXGISwapChain1* swapChain1 = nullptr;
-	if (SUCCEEDED(factory->CreateSwapChainForHwnd(
+	ThrowIfFailed(factory->CreateSwapChainForHwnd(
 		gCommandQueue,
 		wndHandle,
 		&scDesc,
 		nullptr,
 		nullptr,
-		&swapChain1)))
+		&swapChain1
+	));
+
+	if (SUCCEEDED(swapChain1->QueryInterface(IID_PPV_ARGS(&gSwapChain4))))
 	{
-		if (SUCCEEDED(swapChain1->QueryInterface(IID_PPV_ARGS(&gSwapChain4))))
-		{
-			gSwapChain4->Release();
-		}
+		gSwapChain4->Release();
 	}
 
 	SafeRelease2(&factory);
@@ -222,7 +221,7 @@ void D3D12Test::CreateCommandInterfacesAndSwapChain(HWND wndHandle)
 #pragma region CreateFenceAndEventHandle
 void D3D12Test::CreateFenceAndEventHandle()
 {
-	gDevice5->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&gFence));
+	ThrowIfFailed(gDevice5->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&gFence)));
 	gFenceValue = 1;
 	//Create an event handle to use for GPU synchronization.
 	gEventHandle = CreateEvent(0, false, false, 0);
@@ -237,7 +236,7 @@ void D3D12Test::CreateRenderTargets()
 	dhd.NumDescriptors = NUM_SWAP_BUFFERS;
 	dhd.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 
-	HRESULT hr = gDevice5->CreateDescriptorHeap(&dhd, IID_PPV_ARGS(&gRenderTargetsHeap));
+	ThrowIfFailed(gDevice5->CreateDescriptorHeap(&dhd, IID_PPV_ARGS(&gRenderTargetsHeap)));
 
 	//Create resources for the render targets.
 	gRenderTargetDescriptorSize = gDevice5->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
@@ -246,7 +245,7 @@ void D3D12Test::CreateRenderTargets()
 	//One RTV for each frame.
 	for (UINT n = 0; n < NUM_SWAP_BUFFERS; n++)
 	{
-		hr = gSwapChain4->GetBuffer(n, IID_PPV_ARGS(&gRenderTargets[n]));
+		ThrowIfFailed(gSwapChain4->GetBuffer(n, IID_PPV_ARGS(&gRenderTargets[n])));
 		gDevice5->CreateRenderTargetView(gRenderTargets[n], nullptr, cdh);
 		cdh.ptr += gRenderTargetDescriptorSize;
 	}
@@ -308,17 +307,19 @@ void D3D12Test::CreateRootSignature()
 	rsDesc.pStaticSamplers = nullptr;
 
 	ID3DBlob* sBlob;
-	D3D12SerializeRootSignature(
+	ThrowIfFailed(D3D12SerializeRootSignature(
 		&rsDesc,
 		D3D_ROOT_SIGNATURE_VERSION_1,
 		&sBlob,
-		nullptr);
+		nullptr
+	));
 
-	gDevice5->CreateRootSignature(
+	ThrowIfFailed(gDevice5->CreateRootSignature(
 		0,
 		sBlob->GetBufferPointer(),
 		sBlob->GetBufferSize(),
-		IID_PPV_ARGS(&gRootSignature));
+		IID_PPV_ARGS(&gRootSignature)
+	));
 
 	Locator::provide(this->gRootSignature);
 	Locator::provide(this->gDevice5);
@@ -550,7 +551,7 @@ float4 PS_main( VSOut input ) : SV_TARGET0
 	for (UINT i = 0; i < D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT; i++)
 		gpsd.BlendState.RenderTarget[i] = defaultRTdesc;
 
-	gDevice5->CreateGraphicsPipelineState(&gpsd, IID_PPV_ARGS(&gPipeLineState));
+	ThrowIfFailed(gDevice5->CreateGraphicsPipelineState(&gpsd, IID_PPV_ARGS(&gPipeLineState)));
 }
 #pragma endregion
 
@@ -609,59 +610,38 @@ void D3D12Test::Render(int backBufferIndex)
 	this->switchSwapBuffers(&cdh, gCommandList4, backBufferIndex);
 
 	// Bunldes?
-	bool useBundles = true;
+	bool useBundles = false;
 
 	// Record commands to command list
+
 	if (useBundles) {
 		// RESET
-		gBundleCommandAllocator->Reset();
-		gCommandList4->Reset(gBundleCommandAllocator, gPipeLineState);
+		ThrowIfFailed(gBundleCommandAllocator->Reset());
+		ThrowIfFailed(gCommandList4->Reset(gBundleCommandAllocator, gPipeLineState));
 
-		// NONBUNDLED COMMANDS 2.0	
-		gCommandList4->SetGraphicsRootSignature(gRootSignature);
-		gCommandList4->RSSetViewports(1, &gViewport);
-		gCommandList4->RSSetScissorRects(1, &gScissorRect);
-		gCommandList4->OMSetRenderTargets(
-			1,
-			&cdh,
-			true,
-			nullptr
-		);
-		m_testConstantBuffer->bind(nullptr);
-
-		float clearColor[] = { 0.2f, 0.2f, 0.2f, 1.0f };
-		gCommandList4->ClearRenderTargetView(cdh, clearColor, 0, nullptr);
+		// NONBUNDLED COMMANDS 2.0
+		this->recordNonBundledCommands(gCommandList4, &cdh);
 
 		//Execute the command list.
 		gCommandList4->ExecuteBundle(gBundle);
 
-		gCommandList4->Close();
+		ThrowIfFailed(gCommandList4->Close());
 	}
 	else {
 		// RESET
-		gCommandAllocator->Reset();
-		gCommandList4->Reset(gCommandAllocator, gPipeLineState);
+		ThrowIfFailed(gCommandAllocator->Reset());
+		ThrowIfFailed(gCommandList4->Reset(gCommandAllocator, gPipeLineState));
+
 		// NONBUNDLED COMMANDS
-		gCommandList4->SetGraphicsRootSignature(gRootSignature);
-		gCommandList4->RSSetViewports(1, &gViewport);
-		gCommandList4->RSSetScissorRects(1, &gScissorRect);
-		gCommandList4->OMSetRenderTargets(
-			1,
-			&cdh,
-			true,
-			nullptr
-		);
-		m_testConstantBuffer->bind(nullptr);
+		this->recordNonBundledCommands(gCommandList4, &cdh);
 
-		float clearColor[] = { 0.2f, 0.2f, 0.2f, 1.0f };
-		gCommandList4->ClearRenderTargetView(cdh, clearColor, 0, nullptr);
-
+		// BUNDLED COMMANDS
 		gCommandList4->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		m_testVertexBuffer->bind(0, 1, 0);
 		gCommandList4->DrawInstanced(6, 2, 0, 0); //6 Vertices, 2 triangles, start with vertex 0 and triangle 0
 
 		//Close the list to prepare it for execution.
-		gCommandList4->Close();
+		ThrowIfFailed(gCommandList4->Close());
 	}
 
 	// Execute the command list.
@@ -670,7 +650,7 @@ void D3D12Test::Render(int backBufferIndex)
 
 	// Present the frame.
 	DXGI_PRESENT_PARAMETERS pp = {};
-	gSwapChain4->Present1(0, 0, &pp);
+	ThrowIfFailed(gSwapChain4->Present1(0, 0, &pp));
 
 	// Wait for GPU
 	WaitForGpu();
@@ -708,57 +688,35 @@ void D3D12Test::initBundles()
 {
 	///  ------  Create Bundle Components  ------ 
 	// Create Bundle Allocator
-	if (FAILED(gDevice5->CreateCommandAllocator(
+	ThrowIfFailed(gDevice5->CreateCommandAllocator(
 		D3D12_COMMAND_LIST_TYPE_BUNDLE,
 		IID_PPV_ARGS(&gBundleAllocator)
-	)))
-	{
-		throw std::exception("NO WORKU BUNDURU.");
-	}
+	));
 
 	// Create Bundle Command Allocator
-	if (FAILED(gDevice5->CreateCommandAllocator(
+	ThrowIfFailed(gDevice5->CreateCommandAllocator(
 		D3D12_COMMAND_LIST_TYPE_DIRECT,
 		IID_PPV_ARGS(&gBundleCommandAllocator)
-	))) {
-		throw std::exception("NO WORKU BUNDURU.");
-	}
+	));
 
 	// Create the CommandList
-	if (FAILED(gDevice5->CreateCommandList(
+	ThrowIfFailed(gDevice5->CreateCommandList(
 		0,
 		D3D12_COMMAND_LIST_TYPE_BUNDLE,
 		gBundleAllocator,				// Where is the stack?
 		nullptr,
 		IID_PPV_ARGS(&gBundle)			// Where is the list?
-	))) {
-		throw std::exception("NO WORKU BUNDURU.");
-	}
+	));
 
 	// Populate the bundle!
 	this->populateBundle();
+	gBundle->Close();
 }
 
 void D3D12Test::populateBundle()
 {
-	///  ------  Record Commands ------ 
-	D3D12_CPU_DESCRIPTOR_HANDLE cdh = gRenderTargetsHeap->GetCPUDescriptorHandleForHeapStart();
-	/// NONBUNDLED COMMANDS
-	//gBundleAllocator->Reset();
-	//gBundle->Reset(gBundleAllocator, gPipeLineState);
-	//gBundle->SetGraphicsRootSignature(gRootSignature);
-	//gBundle->RSSetViewports(1, &gViewport);
-	//gBundle->RSSetScissorRects(1, &gScissorRect);
-	//gBundle->OMSetRenderTargets(
-	//	1,
-	//	&cdh,
-	//	true,
-	//	nullptr
-	//);
-	//float clearColor[] = { 0.2f, 0.2f, 0.2f, 1.0f };
-	//gBundle->ClearRenderTargetView(cdh, clearColor, 0, nullptr);
-
 	/// BUNDLED COMMANDS
+	gBundle->SetPipelineState(gPipeLineState);
 	gBundle->SetGraphicsRootSignature(gRootSignature); // Needed?
 	gBundle->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	m_testVertexBuffer->bind(0, 1, 0);
@@ -788,6 +746,27 @@ void D3D12Test::switchSwapBuffers(
 		D3D12_RESOURCE_STATE_RENDER_TARGET,	//state before
 		D3D12_RESOURCE_STATE_PRESENT		//state after
 	);
+}
+
+void D3D12Test::recordNonBundledCommands(
+	ID3D12GraphicsCommandList3 * commandList, 
+	D3D12_CPU_DESCRIPTOR_HANDLE* cdh
+)
+{
+	// NONBUNDLED COMMANDS 2.0
+	commandList->SetGraphicsRootSignature(gRootSignature);
+	commandList->RSSetViewports(1, &gViewport);
+	commandList->RSSetScissorRects(1, &gScissorRect);
+	commandList->OMSetRenderTargets(
+		1,
+		cdh,
+		true,
+		nullptr
+	);
+	m_testConstantBuffer->bind(nullptr);
+
+	float clearColor[] = { 0.2f, 0.2f, 0.2f, 1.0f };
+	commandList->ClearRenderTargetView(*cdh, clearColor, 0, nullptr);
 }
 
 #pragma endregion

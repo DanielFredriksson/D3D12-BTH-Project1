@@ -121,6 +121,8 @@ public:
 		ID3D12GraphicsCommandList3* commandList,
 		UINT backBufferIndex	
 	);
+
+	void recordNonBundledCommands(ID3D12GraphicsCommandList3* commandList, D3D12_CPU_DESCRIPTOR_HANDLE* cdh);
 	// Bundles Test!
 
 #pragma region InheritedFunctions

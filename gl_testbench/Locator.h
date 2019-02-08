@@ -5,6 +5,18 @@
 #include "D3D12Renderer.h"
 #include <d3dcompiler.h>
 
+
+inline void ThrowIfFailed(HRESULT hr) {
+	if (FAILED(hr)) {
+		// Char buffer
+		char stringBuffer[64] = {};
+		// Append data to buffer
+		sprintf_s(stringBuffer, "HRESULT of 0x%08X", static_cast<UINT>(hr));
+		// Throw!
+		throw std::runtime_error(std::string(stringBuffer));
+	}
+}
+
 class Locator {
 private:
 	static ID3D12RootSignature* gRootSignature;

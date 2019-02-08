@@ -67,6 +67,7 @@ EXAMPLE (WITHOUT ALLOCATION, SINCE THAT SHIT EASY):
 		CommandList(TYPE::BUNDLE)->FunctionA();
 		CommandList(TYPE::BUNDLE)->FunctionB();
 		CommandList(TYPE::BUNDLE)->FunctionC();
+		CommandList(TYPE::BUNDLE)->Close();
 
 	RECORD THE MAIN COMMANDLIST:
 
@@ -84,9 +85,9 @@ EXAMPLE (WITHOUT ALLOCATION, SINCE THAT SHIT EASY):
 		ADD THE BUNDLE TO THE MAIN COMMANDLIST:
 
 			CommandList(TYPE::DIRECT)->ExecuteBundle(CommandList(TYPE::BUNDLE));
+			CommandList(TYPE::DIRECT)->Close();
 
 	EXECUTE THE MAIN COMMAND:	
 
-		CommandList(TYPE::DIRECT)->Close();
 		ID3D12CommandList* ppCommandList[] = { CommandList(TYPE::DIRECT) };
 		CommandQueue(TYPE::DIRECT)->ExecuteCommandLists(ARRAYSIZE(ppCommandList), ppComandList);
