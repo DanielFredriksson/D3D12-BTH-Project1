@@ -7,6 +7,7 @@
 #include <d3dcompiler.h>
 
 #include "Renderer.h"
+#include "D3D12Bundle.h"
 
 LRESULT CALLBACK wndProc2(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam); //Window Proc callback function
 
@@ -75,6 +76,7 @@ private:
 
 	ConstantBuffer* m_testConstantBuffer;
 	VertexBuffer* m_testVertexBuffer;
+	D3D12Bundle bundle;	
 	
 #pragma endregion
 
@@ -98,32 +100,22 @@ private:
 	void CreateTriangleData();									//8. Create vertexdata
 	void CreateRootSignature();
 	void CreateConstantBufferResources();
+//	void ProvideLocatorWithPointers();
 
 	void	Update(int backBufferIndex);
 	void	Render(int backBufferIndex);
-	
+
+	void recordNonBundledCommands(ID3D12GraphicsCommandList3* commandList, D3D12_CPU_DESCRIPTOR_HANDLE* cdh);
+	void switchSwapBuffers(
+		D3D12_CPU_DESCRIPTOR_HANDLE* cdh,
+		ID3D12GraphicsCommandList3* commandList,
+		UINT backBufferIndex
+	);
 	//------------------------
 #pragma endregion
 public:
 	D3D12Test();
 	~D3D12Test();
-
-	// Bundles Test!
-	ID3D12CommandAllocator*		gBundleAllocator = nullptr;
-	ID3D12CommandAllocator*		gBundleCommandAllocator = nullptr;
-	ID3D12GraphicsCommandList3*	gBundle = nullptr;
-
-	void RenderBundle(int backBufferIndex);
-	void initBundles();
-	void populateBundle();
-	void switchSwapBuffers(
-		D3D12_CPU_DESCRIPTOR_HANDLE* cdh, 
-		ID3D12GraphicsCommandList3* commandList,
-		UINT backBufferIndex	
-	);
-
-	void recordNonBundledCommands(ID3D12GraphicsCommandList3* commandList, D3D12_CPU_DESCRIPTOR_HANDLE* cdh);
-	// Bundles Test!
 
 #pragma region InheritedFunctions
 	///  ------  Inherited Functions  ------ 

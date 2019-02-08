@@ -321,11 +321,11 @@ void D3D12Test::CreateRootSignature()
 		IID_PPV_ARGS(&gRootSignature)
 	));
 
-	Locator::provide(this->gRootSignature);
-	Locator::provide(this->gDevice5);
-	Locator::provide(this->gPipeLineState);
-	Locator::provide(this->gSwapChain4);
-	Locator::provide(this->gCommandList4);
+	Locator::provide(&this->gRootSignature);
+	Locator::provide(&this->gDevice5);
+	Locator::provide(&this->gPipeLineState);
+	Locator::provide(&this->gSwapChain4);
+	Locator::provide(&this->gCommandList4);
 }
 #pragma endregion
 
@@ -551,6 +551,7 @@ float4 PS_main( VSOut input ) : SV_TARGET0
 	for (UINT i = 0; i < D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT; i++)
 		gpsd.BlendState.RenderTarget[i] = defaultRTdesc;
 
+
 	ThrowIfFailed(gDevice5->CreateGraphicsPipelineState(&gpsd, IID_PPV_ARGS(&gPipeLineState)));
 }
 #pragma endregion
@@ -609,22 +610,23 @@ void D3D12Test::Render(int backBufferIndex)
 	D3D12_CPU_DESCRIPTOR_HANDLE cdh = gRenderTargetsHeap->GetCPUDescriptorHandleForHeapStart();
 	this->switchSwapBuffers(&cdh, gCommandList4, backBufferIndex);
 
-	// Bunldes?
-	bool useBundles = false;
+	// Bundles?
+	bool useBundles = true;
 
 	// Record commands to command list
-
 	if (useBundles) {
-		// RESET
-		ThrowIfFailed(gBundleCommandAllocator->Reset());
-		ThrowIfFailed(gCommandList4->Reset(gBundleCommandAllocator, gPipeLineState));
+		// Reset
+		this->bundle.reset(gCommandList4);
+		//ThrowIfFailed(this->bundle.bundleAllocator->Reset());
+		//ThrowIfFailed(gCommandList4->Reset(this->bundle.bundleAllocator, gPipeLineState));
 
-		// NONBUNDLED COMMANDS 2.0
+		// Record NonBundled Commands
 		this->recordNonBundledCommands(gCommandList4, &cdh);
 
-		//Execute the command list.
-		gCommandList4->ExecuteBundle(gBundle);
+		// Record Bundled Commands
+		this->bundle.appendBundleToCommandList(gCommandList4);
 
+		// Close
 		ThrowIfFailed(gCommandList4->Close());
 	}
 	else {
@@ -657,22 +659,6 @@ void D3D12Test::Render(int backBufferIndex)
 }
 #pragma endregion
 
-#pragma region RenderBundle
-void D3D12Test::RenderBundle(int backBufferIndex)
-{
-	// Execute Commands via Bundle
-//	ID3D12CommandList* listsToExecute[] = { gBundleCommandList };
-//	gCommandList4->ExecuteBundle(gBundleCommandList);	// ???
-
-	// Present the frame
-	DXGI_PRESENT_PARAMETERS pp = {};
-	gSwapChain4->Present1(0, 0, &pp);
-
-	// Wait for GPU
-	WaitForGpu();
-}
-#pragma endregion
-
 #pragma region publicFuncs
 //----Public functions----
 D3D12Test::D3D12Test() {
@@ -682,45 +668,6 @@ D3D12Test::D3D12Test() {
 
 D3D12Test::~D3D12Test() {
 
-}
-
-void D3D12Test::initBundles()
-{
-	///  ------  Create Bundle Components  ------ 
-	// Create Bundle Allocator
-	ThrowIfFailed(gDevice5->CreateCommandAllocator(
-		D3D12_COMMAND_LIST_TYPE_BUNDLE,
-		IID_PPV_ARGS(&gBundleAllocator)
-	));
-
-	// Create Bundle Command Allocator
-	ThrowIfFailed(gDevice5->CreateCommandAllocator(
-		D3D12_COMMAND_LIST_TYPE_DIRECT,
-		IID_PPV_ARGS(&gBundleCommandAllocator)
-	));
-
-	// Create the CommandList
-	ThrowIfFailed(gDevice5->CreateCommandList(
-		0,
-		D3D12_COMMAND_LIST_TYPE_BUNDLE,
-		gBundleAllocator,				// Where is the stack?
-		nullptr,
-		IID_PPV_ARGS(&gBundle)			// Where is the list?
-	));
-
-	// Populate the bundle!
-	this->populateBundle();
-	gBundle->Close();
-}
-
-void D3D12Test::populateBundle()
-{
-	/// BUNDLED COMMANDS
-	gBundle->SetPipelineState(gPipeLineState);
-	gBundle->SetGraphicsRootSignature(gRootSignature); // Needed?
-	gBundle->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	m_testVertexBuffer->bind(0, 1, 0);
-	gBundle->DrawInstanced(6, 2, 0, 0);
 }
 
 void D3D12Test::switchSwapBuffers(
@@ -736,7 +683,6 @@ void D3D12Test::switchSwapBuffers(
 		D3D12_RESOURCE_STATE_PRESENT,		//state before
 		D3D12_RESOURCE_STATE_RENDER_TARGET	//state after
 	);
-	//Record commands.
 	//Get the handle for the current render target used as back buffer.
 	cdh->ptr += gRenderTargetDescriptorSize * backBufferIndex;
 	//Indicate that the back buffer will now be used to present.
@@ -852,7 +798,7 @@ int D3D12Test::initialize(unsigned int width, unsigned int height)
 
 		CreateTriangleData();								//10. Create vertexdata
 
-		initBundles();
+		this->bundle.initialize(m_testVertexBuffer);	// Initialize Bundles
 
 		WaitForGpu();
 

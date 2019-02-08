@@ -150,6 +150,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ConstantBuffer.cpp" />
+    <ClCompile Include="D3D12Bundle.cpp" />
     <ClCompile Include="D3D12ConstantBuffer.cpp" />
     <ClCompile Include="D3D12Mesh.cpp" />
     <ClCompile Include="D3D12Material.cpp" />
@@ -184,6 +185,7 @@
   <ItemGroup>
     <ClInclude Include="..\include\stb_image.h" />
     <ClInclude Include="ConstantBuffer.h" />
+    <ClInclude Include="D3D12Bundle.h" />
     <ClInclude Include="D3D12ConstantBuffer.h" />
     <ClInclude Include="D3D12Mesh.h" />
     <ClInclude Include="D3D12Material.h" />

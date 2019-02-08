@@ -129,6 +129,9 @@
     <ClCompile Include="D3D12VertexBuffer.cpp">
       <Filter>Source Files\D3D12</Filter>
     </ClCompile>
+    <ClCompile Include="D3D12Bundle.cpp">
+      <Filter>Source Files\D3D12</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Renderer.h">
@@ -225,6 +228,9 @@
       <Filter>Header Files\D3D12</Filter>
     </ClInclude>
     <ClInclude Include="D3D12VertexBuffer.h">
+      <Filter>Header Files\D3D12</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D12Bundle.h">
       <Filter>Header Files\D3D12</Filter>
     </ClInclude>
   </ItemGroup>
