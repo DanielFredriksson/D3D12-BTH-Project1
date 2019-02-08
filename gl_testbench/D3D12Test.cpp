@@ -335,7 +335,7 @@ void D3D12Test::CreateRootSignature()
 void D3D12Test::CreateShadersAndPiplelineState()
 {
 	m_testMaterial = makeMaterial("testMaterial");
-	m_testMaterial->setShader("VertexShader.hlsl", Material::ShaderType::VS);
+	m_testMaterial->setShader("VertexShader2.hlsl", Material::ShaderType::VS);
 	m_testMaterial->setShader("PixelShader.hlsl", Material::ShaderType::PS);
 	std::string errorString;
 	m_testMaterial->compileMaterial(errorString);
@@ -351,7 +351,7 @@ void D3D12Test::CreateShadersAndPiplelineState()
 #pragma region CreateTriangleData
 void D3D12Test::CreateTriangleData()
 {
-	Vertex triangleVertices[6] =
+	Vertex triangleVertices[3] =
 	{
 		0.0f, 0.5f, 0.0f,	//v0 pos
 		1.0f, 0.0f, 0.0f,	//v0 color
@@ -361,19 +361,11 @@ void D3D12Test::CreateTriangleData()
 
 		-0.5f, -0.5f, 0.0f, //v2
 		0.0f, 0.0f, 1.0f,	//v2 color
-
-		1.0f, 0.5f, 0.0f,	//v0 pos
-		1.0f, 0.0f, 0.0f,	//v0 color
-
-		1.5f, -0.5f, 0.0f,	//v1
-		0.0f, 1.0f, 0.0f,	//v1 color
-
-		0.5f, -0.5f, 0.0f, //v2
-		0.0f, 0.0f, 1.0f,	//v2 color
 	};
 
-	m_testVertexBuffer = makeVertexBuffer(sizeof(triangleVertices), VertexBuffer::DATA_USAGE::STATIC);
-	m_testVertexBuffer->setData(triangleVertices, sizeof(triangleVertices), sizeof(Vertex));
+	m_testVertexBuffer = makeVertexBuffer(sizeof(triangleVertices) * 2, VertexBuffer::DATA_USAGE::STATIC);
+	m_testVertexBuffer->setData(triangleVertices, sizeof(triangleVertices), 0);
+	m_testVertexBuffer->setData(triangleVertices, sizeof(triangleVertices), sizeof(triangleVertices));
 }
 #pragma endregion
 
@@ -402,8 +394,7 @@ void D3D12Test::Render(int backBufferIndex)
 	//finished execution on the GPU; fences are used to ensure this (See WaitForGpu method)
 	gCommandAllocator->Reset();
 
-	m_testTechnique->enable(this);
-	//gCommandList4->Reset(gCommandAllocator, gPipeLineState);
+	m_testTechnique->enable(this); //Resets the commandList and enables the pipeline state
 
 	//Set root signature
 	gCommandList4->SetGraphicsRootSignature(gRootSignature);
@@ -594,7 +585,6 @@ int D3D12Test::initialize(unsigned int width, unsigned int height)
 	}
 
 	SafeRelease2(&gRootSignature);
-	SafeRelease2(&gPipeLineState);
 
 	shutdown();
 
@@ -609,10 +599,36 @@ void D3D12Test::setWinTitle(const char * title)
 
 void D3D12Test::present()
 {
+	//Present the frame.
+	DXGI_PRESENT_PARAMETERS pp = {};
+	gSwapChain4->Present1(0, 0, &pp);
+
+	WaitForGpu(); //Wait for GPU to finish.
+				  //NOT BEST PRACTICE, only used as such for simplicity.
 }
 
 int D3D12Test::shutdown()
 {
+	WaitForGpu();
+	CloseHandle(gEventHandle);
+	SafeRelease2(&gDevice5);
+	SafeRelease2(&gCommandQueue);
+	SafeRelease2(&gCommandAllocator);
+	SafeRelease2(&gCommandList4);
+	SafeRelease2(&gSwapChain4);
+
+	SafeRelease2(&gFence);
+
+	SafeRelease2(&gRenderTargetsHeap);
+	for (int i = 0; i < NUM_SWAP_BUFFERS; i++)
+	{
+		SafeRelease2(&gRenderTargets[i]);
+	}
+
+	SafeRelease2(&gRootSignature);
+
+
+
 	if (m_testConstantBuffer != nullptr) {
 		delete m_testConstantBuffer;
 	}
@@ -632,6 +648,7 @@ int D3D12Test::shutdown()
 	if (m_testTechnique != nullptr) {
 		delete m_testTechnique;
 	}
+
 	return 420;
 }
 
@@ -650,16 +667,96 @@ void D3D12Test::clearBuffer(unsigned int)
 
 void D3D12Test::setRenderState(RenderState *ps)
 {
-	
+
 }
 
 void D3D12Test::submit(Mesh * mesh)
 {
+	drawList2[mesh->technique].push_back(mesh);
 }
 
 void D3D12Test::frame()
 {
+	UINT backBufferIndex = gSwapChain4->GetCurrentBackBufferIndex();
+	for (auto work : drawList2)
+	{
+		for (auto mesh : work.second)
+		{
+			//Command list allocators can only be reset when the associated command lists have
+			//finished execution on the GPU; fences are used to ensure this (See WaitForGpu method)
+			gCommandAllocator->Reset();
 
+			work.first->enable(this);
+
+			//Set root signature
+			gCommandList4->SetGraphicsRootSignature(gRootSignature);
+
+
+			size_t numberElements = mesh->geometryBuffers[0].numElements;
+			//glBindTexture(GL_TEXTURE_2D, 0);
+			//for (auto t : mesh->textures)
+			//{
+			//	// we do not really know here if the sampler has been
+			//	// defined in the shader.
+			//	t.second->bind(t.first);
+			//}
+			for (auto element : mesh->geometryBuffers) {
+				mesh->bindIAVertexBuffer(element.first);
+			}
+			mesh->txBuffer->bind(work.first->getMaterial());
+			//glDrawArrays(GL_TRIANGLES, 0, numberElements);
+
+			//Set necessary states.
+			gCommandList4->RSSetViewports(1, &gViewport);
+			gCommandList4->RSSetScissorRects(1, &gScissorRect);
+
+			//Indicate that the back buffer will be used as render target.
+			SetResourceTransitionBarrier(gCommandList4,
+				gRenderTargets[backBufferIndex],
+				D3D12_RESOURCE_STATE_PRESENT,		//state before
+				D3D12_RESOURCE_STATE_RENDER_TARGET	//state after
+			);
+
+			//Record commands.
+			//Get the handle for the current render target used as back buffer.
+			D3D12_CPU_DESCRIPTOR_HANDLE cdh = gRenderTargetsHeap->GetCPUDescriptorHandleForHeapStart();
+			cdh.ptr += gRenderTargetDescriptorSize * backBufferIndex;
+
+			gCommandList4->OMSetRenderTargets(1, &cdh, true, nullptr);
+
+			gCommandList4->ClearRenderTargetView(cdh, m_clearColor, 0, nullptr);
+
+			gCommandList4->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+
+
+			gCommandList4->DrawInstanced(3 * numberElements, numberElements, 0, 0); 
+
+			//Indicate that the back buffer will now be used to present.
+			SetResourceTransitionBarrier(gCommandList4,
+				gRenderTargets[backBufferIndex],
+				D3D12_RESOURCE_STATE_RENDER_TARGET,	//state before
+				D3D12_RESOURCE_STATE_PRESENT		//state after
+			);
+
+			//Close the list to prepare it for execution.
+			gCommandList4->Close();
+
+			//Execute the command list.
+			ID3D12CommandList* listsToExecute[] = { gCommandList4 };
+			gCommandQueue->ExecuteCommandLists(ARRAYSIZE(listsToExecute), listsToExecute);
+		}
+	}
+	drawList2.clear();
+
+
+
+
+
+
+
+
+	//m_testConstantBuffer->bind(nullptr);
 }
 
 #pragma endregion

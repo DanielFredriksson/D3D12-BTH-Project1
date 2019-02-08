@@ -13,7 +13,14 @@ private:
 	//DATA_USAGE m_usage;
 
 	ID3D12Resource1*			m_vertexBufferResource = nullptr;
-	D3D12_VERTEX_BUFFER_VIEW	m_vertexBufferView = {};
+	//D3D12_VERTEX_BUFFER_VIEW	m_vertexBufferView = {};
+
+	UINT8* m_dataBegin = nullptr;    // starting position of upload buffer
+	UINT8* m_dataCurrent = nullptr;      // current position of upload buffer
+	UINT8* m_dataEnd = nullptr;      // ending position of upload buffer
+
+	HRESULT D3D12VertexBuffer::SuballocateFromBuffer(SIZE_T uSize, UINT uAlign);
+	UINT Align(UINT uLocation, UINT uAlign);
 
 public:
 	D3D12VertexBuffer(size_t size);

@@ -80,6 +80,8 @@ private:
 	RenderState* m_testRenderState;
 	Technique* m_testTechnique;
 
+	std::unordered_map<Technique*, std::vector<Mesh*>> drawList2;
+
 #pragma endregion
 
 #pragma region MemberFunctions
