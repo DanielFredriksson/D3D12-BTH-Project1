@@ -12,36 +12,37 @@ void D3D12Bundle::createD3D12BundleObjects()
 		D3D12_COMMAND_LIST_TYPE_BUNDLE,
 		IID_PPV_ARGS(&bundleAllocator)
 	));
+	bundleAllocator->SetName(L"bundleAllocator");
 
 	// Create Bundle Command Allocator
 	ThrowIfFailed(gDevice5->CreateCommandAllocator(
 		D3D12_COMMAND_LIST_TYPE_DIRECT,
 		IID_PPV_ARGS(&bundleCommandAllocator)
 	));
-
-	// Create the Bundle
-	ThrowIfFailed(gDevice5->CreateCommandList(
-		0,						
-		D3D12_COMMAND_LIST_TYPE_BUNDLE,
-		bundleAllocator,				// Where is the stack?
-		nullptr,
-		IID_PPV_ARGS(&bundle)			// Where is the list?
-	));
+	bundleCommandAllocator->SetName(L"bundleCommandAllocator");
 
 	// Closing the bundle is omitted since commands are recorded directly afterwards.
 }
 
 void D3D12Bundle::populateBundle()
 {
-	/// BUNDLED COMMANDS
-	bundle->SetPipelineState(gPipeLineState);	// Added since debug complains, but why not for normal?
+	// Create the Bundle (Created here since sample does it, will move up later when it's testable if it works)
+	ThrowIfFailed(gDevice5->CreateCommandList(
+		0,
+		D3D12_COMMAND_LIST_TYPE_BUNDLE,
+		bundleAllocator,				// Where is the stack?
+		gPipeLineState,
+		IID_PPV_ARGS(&bundle)			// Where is the list?
+	));
+	bundle->SetName(L"bundle");
 
-	bundle->SetGraphicsRootSignature(gRootSignature); // Needed?
+	/// BUNDLED COMMANDS
+//	bundle->SetGraphicsRootSignature(gRootSignature); // Needed?
 	bundle->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	gVertexBuffer->bind(0, 1, 0); 
 	bundle->DrawInstanced(6, 2, 0, 0);
 
-	//bundle->Close();
+	bundle->Close();
 }
 
 D3D12Bundle::D3D12Bundle()
@@ -77,9 +78,9 @@ void D3D12Bundle::clean()
 void D3D12Bundle::reset(ID3D12GraphicsCommandList3 * mainCommandList)
 {
 	// Reset the stack
-	ThrowIfFailed(bundleAllocator->Reset());
+	ThrowIfFailed(bundleCommandAllocator->Reset());
 	// Reset the main command list
-	ThrowIfFailed(mainCommandList->Reset(bundleAllocator, gPipeLineState));
+	ThrowIfFailed(mainCommandList->Reset(bundleCommandAllocator, gPipeLineState));
 }
 
 void D3D12Bundle::appendBundleToCommandList(ID3D12GraphicsCommandList3 * mainCommandList)

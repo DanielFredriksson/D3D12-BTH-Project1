@@ -100,7 +100,6 @@ private:
 	void CreateTriangleData();									//8. Create vertexdata
 	void CreateRootSignature();
 	void CreateConstantBufferResources();
-//	void ProvideLocatorWithPointers();
 
 	void	Update(int backBufferIndex);
 	void	Render(int backBufferIndex);
@@ -111,6 +110,7 @@ private:
 		ID3D12GraphicsCommandList3* commandList,
 		UINT backBufferIndex
 	);
+	void enableShaderBasedValidation();
 	//------------------------
 #pragma endregion
 public:

@@ -10,7 +10,7 @@ private:
 	ID3D12Device4*				gDevice5 = nullptr;
 	ID3D12PipelineState*		gPipeLineState = nullptr;
 	ID3D12RootSignature*		gRootSignature = nullptr;
-	VertexBuffer*			gVertexBuffer = nullptr;
+	VertexBuffer*				gVertexBuffer = nullptr;
 
 	void createD3D12BundleObjects();
 	void populateBundle();

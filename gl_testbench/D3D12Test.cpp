@@ -94,10 +94,10 @@ void D3D12Test::SetResourceTransitionBarrier(ID3D12GraphicsCommandList* commandL
 #pragma region CreateDirect3DDevice
 void D3D12Test::CreateDirect3DDevice(HWND wndHandle)
 {
-
 #ifdef _DEBUG
 	//Enable the D3D12 debug layer.
 	ID3D12Debug* debugController = nullptr;
+	this->enableShaderBasedValidation();
 
 #ifdef STATIC_LINK_DEBUGSTUFF
 	if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))
@@ -141,7 +141,7 @@ void D3D12Test::CreateDirect3DDevice(HWND wndHandle)
 		//Create the actual device.
 		if (SUCCEEDED(hr = D3D12CreateDevice(adapter, D3D_FEATURE_LEVEL_12_1, IID_PPV_ARGS(&gDevice5))))
 		{
-
+			gDevice5->SetName(L"Device");
 		}
 
 		SafeRelease2(&adapter);
@@ -151,6 +151,7 @@ void D3D12Test::CreateDirect3DDevice(HWND wndHandle)
 		//Create warp device if no adapter was found.
 		ThrowIfFailed(factory->EnumWarpAdapter(IID_PPV_ARGS(&adapter)));
 		ThrowIfFailed(D3D12CreateDevice(adapter, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&gDevice5)));
+		gDevice5->SetName(L"Device");
 	}
 
 	SafeRelease2(&factory);
@@ -163,10 +164,12 @@ void D3D12Test::CreateCommandInterfacesAndSwapChain(HWND wndHandle)
 	//Describe and create the command queue.
 	D3D12_COMMAND_QUEUE_DESC cqd = {};
 	ThrowIfFailed(gDevice5->CreateCommandQueue(&cqd, IID_PPV_ARGS(&gCommandQueue)));
+	gCommandQueue->SetName(L"Normal CommandQueue");
 
 	//Create command allocator. The command allocator object corresponds
 	//to the underlying allocations in which GPU commands are stored.
 	ThrowIfFailed(gDevice5->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&gCommandAllocator)));
+	gCommandAllocator->SetName(L"Normal CommandAllocator");
 
 	//Create command list.
 	ThrowIfFailed(gDevice5->CreateCommandList(
@@ -176,6 +179,7 @@ void D3D12Test::CreateCommandInterfacesAndSwapChain(HWND wndHandle)
 		nullptr,
 		IID_PPV_ARGS(&gCommandList4)
 	));
+	gCommandList4->SetName(L"Main CommandList");
 
 	//Command lists are created in the recording state. Since there is nothing to
 	//record right now and the main loop expects it to be closed, we close it.
@@ -222,6 +226,7 @@ void D3D12Test::CreateCommandInterfacesAndSwapChain(HWND wndHandle)
 void D3D12Test::CreateFenceAndEventHandle()
 {
 	ThrowIfFailed(gDevice5->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&gFence)));
+	gFence->SetName(L"Fence");
 	gFenceValue = 1;
 	//Create an event handle to use for GPU synchronization.
 	gEventHandle = CreateEvent(0, false, false, 0);
@@ -237,10 +242,12 @@ void D3D12Test::CreateRenderTargets()
 	dhd.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 
 	ThrowIfFailed(gDevice5->CreateDescriptorHeap(&dhd, IID_PPV_ARGS(&gRenderTargetsHeap)));
+	gRenderTargetsHeap->SetName(L"RenderTargetsHeap");
 
 	//Create resources for the render targets.
 	gRenderTargetDescriptorSize = gDevice5->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	D3D12_CPU_DESCRIPTOR_HANDLE cdh = gRenderTargetsHeap->GetCPUDescriptorHandleForHeapStart();
+
 
 	//One RTV for each frame.
 	for (UINT n = 0; n < NUM_SWAP_BUFFERS; n++)
@@ -248,6 +255,27 @@ void D3D12Test::CreateRenderTargets()
 		ThrowIfFailed(gSwapChain4->GetBuffer(n, IID_PPV_ARGS(&gRenderTargets[n])));
 		gDevice5->CreateRenderTargetView(gRenderTargets[n], nullptr, cdh);
 		cdh.ptr += gRenderTargetDescriptorSize;
+
+		std::string stringName;
+		if (n == 0) {
+			stringName = "RenderTarget0";
+		}
+		else {
+			stringName = "RenderTarget1";
+		}
+
+		// std::string --> char* --> wchar_t* --> LPCWSTR
+		int length = strlen(stringName.c_str());
+		wchar_t* wideStringName = new wchar_t[length]; 
+		std::mbstowcs(wideStringName, stringName.c_str(), length);
+		LPCWSTR name = wideStringName;	
+		gRenderTargets[n]->SetName(name);
+		/* 
+			An argument could be made for deleting the new'd 'wideStringName',
+			however, since it is a pointer and L"asdf" is also a pointer i assume
+			that ->setName(L"asdf") handles the destruction of L"asdf", and therefore
+			also the desctrution of a given LPCWSTR
+		*/
 	}
 }
 #pragma endregion
@@ -320,6 +348,7 @@ void D3D12Test::CreateRootSignature()
 		sBlob->GetBufferSize(),
 		IID_PPV_ARGS(&gRootSignature)
 	));
+	gRootSignature->SetName(L"RootSignature");
 
 	Locator::provide(&this->gRootSignature);
 	Locator::provide(&this->gDevice5);
@@ -553,6 +582,7 @@ float4 PS_main( VSOut input ) : SV_TARGET0
 
 
 	ThrowIfFailed(gDevice5->CreateGraphicsPipelineState(&gpsd, IID_PPV_ARGS(&gPipeLineState)));
+	gPipeLineState->SetName(L"PipeLineState");
 }
 #pragma endregion
 
@@ -611,14 +641,12 @@ void D3D12Test::Render(int backBufferIndex)
 	this->switchSwapBuffers(&cdh, gCommandList4, backBufferIndex);
 
 	// Bundles?
-	bool useBundles = true;
+	bool useBundles = false;
 
 	// Record commands to command list
 	if (useBundles) {
 		// Reset
 		this->bundle.reset(gCommandList4);
-		//ThrowIfFailed(this->bundle.bundleAllocator->Reset());
-		//ThrowIfFailed(gCommandList4->Reset(this->bundle.bundleAllocator, gPipeLineState));
 
 		// Record NonBundled Commands
 		this->recordNonBundledCommands(gCommandList4, &cdh);
@@ -626,8 +654,9 @@ void D3D12Test::Render(int backBufferIndex)
 		// Record Bundled Commands
 		this->bundle.appendBundleToCommandList(gCommandList4);
 
-		// Close
-		ThrowIfFailed(gCommandList4->Close());
+	//	gCommandList4->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	//	m_testVertexBuffer->bind(0, 1, 0);
+	//	gCommandList4->DrawInstanced(6, 2, 0, 0); //6 Vertices, 2 triangles, start with vertex 0 and triangle 0
 	}
 	else {
 		// RESET
@@ -641,10 +670,10 @@ void D3D12Test::Render(int backBufferIndex)
 		gCommandList4->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		m_testVertexBuffer->bind(0, 1, 0);
 		gCommandList4->DrawInstanced(6, 2, 0, 0); //6 Vertices, 2 triangles, start with vertex 0 and triangle 0
-
-		//Close the list to prepare it for execution.
-		ThrowIfFailed(gCommandList4->Close());
 	}
+
+	//Close the list to prepare it for execution.
+	ThrowIfFailed(gCommandList4->Close());
 
 	// Execute the command list.
 	ID3D12CommandList* listsToExecute[] = { gCommandList4 };
@@ -692,6 +721,16 @@ void D3D12Test::switchSwapBuffers(
 		D3D12_RESOURCE_STATE_RENDER_TARGET,	//state before
 		D3D12_RESOURCE_STATE_PRESENT		//state after
 	);
+}
+
+void D3D12Test::enableShaderBasedValidation()
+{
+	ID3D12Debug* pDebugController0;
+	ID3D12Debug1* pDebugController1;
+	
+	ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&pDebugController0)));
+	ThrowIfFailed(pDebugController0->QueryInterface(IID_PPV_ARGS(&pDebugController1)));
+	pDebugController1->SetEnableGPUBasedValidation(true);
 }
 
 void D3D12Test::recordNonBundledCommands(
