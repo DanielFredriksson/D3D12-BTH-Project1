@@ -7,7 +7,6 @@ D3D12Technique::D3D12Technique(Material* m, RenderState* r) : Technique(m,r) {
 	material = m;
 	renderState = r;
 
-
 	//Create pipeline state
 
 	////// Input Layout //////
@@ -53,15 +52,20 @@ D3D12Technique::D3D12Technique(Material* m, RenderState* r) : Technique(m,r) {
 	for (UINT i = 0; i < D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT; i++)
 		gpsd.BlendState.RenderTarget[i] = defaultRTdesc;
 
+	//m_pipeLineState = Locator::getPipelineState();
+
 	Locator::getDevice()->CreateGraphicsPipelineState(&gpsd, IID_PPV_ARGS(&m_pipeLineState));
 }
 
 D3D12Technique::~D3D12Technique() {
-
+	if (m_pipeLineState != nullptr) {
+		m_pipeLineState->Release();
+	}
 }
 
 void D3D12Technique::enable(Renderer* renderer) {
+	
 
-	Locator::getCommandList()->Reset(Locator::getCommandAllocator, m_pipeLineState);
+	Locator::getCommandList()->Reset(Locator::getCommandAllocator(), m_pipeLineState);
 	
 }

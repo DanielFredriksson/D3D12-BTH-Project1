@@ -78,6 +78,7 @@ private:
 	VertexBuffer* m_testVertexBuffer;
 	Material* m_testMaterial;
 	RenderState* m_testRenderState;
+	Technique* m_testTechnique;
 
 #pragma endregion
 

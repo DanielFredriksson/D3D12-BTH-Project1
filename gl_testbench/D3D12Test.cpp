@@ -7,6 +7,7 @@
 #include "D3D12ConstantBuffer.h"
 #include "D3D12VertexBuffer.h"
 #include "D3D12RenderState.h"
+#include "D3D12Technique.h"
 
 #pragma region wndProc2
 LRESULT CALLBACK wndProc2(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -324,9 +325,9 @@ void D3D12Test::CreateRootSignature()
 
 	Locator::provide(this->gRootSignature);
 	Locator::provide(this->gDevice5);
-	Locator::provide(this->gPipeLineState);
 	Locator::provide(this->gSwapChain4);
 	Locator::provide(this->gCommandList4);
+	Locator::provide(this->gCommandAllocator);
 }
 #pragma endregion
 
@@ -340,52 +341,10 @@ void D3D12Test::CreateShadersAndPiplelineState()
 	m_testMaterial->compileMaterial(errorString);
 	std::cout << errorString << "\n";
 
-	////// Input Layout //////
-	D3D12_INPUT_ELEMENT_DESC inputElementDesc[] = {
-		{ "POS", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,	D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "COLOR"	, 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
-	};
-
-	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc;
-	inputLayoutDesc.pInputElementDescs = inputElementDesc;
-	inputLayoutDesc.NumElements = ARRAYSIZE(inputElementDesc);
-
-	////// Pipline State description//////
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC gpsd = {};
-
-	//Specify pipeline stages: 
-	gpsd.pRootSignature = gRootSignature;
-	gpsd.InputLayout = inputLayoutDesc;
-	gpsd.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-
-	D3D12Material *tempMat = static_cast<D3D12Material*> (m_testMaterial);
-	tempMat->enable(&gpsd);
-
-	//Specify render target and depthstencil usage.
-	gpsd.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-	gpsd.NumRenderTargets = 1;
-
-	gpsd.SampleDesc.Count = 1;
-	gpsd.SampleMask = UINT_MAX;
-
-	//Specify rasterizer behaviour. (render state)
 	m_testRenderState = makeRenderState();
 	m_testRenderState->setWireFrame(false);
-	D3D12RenderState * tempRS = static_cast<D3D12RenderState*> (m_testRenderState);
 
-	tempRS->set(&gpsd);
-	gpsd.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
-
-	//Specify blend descriptions.
-	D3D12_RENDER_TARGET_BLEND_DESC defaultRTdesc = {
-		false, false,
-		D3D12_BLEND_ONE, D3D12_BLEND_ZERO, D3D12_BLEND_OP_ADD,
-		D3D12_BLEND_ONE, D3D12_BLEND_ZERO, D3D12_BLEND_OP_ADD,
-		D3D12_LOGIC_OP_NOOP, D3D12_COLOR_WRITE_ENABLE_ALL };
-	for (UINT i = 0; i < D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT; i++)
-		gpsd.BlendState.RenderTarget[i] = defaultRTdesc;
-
-	gDevice5->CreateGraphicsPipelineState(&gpsd, IID_PPV_ARGS(&gPipeLineState));
+	m_testTechnique = makeTechnique(m_testMaterial, m_testRenderState);
 }
 #pragma endregion
 
@@ -442,7 +401,9 @@ void D3D12Test::Render(int backBufferIndex)
 	//Command list allocators can only be reset when the associated command lists have
 	//finished execution on the GPU; fences are used to ensure this (See WaitForGpu method)
 	gCommandAllocator->Reset();
-	gCommandList4->Reset(gCommandAllocator, gPipeLineState);
+
+	m_testTechnique->enable(this);
+	//gCommandList4->Reset(gCommandAllocator, gPipeLineState);
 
 	//Set root signature
 	gCommandList4->SetGraphicsRootSignature(gRootSignature);
@@ -505,6 +466,7 @@ D3D12Test::D3D12Test() {
 	m_testVertexBuffer = nullptr;
 	m_testMaterial = nullptr;
 	m_testRenderState = nullptr;
+	m_testTechnique = nullptr;
 }
 
 D3D12Test::~D3D12Test() {
@@ -561,8 +523,7 @@ ConstantBuffer * D3D12Test::makeConstantBuffer(std::string NAME, unsigned int lo
 
 Technique * D3D12Test::makeTechnique(Material *m, RenderState *r)
 {
-	Technique* t = new Technique(m, r);
-	return t;
+	return new D3D12Technique(m, r);
 }
 
 int D3D12Test::initialize(unsigned int width, unsigned int height)
@@ -666,6 +627,10 @@ int D3D12Test::shutdown()
 
 	if (m_testRenderState != nullptr) {
 		delete m_testRenderState;
+	}
+
+	if (m_testTechnique != nullptr) {
+		delete m_testTechnique;
 	}
 	return 420;
 }
