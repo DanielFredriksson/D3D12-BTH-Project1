@@ -335,6 +335,7 @@ int main(int argc, char *argv[])
 	// ------  TEST  ------ 
 	//renderer = Renderer::makeRenderer(Renderer::BACKEND::DX12);
 	renderer = Renderer::makeRenderer(Renderer::BACKEND::DX12TEST);
+	//renderer = Renderer::makeRenderer(Renderer::BACKEND::GL45);
 	renderer->initialize(800, 600);
 	renderer->setWinTitle("Direct3D 12");
 	renderer->setClearColor(0.0f, 0.1f, 0.1f, 1.0f);

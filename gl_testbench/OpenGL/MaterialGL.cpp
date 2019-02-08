@@ -115,7 +115,7 @@ void MaterialGL::updateConstantBuffer(const void* data, size_t size, unsigned in
 void MaterialGL::removeShader(ShaderType type)
 {
 	GLuint shader = shaderObjects[(GLuint)type];
-	// check if name exists (if it doesn't there should not be a shader here.
+	// check if name exists (if it doesn't there should not be a shader here)
 	if (shaderFileNames.find(type) == shaderFileNames.end())
 	{
 		assert(shader == 0);

@@ -156,7 +156,9 @@
     <ClCompile Include="D3D12Renderer.cpp" />
     <ClCompile Include="D3D12RenderState.cpp" />
     <ClCompile Include="D3D12Technique.cpp" />
+    <ClCompile Include="D3D12Sampler2D.cpp" />
     <ClCompile Include="D3D12Test.cpp" />
+    <ClCompile Include="D3D12Texture2D.cpp" />
     <ClCompile Include="D3D12VertexBuffer.cpp" />
     <ClCompile Include="Locator.cpp" />
     <ClCompile Include="OpenGL\ConstantBufferGL.cpp" />
@@ -192,7 +194,9 @@
     <ClInclude Include="D3D12Renderer.h" />
     <ClInclude Include="D3D12RenderState.h" />
     <ClInclude Include="D3D12Technique.h" />
+    <ClInclude Include="D3D12Sampler2D.h" />
     <ClInclude Include="D3D12Test.h" />
+    <ClInclude Include="D3D12Texture2D.h" />
     <ClInclude Include="D3D12Transform.h" />
     <ClInclude Include="D3D12VertexBuffer.h" />
     <ClInclude Include="Locator.h" />

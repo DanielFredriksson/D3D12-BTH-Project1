@@ -17,6 +17,7 @@ private:
 	// map from ShaderType to GL_VERTEX_SHADER, should be static.
 	unsigned int mapShaderEnum[4];
 	std::string shaderNames[4];
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC gpsd;
 
 	ID3DBlob* m_shaderDataBlob_PS = nullptr;
 	ID3DBlob* m_shaderDataBlob_VS = nullptr;
