@@ -153,7 +153,7 @@ void D3D12Renderer::initShadersAndPipelineState()
 
 	m_device->CreateGraphicsPipelineState(&gpsd, IID_PPV_ARGS(&this->m_pipelineState));
 
-	Locator::provide(this->m_pipelineState);
+	//Locator::provide(this->m_pipelineState);
 }
 
 void D3D12Renderer::initViewportAndScissorRect()

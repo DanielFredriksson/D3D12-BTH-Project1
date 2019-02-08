@@ -340,9 +340,9 @@ int main(int argc, char *argv[])
 	renderer->setWinTitle("Direct3D 12");
 	renderer->setClearColor(0.0f, 0.1f, 0.1f, 1.0f);
 
-	//initialiseTestbench();
-	//run();
-	//shutdown();
+	/*initialiseTestbench();
+	run();
+	shutdown();*/
 	// --------------------
 
 
