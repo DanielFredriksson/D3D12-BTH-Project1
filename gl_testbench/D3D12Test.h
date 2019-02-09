@@ -79,7 +79,6 @@ private:
 	RenderState* m_testRenderState;
 	Technique* m_testTechnique;
 	D3D12Bundle bundle;	
-	bool firstFrame = true;
 	
 #pragma endregion
 
@@ -108,11 +107,6 @@ private:
 	void	Render(int backBufferIndex);
 
 	void recordNonBundledCommands(ID3D12GraphicsCommandList3* commandList, D3D12_CPU_DESCRIPTOR_HANDLE* cdh);
-	void switchSwapBuffers(
-		D3D12_CPU_DESCRIPTOR_HANDLE* cdh,
-		ID3D12GraphicsCommandList3* commandList,
-		UINT backBufferIndex
-	);
 	void setBackBufferToRender(D3D12_CPU_DESCRIPTOR_HANDLE* cdh, ID3D12GraphicsCommandList3* commandList, UINT backBufferIndex);
 	void setBackBufferToDisplay(D3D12_CPU_DESCRIPTOR_HANDLE* cdh, ID3D12GraphicsCommandList3* commandList, UINT backBufferIndex);
 	void enableShaderBasedValidation();

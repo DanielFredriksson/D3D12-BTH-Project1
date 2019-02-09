@@ -21,6 +21,7 @@ public:
 	
 	virtual void setData(const void* data, size_t size, size_t offset);
 	virtual void bind(size_t offset, size_t size, unsigned int location);
+	void bindBundle(ID3D12GraphicsCommandList* commandList, size_t offset, size_t size, unsigned int location);
 	virtual void unbind();
 	virtual size_t getSize();
 };

@@ -3,7 +3,6 @@
 #include "Locator.h"
 #include <d3d12.h>
 
-
 void D3D12Bundle::createD3D12BundleObjects()
 {
 	///  ------  Create Bundle Components  ------ 
@@ -24,7 +23,11 @@ void D3D12Bundle::createD3D12BundleObjects()
 	// Closing the bundle is omitted since commands are recorded directly afterwards.
 }
 
-void D3D12Bundle::populateBundle()
+void D3D12Bundle::populateBundle(
+	D3D12_VIEWPORT*				 pViewPort,
+	D3D12_RECT*					 pRect,
+	D3D12_CPU_DESCRIPTOR_HANDLE* cdh,
+	ConstantBuffer*				 pCB)
 {
 	// Create the Bundle (Created here since sample does it, will move up later when it's testable if it works)
 	ThrowIfFailed(gDevice5->CreateCommandList(
@@ -37,9 +40,10 @@ void D3D12Bundle::populateBundle()
 	bundle->SetName(L"bundle");
 
 	/// BUNDLED COMMANDS
-//	bundle->SetGraphicsRootSignature(gRootSignature); // Needed?
+	bundle->SetGraphicsRootSignature(gRootSignature);
 	bundle->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	gVertexBuffer->bind(0, 1, 0); 
+	static_cast<D3D12ConstantBuffer*>(pCB)->bindBundle(bundle, nullptr);
+	static_cast<D3D12VertexBuffer*>(gVertexBuffer)->bindBundle(bundle, 0, 1, 0);
 	bundle->DrawInstanced(6, 2, 0, 0);
 
 	bundle->Close();
@@ -54,7 +58,13 @@ D3D12Bundle::~D3D12Bundle()
 	this->clean();
 }
 
-void D3D12Bundle::initialize(VertexBuffer* pVertexBuffer)
+void D3D12Bundle::initialize(
+	VertexBuffer*				 pVertexBuffer,
+	D3D12_VIEWPORT*				 pViewPort,
+	D3D12_RECT*					 pRect,
+	D3D12_CPU_DESCRIPTOR_HANDLE* pcdh,
+	ConstantBuffer*				 pCB
+)
 {
 	// Set Global Objects
 	this->gDevice5 = Locator::getDevice();
@@ -64,7 +74,12 @@ void D3D12Bundle::initialize(VertexBuffer* pVertexBuffer)
 
 	// Create and populate bundles
 	this->createD3D12BundleObjects();
-	this->populateBundle();
+	this->populateBundle(
+		pViewPort,
+		pRect,
+		pcdh,
+		pCB
+	);
 }
 
 void D3D12Bundle::clean()

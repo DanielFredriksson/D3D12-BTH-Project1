@@ -637,70 +637,41 @@ void D3D12Test::Update(int backBufferIndex)
 #pragma region Render
 void D3D12Test::Render(int backBufferIndex)
 {
-	D3D12_CPU_DESCRIPTOR_HANDLE cdh = gRenderTargetsHeap->GetCPUDescriptorHandleForHeapStart();
-
-	// Bundles?
-	bool useBundles = false;
-
-
-	// Record commands to command list
-	if (useBundles) {
+	/// Handle all commands and then close the commandlsit
+	{
+		D3D12_CPU_DESCRIPTOR_HANDLE cdh = gRenderTargetsHeap->GetCPUDescriptorHandleForHeapStart();
+		
 		// Reset (Open Command List)
 		this->bundle.reset(gCommandList4);
 
-		// Switch Front & Back Buffer
-		if (!this->firstFrame) {
-			this->switchSwapBuffers(&cdh, gCommandList4, backBufferIndex);
-		}
-
-		// Record NonBundled Commands
-		this->recordNonBundledCommands(gCommandList4, &cdh);
-
-		//gCommandList4->DrawInstanced(6, 2, 0, 0); //6 Vertices, 2 triangles, start with vertex 0 and triangle 0
-
-		// Record Bundled Commands
-		this->bundle.appendBundleToCommandList(gCommandList4);
-
-	//	gCommandList4->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	//	m_testVertexBuffer->bind(0, 1, 0);
-	//	gCommandList4->DrawInstanced(6, 2, 0, 0); //6 Vertices, 2 triangles, start with vertex 0 and triangle 0
-	}
-	else {
-		// RESET (Open Command List)
-		ThrowIfFailed(gCommandAllocator->Reset());
-		ThrowIfFailed(gCommandList4->Reset(gCommandAllocator, gPipeLineState));
-
+		// Set Back Buffer to Render
 		this->setBackBufferToRender(&cdh, gCommandList4, backBufferIndex);
 
-		// SWITCH FRONT & BACKBUFFER
-		//if (!this->firstFrame) {
-		//	this->switchSwapBuffers(&cdh, gCommandList4, backBufferIndex);
-		//}
-		
-		// NONBUNDLED COMMANDS
-		this->recordNonBundledCommands(gCommandList4, &cdh);
+			// Append Non-Bundled Commands to the commandlist
+			this->recordNonBundledCommands(gCommandList4, &cdh);
 
-		// BUNDLED COMMANDS
-		gCommandList4->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		m_testVertexBuffer->bind(0, 1, 0);
-		gCommandList4->DrawInstanced(6, 2, 0, 0); //6 Vertices, 2 triangles, start with vertex 0 and triangle 0
+			// Append Bundled Commands to the commandlist
+			this->bundle.appendBundleToCommandList(gCommandList4);
 
+		// Set Back Buffer To Display
 		this->setBackBufferToDisplay(&cdh, gCommandList4, backBufferIndex);
+
+		//Close the list to prepare it for execution.
+		ThrowIfFailed(gCommandList4->Close());
 	}
 
-	//Close the list to prepare it for execution.
-	ThrowIfFailed(gCommandList4->Close());
+	/// Execute Command List & Present Frame
+	{
+		// Execute the command list.
+		ID3D12CommandList* listsToExecute[] = { gCommandList4 };
+		gCommandQueue->ExecuteCommandLists(ARRAYSIZE(listsToExecute), listsToExecute);
 
-	// Execute the command list.
-	ID3D12CommandList* listsToExecute[] = { gCommandList4 };
-	gCommandQueue->ExecuteCommandLists(ARRAYSIZE(listsToExecute), listsToExecute);
-
-	// Present the frame.
-	DXGI_PRESENT_PARAMETERS pp = {};
-	ThrowIfFailed(gSwapChain4->Present1(0, 0, &pp));
-
-	// Wait for GPU
-	this->firstFrame = false;
+		// Present the frame.
+		DXGI_PRESENT_PARAMETERS pp = {};
+		ThrowIfFailed(gSwapChain4->Present1(0, 0, &pp));
+	}
+	
+	/// Wait for GPU
 	WaitForGpu();
 }
 #pragma endregion
@@ -765,8 +736,12 @@ void D3D12Test::recordNonBundledCommands(
 	D3D12_CPU_DESCRIPTOR_HANDLE* cdh
 )
 {
+	/*
+	Every API-CALL that can be called by bundles does so, the API Commands
+	in this function are not compatible with bundles and therefore must 
+	be recorded 'normally'
+	*/
 	// NONBUNDLED COMMANDS 2.0
-	commandList->SetGraphicsRootSignature(gRootSignature);
 	commandList->RSSetViewports(1, &gViewport);
 	commandList->RSSetScissorRects(1, &gScissorRect);
 	commandList->OMSetRenderTargets(
@@ -775,8 +750,6 @@ void D3D12Test::recordNonBundledCommands(
 		true,
 		nullptr
 	);
-	m_testConstantBuffer->bind(nullptr);
-
 	float clearColor[] = { 0.2f, 0.2f, 0.2f, 1.0f };
 	commandList->ClearRenderTargetView(*cdh, clearColor, 0, nullptr);
 }
@@ -864,7 +837,13 @@ int D3D12Test::initialize(unsigned int width, unsigned int height)
 
 		CreateTriangleData();								//10. Create vertexdata
 
-		this->bundle.initialize(m_testVertexBuffer);	// Initialize Bundles
+		this->bundle.initialize(				// Initialize Bundles
+			m_testVertexBuffer,
+			&gViewport,
+			&gScissorRect,
+			&gRenderTargetsHeap->GetCPUDescriptorHandleForHeapStart(),
+			m_testConstantBuffer		
+		);	
 
 		WaitForGpu();
 

@@ -2,6 +2,7 @@
 
 #include <d3d12.h>
 #include "D3D12VertexBuffer.h"
+#include "D3D12ConstantBuffer.h"
 
 class D3D12Bundle {
 private:
@@ -13,7 +14,12 @@ private:
 	VertexBuffer*				gVertexBuffer = nullptr;
 
 	void createD3D12BundleObjects();
-	void populateBundle();
+	void populateBundle(
+		D3D12_VIEWPORT*				 pViewPort,
+		D3D12_RECT*					 pRect,
+		D3D12_CPU_DESCRIPTOR_HANDLE* pcdh,
+		ConstantBuffer*				 pCB
+	);
 
 public:
 	// Internal Objects
@@ -28,7 +34,13 @@ public:
 	/*
 	- Creates a D3D12 Bundle and populates it with pre-determined API-Calls.
 	*/
-	void initialize(VertexBuffer* pVertexBuffer);
+	void initialize(
+		VertexBuffer*				pVertexBuffer,
+		D3D12_VIEWPORT*				 pViewPort,
+		D3D12_RECT*					 pRect,
+		D3D12_CPU_DESCRIPTOR_HANDLE* pcdh,
+		ConstantBuffer*				 pCB
+	);
 	/*
 	- Releases internal D3D12 objects.
 	- Clean is automatically called when the destructor is executed

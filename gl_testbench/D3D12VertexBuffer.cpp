@@ -65,6 +65,11 @@ void D3D12VertexBuffer::bind(size_t offset, size_t size, unsigned int location) 
 	m_commandList4->IASetVertexBuffers((UINT)offset, (UINT)size, &m_vertexBufferView);
 }
 
+void D3D12VertexBuffer::bindBundle(ID3D12GraphicsCommandList* commandList, size_t offset, size_t size, unsigned int location)
+{
+	commandList->IASetVertexBuffers((UINT)offset, (UINT)size, &m_vertexBufferView);
+}
+
 void D3D12VertexBuffer::unbind() {
 
 }
