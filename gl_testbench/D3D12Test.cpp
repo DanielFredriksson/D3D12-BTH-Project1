@@ -256,6 +256,7 @@ void D3D12Test::CreateRenderTargets()
 		gDevice5->CreateRenderTargetView(gRenderTargets[n], nullptr, cdh);
 		cdh.ptr += gRenderTargetDescriptorSize;
 
+		// Setting Name for Debugging Purposes
 		std::string stringName;
 		if (n == 0) {
 			stringName = "RenderTarget0";
@@ -636,20 +637,26 @@ void D3D12Test::Update(int backBufferIndex)
 #pragma region Render
 void D3D12Test::Render(int backBufferIndex)
 {
-	// Swap Front and Back Buffers
 	D3D12_CPU_DESCRIPTOR_HANDLE cdh = gRenderTargetsHeap->GetCPUDescriptorHandleForHeapStart();
-	this->switchSwapBuffers(&cdh, gCommandList4, backBufferIndex);
 
 	// Bundles?
 	bool useBundles = false;
 
+
 	// Record commands to command list
 	if (useBundles) {
-		// Reset
+		// Reset (Open Command List)
 		this->bundle.reset(gCommandList4);
+
+		// Switch Front & Back Buffer
+		if (!this->firstFrame) {
+			this->switchSwapBuffers(&cdh, gCommandList4, backBufferIndex);
+		}
 
 		// Record NonBundled Commands
 		this->recordNonBundledCommands(gCommandList4, &cdh);
+
+		//gCommandList4->DrawInstanced(6, 2, 0, 0); //6 Vertices, 2 triangles, start with vertex 0 and triangle 0
 
 		// Record Bundled Commands
 		this->bundle.appendBundleToCommandList(gCommandList4);
@@ -659,10 +666,17 @@ void D3D12Test::Render(int backBufferIndex)
 	//	gCommandList4->DrawInstanced(6, 2, 0, 0); //6 Vertices, 2 triangles, start with vertex 0 and triangle 0
 	}
 	else {
-		// RESET
+		// RESET (Open Command List)
 		ThrowIfFailed(gCommandAllocator->Reset());
 		ThrowIfFailed(gCommandList4->Reset(gCommandAllocator, gPipeLineState));
 
+		this->setBackBufferToRender(&cdh, gCommandList4, backBufferIndex);
+
+		// SWITCH FRONT & BACKBUFFER
+		//if (!this->firstFrame) {
+		//	this->switchSwapBuffers(&cdh, gCommandList4, backBufferIndex);
+		//}
+		
 		// NONBUNDLED COMMANDS
 		this->recordNonBundledCommands(gCommandList4, &cdh);
 
@@ -670,6 +684,8 @@ void D3D12Test::Render(int backBufferIndex)
 		gCommandList4->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		m_testVertexBuffer->bind(0, 1, 0);
 		gCommandList4->DrawInstanced(6, 2, 0, 0); //6 Vertices, 2 triangles, start with vertex 0 and triangle 0
+
+		this->setBackBufferToDisplay(&cdh, gCommandList4, backBufferIndex);
 	}
 
 	//Close the list to prepare it for execution.
@@ -684,6 +700,7 @@ void D3D12Test::Render(int backBufferIndex)
 	ThrowIfFailed(gSwapChain4->Present1(0, 0, &pp));
 
 	// Wait for GPU
+	this->firstFrame = false;
 	WaitForGpu();
 }
 #pragma endregion
@@ -699,21 +716,31 @@ D3D12Test::~D3D12Test() {
 
 }
 
-void D3D12Test::switchSwapBuffers(
-	D3D12_CPU_DESCRIPTOR_HANDLE* cdh, 
+void D3D12Test::setBackBufferToRender(
+	D3D12_CPU_DESCRIPTOR_HANDLE* cdh,
 	ID3D12GraphicsCommandList3* commandList,
 	UINT backBufferIndex
 )
 {
-	////Indicate that the back buffer will be used as render target.
+	///  --------------  OLD  --------------
+	//Indicate that the back buffer will be used as render target.
 	SetResourceTransitionBarrier(
 		gCommandList4,
 		gRenderTargets[backBufferIndex],
 		D3D12_RESOURCE_STATE_PRESENT,		//state before
 		D3D12_RESOURCE_STATE_RENDER_TARGET	//state after
 	);
+
 	//Get the handle for the current render target used as back buffer.
 	cdh->ptr += gRenderTargetDescriptorSize * backBufferIndex;
+}
+
+void D3D12Test::setBackBufferToDisplay(
+	D3D12_CPU_DESCRIPTOR_HANDLE* cdh,
+	ID3D12GraphicsCommandList3* commandList,
+	UINT backBufferIndex
+)
+{
 	//Indicate that the back buffer will now be used to present.
 	SetResourceTransitionBarrier(
 		gCommandList4,
@@ -856,7 +883,6 @@ int D3D12Test::initialize(unsigned int width, unsigned int height)
 
 				Update(backBufferIndex);
 				Render(backBufferIndex);
-			//	RenderBundle(backBufferIndex);
 			}
 		}
 	}

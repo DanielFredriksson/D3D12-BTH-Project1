@@ -79,6 +79,7 @@ private:
 	RenderState* m_testRenderState;
 	Technique* m_testTechnique;
 	D3D12Bundle bundle;	
+	bool firstFrame = true;
 	
 #pragma endregion
 
@@ -112,6 +113,8 @@ private:
 		ID3D12GraphicsCommandList3* commandList,
 		UINT backBufferIndex
 	);
+	void setBackBufferToRender(D3D12_CPU_DESCRIPTOR_HANDLE* cdh, ID3D12GraphicsCommandList3* commandList, UINT backBufferIndex);
+	void setBackBufferToDisplay(D3D12_CPU_DESCRIPTOR_HANDLE* cdh, ID3D12GraphicsCommandList3* commandList, UINT backBufferIndex);
 	void enableShaderBasedValidation();
 	//------------------------
 #pragma endregion
