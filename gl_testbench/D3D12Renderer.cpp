@@ -238,6 +238,8 @@ void D3D12Renderer::initCommandQueue()
 	//Command lists are created in the recording state. Since there is nothing to
 	//record right now and the main loop expects it to be closed, we close it.
 	m_commandList->Close();
+
+	Locator::provide(this->m_commandQueue);
 }
 
 void D3D12Renderer::initSwapChain()
