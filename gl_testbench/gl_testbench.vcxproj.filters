@@ -129,6 +129,30 @@
     <ClCompile Include="D3D12VertexBuffer.cpp">
       <Filter>Source Files\D3D12</Filter>
     </ClCompile>
+    <ClCompile Include="D3D12RenderState.cpp">
+      <Filter>Source Files\D3D12</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D12Technique.cpp">
+      <Filter>Source Files\D3D12</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D12Sampler2D.cpp">
+      <Filter>Source Files\D3D12</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D12Texture2D.cpp">
+      <Filter>Source Files\D3D12</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D12ConstantBuffer.cpp">
+      <Filter>Source Files\D3D12</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D12Test.cpp">
+      <Filter>Source Files\D3D12</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D12Renderer.cpp">
+      <Filter>Source Files\D3D12</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D12VertexBuffer.cpp">
+      <Filter>Source Files\D3D12</Filter>
+    </ClCompile>
     <ClCompile Include="D3D12Bundle.cpp">
       <Filter>Source Files\D3D12</Filter>
     </ClCompile>
@@ -216,6 +240,30 @@
       <Filter>Header Files\D3D12</Filter>
     </ClInclude>
     <ClInclude Include="D3D12Material.h">
+      <Filter>Header Files\D3D12</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D12ConstantBuffer.h">
+      <Filter>Header Files\D3D12</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D12Test.h">
+      <Filter>Header Files\D3D12</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D12Renderer.h">
+      <Filter>Header Files\D3D12</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D12VertexBuffer.h">
+      <Filter>Header Files\D3D12</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D12RenderState.h">
+      <Filter>Header Files\D3D12</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D12Technique.h">
+      <Filter>Header Files\D3D12</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D12Sampler2D.h">
+      <Filter>Header Files\D3D12</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D12Texture2D.h">
       <Filter>Header Files\D3D12</Filter>
     </ClInclude>
     <ClInclude Include="D3D12ConstantBuffer.h">

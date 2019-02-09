@@ -73,9 +73,11 @@ private:
 #pragma region OwnVariables
 
 	float m_clearColor[4] = { 0,0,0,0 };
-
 	ConstantBuffer* m_testConstantBuffer;
 	VertexBuffer* m_testVertexBuffer;
+	Material* m_testMaterial;
+	RenderState* m_testRenderState;
+	Technique* m_testTechnique;
 	D3D12Bundle bundle;	
 	
 #pragma endregion

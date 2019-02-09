@@ -31,7 +31,7 @@ void D3D12ConstantBuffer::setData(const void * data, size_t size, Material * m, 
 {
 	//if this is the first time we are running setData - do this.
 	if (!m_hasBeenInitialized) {
-		for (int i = 0; i < m_frameCount; i++)
+		for (unsigned int i = 0; i < m_frameCount; i++)
 		{
 			D3D12_DESCRIPTOR_HEAP_DESC heapDescriptorDesc = {};
 			heapDescriptorDesc.NumDescriptors = 1;
@@ -59,7 +59,7 @@ void D3D12ConstantBuffer::setData(const void * data, size_t size, Material * m, 
 		resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 
 		//Create a resource heap, descriptor heap, and pointer to cbv for each frame
-		for (int i = 0; i < m_frameCount; i++) {
+		for (unsigned int i = 0; i < m_frameCount; i++) {
 			// Committed Resource - creates implicit heap with the heapProperties
 			if (FAILED(m_device->CreateCommittedResource(
 				&heapProperties,
@@ -109,6 +109,8 @@ void D3D12ConstantBuffer::bind(Material *)
 	m_commandList4->SetDescriptorHeaps(ARRAYSIZE(descriptorHeaps), descriptorHeaps);
 
 	//Set root descriptor table to index 0 in previously set root signature
-	m_commandList4->SetGraphicsRootDescriptorTable(0,
-		m_descriptorHeap[backBufferIndex]->GetGPUDescriptorHandleForHeapStart());
+	m_commandList4->SetGraphicsRootDescriptorTable(
+		0,
+		m_descriptorHeap[backBufferIndex]->GetGPUDescriptorHandleForHeapStart()
+	);
 }
