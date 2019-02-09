@@ -363,9 +363,21 @@ void D3D12Test::CreateTriangleData()
 		0.0f, 0.0f, 1.0f,	//v2 color
 	};
 
+	Vertex triangleVertices2[3] =
+	{
+		1.0f, 0.5f, 0.0f,	//v0 pos
+		1.0f, 0.0f, 0.0f,	//v0 color
+
+		1.5f, -0.5f, 0.0f,	//v1
+		0.0f, 1.0f, 0.0f,	//v1 color
+
+		0.5f, -0.5f, 0.0f, //v2
+		0.0f, 0.0f, 1.0f,	//v2 color
+	};
+
 	m_testVertexBuffer = makeVertexBuffer(sizeof(triangleVertices) * 2, VertexBuffer::DATA_USAGE::STATIC);
 	m_testVertexBuffer->setData(triangleVertices, sizeof(triangleVertices), 0);
-	m_testVertexBuffer->setData(triangleVertices, sizeof(triangleVertices), sizeof(triangleVertices));
+	m_testVertexBuffer->setData(triangleVertices2, sizeof(triangleVertices2), sizeof(triangleVertices));
 }
 #pragma endregion
 
@@ -423,9 +435,13 @@ void D3D12Test::Render(int backBufferIndex)
 	gCommandList4->ClearRenderTargetView(cdh, clearColor, 0, nullptr);
 
 	gCommandList4->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	m_testVertexBuffer->bind(0, 1, 0);
+	m_testVertexBuffer->bind(0, 3 * sizeof(Vertex), 0);
 
-	gCommandList4->DrawInstanced(6, 2, 0, 0); //6 Vertices, 2 triangles, start with vertex 0 and triangle 0
+	gCommandList4->DrawInstanced(3, 1, 0, 0); //3 Vertices, 1 triangle, start with vertex 0 and triangle 0
+
+	m_testVertexBuffer->bind(3 * sizeof(Vertex), 3 * sizeof(Vertex), 0);
+
+	gCommandList4->DrawInstanced(3, 1, 0, 0);
 
 	//Indicate that the back buffer will now be used to present.
 	SetResourceTransitionBarrier(gCommandList4,
@@ -678,74 +694,27 @@ void D3D12Test::submit(Mesh * mesh)
 void D3D12Test::frame()
 {
 	UINT backBufferIndex = gSwapChain4->GetCurrentBackBufferIndex();
-	for (auto work : drawList2)
+	for (auto work : drawList2) //Loop through 4 different techniques
 	{
-		for (auto mesh : work.second)
+		//Enable technique
+		work.first->enable(this);
+
+		for (auto mesh : work.second) //Loop through all meshes that uses the "work" technique
 		{
-			//Command list allocators can only be reset when the associated command lists have
-			//finished execution on the GPU; fences are used to ensure this (See WaitForGpu method)
-			gCommandAllocator->Reset();
 
-			work.first->enable(this);
+			//Bind vb
+			mesh->bindIAVertexBuffer(0);
 
-			//Set root signature
-			gCommandList4->SetGraphicsRootSignature(gRootSignature);
-
-
-			size_t numberElements = mesh->geometryBuffers[0].numElements;
-			//glBindTexture(GL_TEXTURE_2D, 0);
-			//for (auto t : mesh->textures)
-			//{
-			//	// we do not really know here if the sampler has been
-			//	// defined in the shader.
-			//	t.second->bind(t.first);
-			//}
-			for (auto element : mesh->geometryBuffers) {
-				mesh->bindIAVertexBuffer(element.first);
-			}
+			//Bind cb
 			mesh->txBuffer->bind(work.first->getMaterial());
-			//glDrawArrays(GL_TRIANGLES, 0, numberElements);
-
-			//Set necessary states.
-			gCommandList4->RSSetViewports(1, &gViewport);
-			gCommandList4->RSSetScissorRects(1, &gScissorRect);
-
-			//Indicate that the back buffer will be used as render target.
-			SetResourceTransitionBarrier(gCommandList4,
-				gRenderTargets[backBufferIndex],
-				D3D12_RESOURCE_STATE_PRESENT,		//state before
-				D3D12_RESOURCE_STATE_RENDER_TARGET	//state after
-			);
-
-			//Record commands.
-			//Get the handle for the current render target used as back buffer.
-			D3D12_CPU_DESCRIPTOR_HANDLE cdh = gRenderTargetsHeap->GetCPUDescriptorHandleForHeapStart();
-			cdh.ptr += gRenderTargetDescriptorSize * backBufferIndex;
-
-			gCommandList4->OMSetRenderTargets(1, &cdh, true, nullptr);
-
-			gCommandList4->ClearRenderTargetView(cdh, m_clearColor, 0, nullptr);
-
-			gCommandList4->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			//Draw
+			gCommandList4->DrawInstanced(3, 2, 0, 0); //6 Vertices, 2 triangles, start with vertex 0 and triangle 0
 
 
 
-			gCommandList4->DrawInstanced(3 * numberElements, numberElements, 0, 0); 
-
-			//Indicate that the back buffer will now be used to present.
-			SetResourceTransitionBarrier(gCommandList4,
-				gRenderTargets[backBufferIndex],
-				D3D12_RESOURCE_STATE_RENDER_TARGET,	//state before
-				D3D12_RESOURCE_STATE_PRESENT		//state after
-			);
-
-			//Close the list to prepare it for execution.
-			gCommandList4->Close();
-
-			//Execute the command list.
-			ID3D12CommandList* listsToExecute[] = { gCommandList4 };
-			gCommandQueue->ExecuteCommandLists(ARRAYSIZE(listsToExecute), listsToExecute);
 		}
+
+		//Execute
 	}
 	drawList2.clear();
 

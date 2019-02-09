@@ -55,39 +55,21 @@ D3D12VertexBuffer::~D3D12VertexBuffer() {
 }
 
 void D3D12VertexBuffer::setData(const void* data, size_t size, size_t offset) {
-	SIZE_T byteSize = offset; //Offset
-
-	HRESULT hr = SuballocateFromBuffer(byteSize, size);
-	if (SUCCEEDED(hr))
-	{
-		//byteOffset = UINT(m_dataCurrent - m_dataBegin);
-		memcpy(m_dataCurrent, data, byteSize);
-		m_dataCurrent += byteSize;
-	}
-
-
-
-	////Copy the triangle data to the vertex buffer.
-	//void* dataBegin = nullptr;
-	//D3D12_RANGE range = { 0, 0 }; //We do not intend to read this resource on the CPU.
-	//m_vertexBufferResource->Map(0, &range, &dataBegin);
-	//memcpy(dataBegin, data, size);
-	//m_vertexBufferResource->Unmap(0, nullptr);
-
+		m_dataCurrent = m_dataBegin + offset;
+		memcpy(m_dataCurrent, data, size);
 }
 
 void D3D12VertexBuffer::bind(size_t offset, size_t size, unsigned int location) {
+
 	//Initialize vertex buffer view, used in the render call.
-	D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
+	D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
 		
-	m_vertexBufferView.BufferLocation = m_vertexBufferResource->GetGPUVirtualAddress() + UINT(m_dataCurrent - m_dataBegin);
-	m_vertexBufferView.StrideInBytes = (UINT)offset;
-	m_vertexBufferView.SizeInBytes = (UINT)size;
+	vertexBufferView.BufferLocation = m_vertexBufferResource->GetGPUVirtualAddress() + offset;
+	vertexBufferView.StrideInBytes = (UINT)(sizeof(float) * 6);
+	vertexBufferView.SizeInBytes = (UINT)size;
 
-	//If this doesn't work it probably is because we have to convert size to number of elements instead of data size
-	m_commandList4->IASetVertexBuffers((UINT)offset, (UINT)size, &m_vertexBufferView);
 
-	//Taken from here: https://docs.microsoft.com/en-us/windows/desktop/direct3d12/uploading-resources#buffer-alignment
+	m_commandList4->IASetVertexBuffers(0, 1, &vertexBufferView);
 }
 
 void D3D12VertexBuffer::unbind() {
@@ -96,25 +78,4 @@ void D3D12VertexBuffer::unbind() {
 
 size_t D3D12VertexBuffer::getSize() {
 	return m_bufferSize;
-}
-
-
-HRESULT D3D12VertexBuffer::SuballocateFromBuffer(SIZE_T uSize, UINT uAlign)
-{
-	
-	m_dataCurrent = reinterpret_cast<UINT8*>(
-		Align(reinterpret_cast<SIZE_T>(m_dataCurrent), uAlign)
-		);
-
-	return (m_dataCurrent + uSize > m_dataEnd) ? E_INVALIDARG : S_OK;
-}
-
-UINT D3D12VertexBuffer::Align(UINT uLocation, UINT uAlign)
-{
-	/*if ((0 == uAlign) || (uAlign & (uAlign - 1)))
-	{
-		ThrowException("non-pow2 alignment");
-	}*/
-
-	return ((uLocation + (uAlign - 1)) & ~(uAlign - 1));
 }
