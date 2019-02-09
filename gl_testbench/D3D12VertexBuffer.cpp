@@ -15,8 +15,6 @@ D3D12VertexBuffer::D3D12VertexBuffer(size_t size) {
 	//code simplicity and because there are very few vertices to actually transfer.
 	D3D12_HEAP_PROPERTIES hp = {};
 	hp.Type = D3D12_HEAP_TYPE_UPLOAD;
-	/*hp.CreationNodeMask = 1;
-	hp.VisibleNodeMask = 1;*/
 
 	D3D12_RESOURCE_DESC rd = {};
 	rd.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
@@ -68,8 +66,7 @@ void D3D12VertexBuffer::bind(size_t offset, size_t size, unsigned int location) 
 	vertexBufferView.StrideInBytes = (UINT)(sizeof(float) * 6);
 	vertexBufferView.SizeInBytes = (UINT)size;
 
-
-	m_commandList4->IASetVertexBuffers(0, 1, &vertexBufferView);
+	m_commandList4->IASetVertexBuffers(location, 1, &vertexBufferView);
 }
 
 void D3D12VertexBuffer::unbind() {

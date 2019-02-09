@@ -376,8 +376,22 @@ void D3D12Test::CreateTriangleData()
 	};
 
 	m_testVertexBuffer = makeVertexBuffer(sizeof(triangleVertices) * 2, VertexBuffer::DATA_USAGE::STATIC);
-	m_testVertexBuffer->setData(triangleVertices, sizeof(triangleVertices), 0);
-	m_testVertexBuffer->setData(triangleVertices2, sizeof(triangleVertices2), sizeof(triangleVertices));
+
+	Mesh* m = makeMesh();
+
+	constexpr auto numberOfPosElements = 3;
+	size_t offset = 0 * sizeof(triangleVertices);
+	m_testVertexBuffer->setData(triangleVertices, sizeof(triangleVertices), offset);
+	m->addIAVertexBufferBinding(m_testVertexBuffer, offset, numberOfPosElements, sizeof(Vertex), 0);
+	m->technique = m_testTechnique;
+	m_meshes.push_back(m);
+
+	Mesh* m2 = makeMesh();
+	offset = 1 * sizeof(triangleVertices);
+	m_testVertexBuffer->setData(triangleVertices2, sizeof(triangleVertices2), offset);
+	m2->addIAVertexBufferBinding(m_testVertexBuffer, offset, numberOfPosElements, sizeof(Vertex), 0);
+	m2->technique = m_testTechnique;
+	m_meshes.push_back(m2);
 }
 #pragma endregion
 
@@ -396,6 +410,10 @@ void D3D12Test::Update(int backBufferIndex)
 
 	//Update GPU memory
 	m_testConstantBuffer->setData(&gConstantBufferCPU, sizeof(ConstantBufferData), nullptr, 5);
+
+	for (auto m : m_meshes) {
+		submit(m);
+	}
 }
 #pragma endregion
 
@@ -583,30 +601,14 @@ int D3D12Test::initialize(unsigned int width, unsigned int height)
 				UINT backBufferIndex = gSwapChain4->GetCurrentBackBufferIndex();
 
 				Update(backBufferIndex);
-				Render(backBufferIndex);
+				//Render(backBufferIndex);
+				frame();
+				present();
 			}
 		}
 	}
 
-	//Wait for GPU execution to be done and then release all interfaces.
-	WaitForGpu();
-	CloseHandle(gEventHandle);
-	SafeRelease2(&gDevice5);
-	SafeRelease2(&gCommandQueue);
-	SafeRelease2(&gCommandAllocator);
-	SafeRelease2(&gCommandList4);
-	SafeRelease2(&gSwapChain4);
-
-	SafeRelease2(&gFence);
-
-	SafeRelease2(&gRenderTargetsHeap);
-	for (int i = 0; i < NUM_SWAP_BUFFERS; i++)
-	{
-		SafeRelease2(&gRenderTargets[i]);
-	}
-
-	SafeRelease2(&gRootSignature);
-
+	
 	shutdown();
 
 	return 1;
@@ -735,13 +737,17 @@ void D3D12Test::frame()
 
 		gCommandList4->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
+		m_testConstantBuffer->bind(nullptr);
+
 		for (auto mesh : work.second) //Loop through all meshes that uses the "work" technique
 		{
-			//Bind vb
-			mesh->bindIAVertexBuffer(0);
+			//Bind vertex buffers
+			for (auto element : mesh->geometryBuffers) {
+				mesh->bindIAVertexBuffer(element.first);
+			}
 
-			//Bind cb
-			mesh->txBuffer->bind(work.first->getMaterial());
+			//Bind cb - not yet completely implemented
+			//mesh->txBuffer->bind(work.first->getMaterial());
 
 			//Add draw command to command list
 			gCommandList4->DrawInstanced(3, 1, 0, 0); //3 Vertices, 1 triangle, start with vertex 0 and triangle 0
