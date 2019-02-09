@@ -25,6 +25,7 @@ private:
 	static ID3D12PipelineState** gPipelineState;
 	static IDXGISwapChain4** gSwapChain;
 	static ID3D12GraphicsCommandList3** gCommandList;
+	static ID3D12CommandAllocator** gCommandAllocator;
 
 public:
 	Locator() {}
@@ -46,6 +47,9 @@ public:
 	static void provide(ID3D12GraphicsCommandList3** commandList) {
 		gCommandList = commandList;
 	}
+	static void provide(ID3D12CommandAllocator** commandAllocator) {
+		gCommandAllocator = commandAllocator;
+	}
 
 	// GET
 	static ID3D12RootSignature* getRootSignature() {
@@ -62,5 +66,8 @@ public:
 	}
 	static ID3D12GraphicsCommandList3* getCommandList() {
 		return *gCommandList;
+	}
+	static ID3D12CommandAllocator* getCommandAllocator() {
+		return *gCommandAllocator;
 	}
 };

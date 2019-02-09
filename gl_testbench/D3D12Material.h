@@ -22,9 +22,6 @@ private:
 	ID3DBlob* m_shaderDataBlob_PS = nullptr;
 	ID3DBlob* m_shaderDataBlob_VS = nullptr;
 
-	ID3DBlob* m_shaderDataBlob_PS = nullptr;
-	ID3DBlob* m_shaderDataBlob_VS = nullptr;
-
 	// opengl shader object
 	unsigned int shaderObjects[4] = { 0,0,0,0 };
 

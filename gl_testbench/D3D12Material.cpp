@@ -55,8 +55,6 @@ int D3D12Material::compileShader(ShaderType type, std::string& errString)
 	////////////////////////////////////////////////
 	SIZE_T shaderSrcDataLength = static_cast<SIZE_T>(allDataToBeConverted.length());
 
-	// Extra step, just in case
-	std::string allDataToBeConverted = (shaderDefinesData + shaderText);
 
 
 	///////////////////////////////////////////////////////////////
