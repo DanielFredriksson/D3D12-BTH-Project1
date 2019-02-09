@@ -469,6 +469,11 @@ void D3D12Test::Render(int backBufferIndex)
 #pragma region publicFuncs
 //----Public functions----
 D3D12Test::D3D12Test() {
+	m_clearColor[0] = 0.2f;
+	m_clearColor[1] = 0.2f;
+	m_clearColor[2] = 0.2f;
+	m_clearColor[3] = 1.0f;
+
 	m_testConstantBuffer = nullptr;
 	m_testVertexBuffer = nullptr;
 	m_testMaterial = nullptr;
@@ -693,39 +698,72 @@ void D3D12Test::submit(Mesh * mesh)
 
 void D3D12Test::frame()
 {
-	UINT backBufferIndex = gSwapChain4->GetCurrentBackBufferIndex();
+	//Command list allocators can only be reset when the associated command lists have
+	//finished execution on the GPU; fences are used to ensure this (See WaitForGpu method)
+	gCommandAllocator->Reset();
+
+	UINT backBufferIndex = gSwapChain4->GetCurrentBackBufferIndex();	
+
 	for (auto work : drawList2) //Loop through 4 different techniques
 	{
 		//Enable technique
-		work.first->enable(this);
+		work.first->enable(this); //Resets the command list
+
+		//Set root signature because list was reset
+		gCommandList4->SetGraphicsRootSignature(gRootSignature);
+
+		//Set necessary states.
+		gCommandList4->RSSetViewports(1, &gViewport);
+		gCommandList4->RSSetScissorRects(1, &gScissorRect);
+
+		//Indicate that the back buffer will be used as render target.
+		SetResourceTransitionBarrier(gCommandList4,
+			gRenderTargets[backBufferIndex],
+			D3D12_RESOURCE_STATE_PRESENT,		//state before
+			D3D12_RESOURCE_STATE_RENDER_TARGET	//state after
+		);
+
+		//RECORD COMMANDS
+
+		//Get the handle for the current render target used as back buffer.
+		D3D12_CPU_DESCRIPTOR_HANDLE cdh = gRenderTargetsHeap->GetCPUDescriptorHandleForHeapStart();
+		cdh.ptr += gRenderTargetDescriptorSize * backBufferIndex;
+
+		gCommandList4->OMSetRenderTargets(1, &cdh, true, nullptr);
+
+		gCommandList4->ClearRenderTargetView(cdh, m_clearColor, 0, nullptr);
+
+		gCommandList4->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 		for (auto mesh : work.second) //Loop through all meshes that uses the "work" technique
 		{
-
 			//Bind vb
 			mesh->bindIAVertexBuffer(0);
 
 			//Bind cb
 			mesh->txBuffer->bind(work.first->getMaterial());
-			//Draw
-			gCommandList4->DrawInstanced(3, 2, 0, 0); //6 Vertices, 2 triangles, start with vertex 0 and triangle 0
 
-
+			//Add draw command to command list
+			gCommandList4->DrawInstanced(3, 1, 0, 0); //3 Vertices, 1 triangle, start with vertex 0 and triangle 0
 
 		}
 
-		//Execute
+		//Indicate that the back buffer will now be used to present.
+		SetResourceTransitionBarrier(gCommandList4,
+			gRenderTargets[backBufferIndex],
+			D3D12_RESOURCE_STATE_RENDER_TARGET,	//state before
+			D3D12_RESOURCE_STATE_PRESENT		//state after
+		);
+
+		//Close the list to prepare it for execution.
+		gCommandList4->Close();
+
+		//Execute the command list.
+		ID3D12CommandList* listsToExecute[] = { gCommandList4 };
+		gCommandQueue->ExecuteCommandLists(ARRAYSIZE(listsToExecute), listsToExecute);
+
 	}
 	drawList2.clear();
-
-
-
-
-
-
-
-
-	//m_testConstantBuffer->bind(nullptr);
 }
 
 #pragma endregion
