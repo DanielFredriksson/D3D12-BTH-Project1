@@ -353,45 +353,34 @@ void D3D12Test::CreateTriangleData()
 {
 	Vertex triangleVertices[3] =
 	{
-		0.0f, 0.5f, 0.0f,	//v0 pos
+		-0.5f, 0.5f, 0.0f,	//v0 pos
 		1.0f, 0.0f, 0.0f,	//v0 color
 
-		0.5f, -0.5f, 0.0f,	//v1
+		0.0f, -0.5f, 0.0f,	//v1
 		0.0f, 1.0f, 0.0f,	//v1 color
 
-		-0.5f, -0.5f, 0.0f, //v2
-		0.0f, 0.0f, 1.0f,	//v2 color
+		-1.0f, -0.5f, 0.0f, //v2
+		0.0f, 0.0f, 1.0f	//v2 color
 	};
 
-	Vertex triangleVertices2[3] =
-	{
-		1.0f, 0.5f, 0.0f,	//v0 pos
-		1.0f, 0.0f, 0.0f,	//v0 color
+	m_testVertexBuffer = makeVertexBuffer(sizeof(triangleVertices) * 100, VertexBuffer::DATA_USAGE::STATIC);
 
-		1.5f, -0.5f, 0.0f,	//v1
-		0.0f, 1.0f, 0.0f,	//v1 color
+	for (int i = 0; i < 100; i++) {
+		Mesh* m = makeMesh();
 
-		0.5f, -0.5f, 0.0f, //v2
-		0.0f, 0.0f, 1.0f,	//v2 color
-	};
+		constexpr auto numberOfPosElements = 3;
+		size_t offset = i * sizeof(triangleVertices);
+		m_testVertexBuffer->setData(triangleVertices, sizeof(triangleVertices), offset);
+		m->addIAVertexBufferBinding(m_testVertexBuffer, offset, numberOfPosElements, sizeof(Vertex), 0);
+		m->technique = m_testTechnique;
+		m_meshes.push_back(m);
 
-	m_testVertexBuffer = makeVertexBuffer(sizeof(triangleVertices) * 2, VertexBuffer::DATA_USAGE::STATIC);
+		triangleVertices[0].x += 0.01f;
+		triangleVertices[1].x += 0.01f;
+		triangleVertices[2].x += 0.01f;
+	}
 
-	Mesh* m = makeMesh();
-
-	constexpr auto numberOfPosElements = 3;
-	size_t offset = 0 * sizeof(triangleVertices);
-	m_testVertexBuffer->setData(triangleVertices, sizeof(triangleVertices), offset);
-	m->addIAVertexBufferBinding(m_testVertexBuffer, offset, numberOfPosElements, sizeof(Vertex), 0);
-	m->technique = m_testTechnique;
-	m_meshes.push_back(m);
-
-	Mesh* m2 = makeMesh();
-	offset = 1 * sizeof(triangleVertices);
-	m_testVertexBuffer->setData(triangleVertices2, sizeof(triangleVertices2), offset);
-	m2->addIAVertexBufferBinding(m_testVertexBuffer, offset, numberOfPosElements, sizeof(Vertex), 0);
-	m2->technique = m_testTechnique;
-	m_meshes.push_back(m2);
+	
 }
 #pragma endregion
 
@@ -538,7 +527,7 @@ RenderState * D3D12Test::makeRenderState()
 
 std::string D3D12Test::getShaderPath()
 {
-	return "";
+	return "../assets/D3D12/";
 }
 
 std::string D3D12Test::getShaderExtension()
@@ -670,6 +659,10 @@ int D3D12Test::shutdown()
 
 	if (m_testTechnique != nullptr) {
 		delete m_testTechnique;
+	}
+
+	for (unsigned int i = 0; i < m_meshes.size(); i++) {
+		delete m_meshes[i];
 	}
 
 	return 420;
