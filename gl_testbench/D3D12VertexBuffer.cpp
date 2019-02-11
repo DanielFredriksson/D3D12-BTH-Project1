@@ -55,6 +55,7 @@ D3D12VertexBuffer::~D3D12VertexBuffer() {
 void D3D12VertexBuffer::setData(const void* data, size_t size, size_t offset) {
 		m_dataCurrent = m_dataBegin + offset;
 		memcpy(m_dataCurrent, data, size);
+		m_stride = size / 3;
 }
 
 void D3D12VertexBuffer::bind(size_t offset, size_t size, unsigned int location) {
@@ -63,7 +64,7 @@ void D3D12VertexBuffer::bind(size_t offset, size_t size, unsigned int location) 
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
 		
 	vertexBufferView.BufferLocation = m_vertexBufferResource->GetGPUVirtualAddress() + offset;
-	vertexBufferView.StrideInBytes = (UINT)(sizeof(float) * 6);
+	vertexBufferView.StrideInBytes = (UINT)(m_stride);
 	vertexBufferView.SizeInBytes = (UINT)size;
 
 	m_commandList4->IASetVertexBuffers(location, 1, &vertexBufferView);

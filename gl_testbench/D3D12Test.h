@@ -82,6 +82,8 @@ private:
 	Technique* m_testTechnique;
 	Technique* m_testTechnique2;
 
+	bool m_firstFrame = true;
+
 	std::vector<Mesh*> m_meshes;
 	std::unordered_map<Technique*, std::vector<Mesh*>> drawList2;
 

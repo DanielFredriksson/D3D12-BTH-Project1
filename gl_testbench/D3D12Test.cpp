@@ -100,7 +100,7 @@ void D3D12Test::CreateDirect3DDevice(HWND wndHandle)
 
 #ifdef _DEBUG
 	//Enable the D3D12 debug layer.
-	ID3D12Debug* debugController = nullptr;
+	ID3D12Debug1* debugController = nullptr;
 
 #ifdef STATIC_LINK_DEBUGSTUFF
 	if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))
@@ -111,9 +111,10 @@ void D3D12Test::CreateDirect3DDevice(HWND wndHandle)
 #else
 	HMODULE mD3D12 = GetModuleHandle(L"D3D12.dll");
 	PFN_D3D12_GET_DEBUG_INTERFACE f = (PFN_D3D12_GET_DEBUG_INTERFACE)GetProcAddress(mD3D12, "D3D12GetDebugInterface");
-	if (SUCCEEDED(f(IID_PPV_ARGS(&debugController))))
+	if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))
 	{
 		debugController->EnableDebugLayer();
+		debugController->SetEnableGPUBasedValidation(true);
 	}
 	SafeRelease2(&debugController);
 #endif
@@ -276,32 +277,67 @@ void D3D12Test::CreateViewportAndScissorRect()
 #pragma region CreateConstantBufferResources
 void D3D12Test::CreateConstantBufferResources()
 {
-	m_testConstantBuffer = makeConstantBuffer("test", 5);
-	m_testConstantBuffer->setData(&gConstantBufferCPU, sizeof(ConstantBufferData), nullptr, 5);
+	m_testConstantBuffer = makeConstantBuffer("test", DIFFUSE_TINT);
+	m_testConstantBuffer->setData(&gConstantBufferCPU, sizeof(ConstantBufferData), nullptr, DIFFUSE_TINT);
 }
 #pragma endregion
 
 #pragma region CreateRootSignature
 void D3D12Test::CreateRootSignature()
 {
-	//define descriptor range(s)
-	D3D12_DESCRIPTOR_RANGE  dtRanges[1];
-	dtRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-	dtRanges[0].NumDescriptors = 1; //only one CB in this example
-	dtRanges[0].BaseShaderRegister = 0; //register b0
-	dtRanges[0].RegisterSpace = 0; //register(b0,space0);
-	dtRanges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+	////define descriptor range(s)
+	//D3D12_DESCRIPTOR_RANGE  dtRanges[2];
+	//dtRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+	//dtRanges[0].NumDescriptors = 1; 
+	//dtRanges[0].BaseShaderRegister = TRANSLATION; //register b5
+	//dtRanges[0].RegisterSpace = 0;
+	//dtRanges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-	//create a descriptor table
-	D3D12_ROOT_DESCRIPTOR_TABLE dt;
-	dt.NumDescriptorRanges = ARRAYSIZE(dtRanges);
-	dt.pDescriptorRanges = dtRanges;
+	//dtRanges[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+	//dtRanges[1].NumDescriptors = 1; 
+	//dtRanges[1].BaseShaderRegister = DIFFUSE_TINT; //register b6
+	//dtRanges[1].RegisterSpace = 0;
+	//dtRanges[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-	//create root parameter
-	D3D12_ROOT_PARAMETER  rootParam[1];
-	rootParam[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	rootParam[0].DescriptorTable = dt;
-	rootParam[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+
+	////create a descriptor table
+	//D3D12_ROOT_DESCRIPTOR_TABLE dt;
+	//dt.NumDescriptorRanges = ARRAYSIZE(dtRanges);
+	//dt.pDescriptorRanges = dtRanges;
+
+	////create root parameter
+	//D3D12_ROOT_PARAMETER  rootParam[1];
+	//rootParam[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	//rootParam[0].DescriptorTable = dt;
+	//rootParam[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+	//D3D12_ROOT_SIGNATURE_DESC rsDesc;
+	//rsDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+	//rsDesc.NumParameters = ARRAYSIZE(rootParam);
+	//rsDesc.pParameters = rootParam;
+	//rsDesc.NumStaticSamplers = 0;
+	//rsDesc.pStaticSamplers = nullptr;
+
+
+	// Create root descriptors
+	D3D12_ROOT_DESCRIPTOR rootDescCBV = {};
+	rootDescCBV.ShaderRegister = TRANSLATION;
+	rootDescCBV.RegisterSpace = 0;
+	D3D12_ROOT_DESCRIPTOR rootDescCBV2 = {};
+	rootDescCBV2.ShaderRegister = DIFFUSE_TINT;
+	rootDescCBV2.RegisterSpace = 0;
+
+	// Create root parameters
+	D3D12_ROOT_PARAMETER rootParam[2];
+
+	rootParam[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	rootParam[0].Descriptor = rootDescCBV;
+	rootParam[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+	rootParam[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	rootParam[1].Descriptor = rootDescCBV2;
+	rootParam[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
 
 	D3D12_ROOT_SIGNATURE_DESC rsDesc;
 	rsDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
@@ -491,6 +527,8 @@ D3D12Test::D3D12Test() {
 	m_clearColor[2] = 0.2f;
 	m_clearColor[3] = 1.0f;
 
+	//gConstantBufferCPU.colorChannel[0] = 1.0f;
+
 	m_testConstantBuffer = nullptr;
 	m_testVertexBuffer = nullptr;
 	m_testMaterial = nullptr;
@@ -582,7 +620,7 @@ int D3D12Test::initialize(unsigned int width, unsigned int height)
 
 		//CreateShadersAndPiplelineState();					//8. Set up the pipeline state
 
-		//CreateConstantBufferResources();					//9. Create constant buffer data
+		CreateConstantBufferResources();					//9. Create constant buffer data
 
 		//CreateTriangleData();								//10. Create vertexdata
 
@@ -705,50 +743,69 @@ void D3D12Test::submit(Mesh * mesh)
 
 void D3D12Test::frame()
 {
+	UINT backBufferIndex = gSwapChain4->GetCurrentBackBufferIndex();
+
+	if (m_firstFrame) {
+		////Close the list to prepare it for execution.
+		//gCommandList4->Close();
+
+		////Execute the command list.
+		//ID3D12CommandList* listsToExecute[] = { gCommandList4 };
+		//gCommandQueue->ExecuteCommandLists(ARRAYSIZE(listsToExecute), listsToExecute);
+
+		//WaitForGpu();
+		m_firstFrame = false;
+	}
+
 	//Command list allocators can only be reset when the associated command lists have
 	//finished execution on the GPU; fences are used to ensure this (See WaitForGpu method)
 	gCommandAllocator->Reset();
 
-	UINT backBufferIndex = gSwapChain4->GetCurrentBackBufferIndex();
+	gCommandList4->Reset(gCommandAllocator, nullptr);
 
-	bool firstDraw = true;
+	//Indicate that the back buffer will be used as render target.
+	SetResourceTransitionBarrier(gCommandList4,
+		gRenderTargets[backBufferIndex],
+		D3D12_RESOURCE_STATE_PRESENT,		//state before
+		D3D12_RESOURCE_STATE_RENDER_TARGET	//state after
+	);
+
+	//Get the handle for the current render target used as back buffer.
+	D3D12_CPU_DESCRIPTOR_HANDLE cdh = gRenderTargetsHeap->GetCPUDescriptorHandleForHeapStart();
+	cdh.ptr += gRenderTargetDescriptorSize * backBufferIndex;
+
+	gCommandList4->OMSetRenderTargets(1, &cdh, true, nullptr);
+
+	gCommandList4->ClearRenderTargetView(cdh, m_clearColor, 0, nullptr);
+
+	//Set root signature because list was reset
+	gCommandList4->SetGraphicsRootSignature(gRootSignature);
+
+	//Set necessary states.
+	gCommandList4->RSSetViewports(1, &gViewport);
+	gCommandList4->RSSetScissorRects(1, &gScissorRect);
+
+	gCommandList4->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	//bool firstDraw = true;
 
 	for (auto work : drawList2) //Loop through 4 different techniques
 	{
-
 		//Enable technique
 		work.first->enable(this); //Resets the command list
 
-		//Set root signature because list was reset
-		gCommandList4->SetGraphicsRootSignature(gRootSignature);
+		m_testConstantBuffer->bind(nullptr);
 
-		//Set necessary states.
-		gCommandList4->RSSetViewports(1, &gViewport);
-		gCommandList4->RSSetScissorRects(1, &gScissorRect);
 
-		//Indicate that the back buffer will be used as render target.
-		SetResourceTransitionBarrier(gCommandList4,
-			gRenderTargets[backBufferIndex],
-			D3D12_RESOURCE_STATE_PRESENT,		//state before
-			D3D12_RESOURCE_STATE_RENDER_TARGET	//state after
-		);
 
 		//RECORD COMMANDS
 
-		//Get the handle for the current render target used as back buffer.
-		D3D12_CPU_DESCRIPTOR_HANDLE cdh = gRenderTargetsHeap->GetCPUDescriptorHandleForHeapStart();
-		cdh.ptr += gRenderTargetDescriptorSize * backBufferIndex;
 
-		if (firstDraw) {
-			gCommandList4->ClearRenderTargetView(cdh, m_clearColor, 0, nullptr);
+
+		/*if (firstDraw) {
+
 			firstDraw = false;
-		}
-
-		gCommandList4->OMSetRenderTargets(1, &cdh, true, nullptr);
-
-		gCommandList4->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-		//m_testConstantBuffer->bind(nullptr);
+		}*/
 
 		for (auto mesh : work.second) //Loop through all meshes that uses the "work" technique
 		{
@@ -758,27 +815,28 @@ void D3D12Test::frame()
 			}
 
 			//Bind cb - not yet completely implemented
-			//mesh->txBuffer->bind(work.first->getMaterial());
+			mesh->txBuffer->bind(work.first->getMaterial());
 
 			//Add draw command to command list
 			gCommandList4->DrawInstanced(3, 1, 0, 0); //3 Vertices, 1 triangle, start with vertex 0 and triangle 0
 
 		}
-
-		//Indicate that the back buffer will now be used to present.
-		SetResourceTransitionBarrier(gCommandList4,
-			gRenderTargets[backBufferIndex],
-			D3D12_RESOURCE_STATE_RENDER_TARGET,	//state before
-			D3D12_RESOURCE_STATE_PRESENT		//state after
-		);
-
-		//Close the list to prepare it for execution.
-		gCommandList4->Close();
-
-		//Execute the command list.
-		ID3D12CommandList* listsToExecute[] = { gCommandList4 };
-		gCommandQueue->ExecuteCommandLists(ARRAYSIZE(listsToExecute), listsToExecute);
 	}
+
+	//Indicate that the back buffer will now be used to present.
+	SetResourceTransitionBarrier(gCommandList4,
+		gRenderTargets[backBufferIndex],
+		D3D12_RESOURCE_STATE_RENDER_TARGET,	//state before
+		D3D12_RESOURCE_STATE_PRESENT		//state after
+	);
+
+	//Close the list to prepare it for execution.
+	gCommandList4->Close();
+
+	//Execute the command list.
+	ID3D12CommandList* listsToExecute[] = { gCommandList4 };
+	gCommandQueue->ExecuteCommandLists(ARRAYSIZE(listsToExecute), listsToExecute);
+
 	drawList2.clear();
 }
 

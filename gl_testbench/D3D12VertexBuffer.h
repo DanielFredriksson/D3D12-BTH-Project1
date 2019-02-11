@@ -13,6 +13,7 @@ private:
 	//DATA_USAGE m_usage;
 	size_t m_stride;
 
+
 	ID3D12Resource1*			m_vertexBufferResource = nullptr;
 	//D3D12_VERTEX_BUFFER_VIEW	m_vertexBufferView = {};
 
