@@ -16,6 +16,11 @@ D3D12Technique::D3D12Technique(Material* m, RenderState* r) : Technique(m,r) {
 		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32B32_FLOAT, 2, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
 	};
 
+	/*D3D12_INPUT_ELEMENT_DESC inputElementDesc[] = {
+		{ "POS", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,	D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "COLOR"	, 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+	};*/
+
 	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc;
 	inputLayoutDesc.pInputElementDescs = inputElementDesc;
 	inputLayoutDesc.NumElements = ARRAYSIZE(inputElementDesc);
@@ -68,6 +73,5 @@ D3D12Technique::~D3D12Technique() {
 void D3D12Technique::enable(Renderer* renderer) {
 
 	Locator::getCommandList()->Reset(Locator::getCommandAllocator(), m_pipeLineState);
-	Locator::getCommandList()->SetPipelineState(m_pipeLineState);
 	
 }

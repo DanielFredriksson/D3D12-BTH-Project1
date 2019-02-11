@@ -78,7 +78,9 @@ private:
 	VertexBuffer* m_testVertexBuffer;
 	Material* m_testMaterial;
 	RenderState* m_testRenderState;
+	RenderState* m_testRenderState2;
 	Technique* m_testTechnique;
+	Technique* m_testTechnique2;
 
 	std::vector<Mesh*> m_meshes;
 	std::unordered_map<Technique*, std::vector<Mesh*>> drawList2;

@@ -29,6 +29,7 @@ D3D12ConstantBuffer::~D3D12ConstantBuffer()
 
 void D3D12ConstantBuffer::setData(const void * data, size_t size, Material * m, unsigned int location)
 {
+	m_location = location;
 	//if this is the first time we are running setData - do this.
 	if (!m_hasBeenInitialized) {
 		for (unsigned int i = 0; i < m_frameCount; i++)
@@ -110,7 +111,7 @@ void D3D12ConstantBuffer::bind(Material *)
 
 	//Set root descriptor table to index 0 in previously set root signature
 	m_commandList4->SetGraphicsRootDescriptorTable(
-		0,
+		m_location,
 		m_descriptorHeap[backBufferIndex]->GetGPUDescriptorHandleForHeapStart()
 	);
 }

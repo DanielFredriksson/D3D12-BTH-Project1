@@ -204,7 +204,7 @@ void D3D12Renderer::initDevice()
 		throw std::exception("ERROR: Failed to create Device!");
 	}
 
-	Locator::provide(this->m_device);
+	Locator::provide(&this->m_device);
 	// Release
 }
 
@@ -280,7 +280,7 @@ void D3D12Renderer::initSwapChain()
 		}
 	}
 
-	Locator::provide(this->m_swapChain);
+	//Locator::provide(&this->m_swapChain);
 }
 
 void D3D12Renderer::initFenceAndEventHandle()
@@ -378,7 +378,7 @@ void D3D12Renderer::initRootSignature()
 		IID_PPV_ARGS(&m_rootSignature)
 	);
 
-	Locator::provide(this->m_rootSignature);
+	Locator::provide(&this->m_rootSignature);
 }
 
 void D3D12Renderer::initConstantBuffers()

@@ -323,11 +323,12 @@ void D3D12Test::CreateRootSignature()
 		sBlob->GetBufferSize(),
 		IID_PPV_ARGS(&gRootSignature));
 
-	Locator::provide(this->gRootSignature);
-	Locator::provide(this->gDevice5);
-	Locator::provide(this->gSwapChain4);
-	Locator::provide(this->gCommandList4);
-	Locator::provide(this->gCommandAllocator);
+	Locator::provide(&this->gRootSignature);
+	Locator::provide(&this->gDevice5);
+	Locator::provide(&this->gSwapChain4);
+	Locator::provide(&this->gCommandList4);
+	Locator::provide(&this->gCommandAllocator);
+	Locator::provide(&this->gCommandQueue);
 }
 #pragma endregion
 
@@ -344,7 +345,11 @@ void D3D12Test::CreateShadersAndPiplelineState()
 	m_testRenderState = makeRenderState();
 	m_testRenderState->setWireFrame(false);
 
+	m_testRenderState2 = makeRenderState();
+	m_testRenderState2->setWireFrame(true);
+
 	m_testTechnique = makeTechnique(m_testMaterial, m_testRenderState);
+	m_testTechnique2 = makeTechnique(m_testMaterial, m_testRenderState2);
 }
 #pragma endregion
 
@@ -365,19 +370,24 @@ void D3D12Test::CreateTriangleData()
 
 	m_testVertexBuffer = makeVertexBuffer(sizeof(triangleVertices) * 100, VertexBuffer::DATA_USAGE::STATIC);
 
-	for (int i = 0; i < 100; i++) {
+	for (int i = 0; i < 6; i++) {
 		Mesh* m = makeMesh();
 
 		constexpr auto numberOfPosElements = 3;
 		size_t offset = i * sizeof(triangleVertices);
 		m_testVertexBuffer->setData(triangleVertices, sizeof(triangleVertices), offset);
 		m->addIAVertexBufferBinding(m_testVertexBuffer, offset, numberOfPosElements, sizeof(Vertex), 0);
-		m->technique = m_testTechnique;
+		if (i % 2 == 0) {
+			m->technique = m_testTechnique;
+		}
+		else {
+			m->technique = m_testTechnique2;
+		}
 		m_meshes.push_back(m);
 
-		triangleVertices[0].x += 0.01f;
-		triangleVertices[1].x += 0.01f;
-		triangleVertices[2].x += 0.01f;
+		triangleVertices[0].x += 0.1f;
+		triangleVertices[1].x += 0.1f;
+		triangleVertices[2].x += 0.1f;
 	}
 
 	
@@ -485,7 +495,9 @@ D3D12Test::D3D12Test() {
 	m_testVertexBuffer = nullptr;
 	m_testMaterial = nullptr;
 	m_testRenderState = nullptr;
+	m_testRenderState2 = nullptr;
 	m_testTechnique = nullptr;
+	m_testTechnique2 = nullptr;
 }
 
 D3D12Test::~D3D12Test() {
@@ -697,10 +709,13 @@ void D3D12Test::frame()
 	//finished execution on the GPU; fences are used to ensure this (See WaitForGpu method)
 	gCommandAllocator->Reset();
 
-	UINT backBufferIndex = gSwapChain4->GetCurrentBackBufferIndex();	
+	UINT backBufferIndex = gSwapChain4->GetCurrentBackBufferIndex();
+
+	bool firstDraw = true;
 
 	for (auto work : drawList2) //Loop through 4 different techniques
 	{
+
 		//Enable technique
 		work.first->enable(this); //Resets the command list
 
@@ -724,9 +739,12 @@ void D3D12Test::frame()
 		D3D12_CPU_DESCRIPTOR_HANDLE cdh = gRenderTargetsHeap->GetCPUDescriptorHandleForHeapStart();
 		cdh.ptr += gRenderTargetDescriptorSize * backBufferIndex;
 
-		gCommandList4->OMSetRenderTargets(1, &cdh, true, nullptr);
+		if (firstDraw) {
+			gCommandList4->ClearRenderTargetView(cdh, m_clearColor, 0, nullptr);
+			firstDraw = false;
+		}
 
-		gCommandList4->ClearRenderTargetView(cdh, m_clearColor, 0, nullptr);
+		gCommandList4->OMSetRenderTargets(1, &cdh, true, nullptr);
 
 		gCommandList4->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
@@ -740,7 +758,7 @@ void D3D12Test::frame()
 			}
 
 			//Bind cb - not yet completely implemented
-			mesh->txBuffer->bind(work.first->getMaterial());
+			//mesh->txBuffer->bind(work.first->getMaterial());
 
 			//Add draw command to command list
 			gCommandList4->DrawInstanced(3, 1, 0, 0); //3 Vertices, 1 triangle, start with vertex 0 and triangle 0
@@ -760,7 +778,6 @@ void D3D12Test::frame()
 		//Execute the command list.
 		ID3D12CommandList* listsToExecute[] = { gCommandList4 };
 		gCommandQueue->ExecuteCommandLists(ARRAYSIZE(listsToExecute), listsToExecute);
-
 	}
 	drawList2.clear();
 }

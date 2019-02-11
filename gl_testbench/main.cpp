@@ -342,7 +342,7 @@ int main(int argc, char *argv[])
 
 	initialiseTestbench();
 	run();
-	/*shutdown();*/
+	shutdown();
 	// --------------------
 
 
