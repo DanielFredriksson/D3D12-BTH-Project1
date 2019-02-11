@@ -527,7 +527,7 @@ RenderState * D3D12Test::makeRenderState()
 
 std::string D3D12Test::getShaderPath()
 {
-	return "../assets/D3D12/";
+	return "..\\assets\\D3D12\\";
 }
 
 std::string D3D12Test::getShaderExtension()
@@ -568,37 +568,37 @@ int D3D12Test::initialize(unsigned int width, unsigned int height)
 
 		CreateRootSignature();								//7. Create root signature
 
-		CreateShadersAndPiplelineState();					//8. Set up the pipeline state
+		//CreateShadersAndPiplelineState();					//8. Set up the pipeline state
 
-		CreateConstantBufferResources();					//9. Create constant buffer data
+		//CreateConstantBufferResources();					//9. Create constant buffer data
 
-		CreateTriangleData();								//10. Create vertexdata
+		//CreateTriangleData();								//10. Create vertexdata
 
 		WaitForGpu();
 
 
 		ShowWindow(wndHandle, 1); //Display window
-		while (WM_QUIT != msg.message)
-		{
-			if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
-			{
-				TranslateMessage(&msg);
-				DispatchMessage(&msg);
-			}
-			else
-			{
-				UINT backBufferIndex = gSwapChain4->GetCurrentBackBufferIndex();
+		//while (WM_QUIT != msg.message)
+		//{
+		//	if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+		//	{
+		//		TranslateMessage(&msg);
+		//		DispatchMessage(&msg);
+		//	}
+		//	else
+		//	{
+		//		UINT backBufferIndex = gSwapChain4->GetCurrentBackBufferIndex();
 
-				Update(backBufferIndex);
-				//Render(backBufferIndex);
-				frame();
-				present();
-			}
-		}
+		//		Update(backBufferIndex);
+		//		//Render(backBufferIndex);
+		//		frame();
+		//		present();
+		//	}
+		//}
 	}
 
 	
-	shutdown();
+	//shutdown();
 
 	return 1;
 }
@@ -730,7 +730,7 @@ void D3D12Test::frame()
 
 		gCommandList4->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-		m_testConstantBuffer->bind(nullptr);
+		//m_testConstantBuffer->bind(nullptr);
 
 		for (auto mesh : work.second) //Loop through all meshes that uses the "work" technique
 		{
@@ -740,7 +740,7 @@ void D3D12Test::frame()
 			}
 
 			//Bind cb - not yet completely implemented
-			//mesh->txBuffer->bind(work.first->getMaterial());
+			mesh->txBuffer->bind(work.first->getMaterial());
 
 			//Add draw command to command list
 			gCommandList4->DrawInstanced(3, 1, 0, 0); //3 Vertices, 1 triangle, start with vertex 0 and triangle 0

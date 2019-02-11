@@ -11,8 +11,9 @@ D3D12Technique::D3D12Technique(Material* m, RenderState* r) : Technique(m,r) {
 
 	////// Input Layout //////
 	D3D12_INPUT_ELEMENT_DESC inputElementDesc[] = {
-		{ "POS", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,	D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "COLOR"	, 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,	D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "NORMAL"	, 0, DXGI_FORMAT_R32G32B32_FLOAT, 1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32B32_FLOAT, 2, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
 	};
 
 	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc;
@@ -55,6 +56,7 @@ D3D12Technique::D3D12Technique(Material* m, RenderState* r) : Technique(m,r) {
 	//m_pipeLineState = Locator::getPipelineState();
 
 	Locator::getDevice()->CreateGraphicsPipelineState(&gpsd, IID_PPV_ARGS(&m_pipeLineState));
+
 }
 
 D3D12Technique::~D3D12Technique() {
@@ -64,8 +66,8 @@ D3D12Technique::~D3D12Technique() {
 }
 
 void D3D12Technique::enable(Renderer* renderer) {
-	
 
 	Locator::getCommandList()->Reset(Locator::getCommandAllocator(), m_pipeLineState);
+	Locator::getCommandList()->SetPipelineState(m_pipeLineState);
 	
 }

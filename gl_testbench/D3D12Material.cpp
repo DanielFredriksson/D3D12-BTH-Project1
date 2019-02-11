@@ -42,8 +42,8 @@ int D3D12Material::compileShader(ShaderType type, std::string& errString)
 
 	// Combine all the individual 'define' strings into one string
 	std::string shaderDefinesData = "";
-	/*for (auto it = this->shaderDefines.at(type).begin(); it != this->shaderDefines.at(type).end(); it++)
-		shaderDefinesData += *it;*/
+	for (auto it = this->shaderDefines.at(type).begin(); it != this->shaderDefines.at(type).end(); it++)
+		shaderDefinesData += *it;
 
 	// Extra step, just in case
 	std::string allDataToBeConverted = (shaderDefinesData + shaderText);

@@ -1,25 +1,31 @@
-struct VSIn
-{
-	float3 pos		: POSITION;
-	float3 color	: COLOR;
+#define MERGE(a, b) a##b
+struct VSIn {
+	float4 position : POSITION0;
+	float4 normal 	: NORMAL0;
+	float2 texCoord : TEXCOORD0;
 };
 
-struct VSOut
-{
-	float4 pos		: SV_POSITION;
-	float4 color	: COLOR;
+struct VSOut {
+	float4 position : SV_POSITION;
+	float4 normal 	: NORMAL0;
+	float2 texCoord : TEXCOORD0;
 };
 
-cbuffer CB : register(b0)
-{
-	float R, G, B, A;
+cbuffer TRANSLATION_NAME : register(MERGE(b, TRANSLATION)) {
+	float4 translate;
 }
 
-VSOut VS_main( VSIn input, uint index : SV_VertexID )
-{
-	VSOut output	= (VSOut)0;
-	output.pos		= float4( input.pos, 1.0f );
-	output.color	= float4(R, G, B, A);
+VSOut VS_main(VSIn input) {
+	VSOut output = (VSOut)0;
+	output.position = input.position + translate;
+
+	#ifdef NORMAL
+	 	output.normal = input.normal;
+	#endif
+
+	#ifdef TEXTCOORD
+	 	output.texCoord = input.texCoord;
+	 #endif
 
 	return output;
 }
