@@ -11,6 +11,7 @@ public:
 	~D3D12ConstantBuffer();
 	void setData(const void* data, size_t size, Material* m, unsigned int location);
 	void bind(Material*);
+	void bindBundle(ID3D12GraphicsCommandList* pCommandList, Material*);
 
 private:
 	const unsigned int m_frameCount = 2;

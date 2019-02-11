@@ -63,13 +63,13 @@ void D3D12Test::WaitForGpu()
 
 	//Signal and increment the fence value.
 	const UINT64 fence = gFenceValue;
-	gCommandQueue->Signal(gFence, fence);
+	ThrowIfFailed(gCommandQueue->Signal(gFence, fence));
 	gFenceValue++;
 
 	//Wait until command queue is done.
 	if (gFence->GetCompletedValue() < fence)
 	{
-		gFence->SetEventOnCompletion(fence, gEventHandle);
+		ThrowIfFailed(gFence->SetEventOnCompletion(fence, gEventHandle));
 		WaitForSingleObject(gEventHandle, INFINITE);
 	}
 }
@@ -94,10 +94,10 @@ void D3D12Test::SetResourceTransitionBarrier(ID3D12GraphicsCommandList* commandL
 #pragma region CreateDirect3DDevice
 void D3D12Test::CreateDirect3DDevice(HWND wndHandle)
 {
-
 #ifdef _DEBUG
 	//Enable the D3D12 debug layer.
 	ID3D12Debug* debugController = nullptr;
+	this->enableShaderBasedValidation();
 
 #ifdef STATIC_LINK_DEBUGSTUFF
 	if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))
@@ -108,10 +108,8 @@ void D3D12Test::CreateDirect3DDevice(HWND wndHandle)
 #else
 	HMODULE mD3D12 = GetModuleHandle(L"D3D12.dll");
 	PFN_D3D12_GET_DEBUG_INTERFACE f = (PFN_D3D12_GET_DEBUG_INTERFACE)GetProcAddress(mD3D12, "D3D12GetDebugInterface");
-	if (SUCCEEDED(f(IID_PPV_ARGS(&debugController))))
-	{
-		debugController->EnableDebugLayer();
-	}
+	ThrowIfFailed(f(IID_PPV_ARGS(&debugController)));
+	debugController->EnableDebugLayer();
 	SafeRelease2(&debugController);
 #endif
 #endif
@@ -120,7 +118,7 @@ void D3D12Test::CreateDirect3DDevice(HWND wndHandle)
 	IDXGIFactory6*	factory = nullptr;
 	IDXGIAdapter1*	adapter = nullptr;
 	//First a factory is created to iterate through the adapters available.
-	CreateDXGIFactory(IID_PPV_ARGS(&factory));
+	ThrowIfFailed(CreateDXGIFactory(IID_PPV_ARGS(&factory)));
 	for (UINT adapterIndex = 0;; ++adapterIndex)
 	{
 		adapter = nullptr;
@@ -143,7 +141,7 @@ void D3D12Test::CreateDirect3DDevice(HWND wndHandle)
 		//Create the actual device.
 		if (SUCCEEDED(hr = D3D12CreateDevice(adapter, D3D_FEATURE_LEVEL_12_1, IID_PPV_ARGS(&gDevice5))))
 		{
-
+			gDevice5->SetName(L"Device");
 		}
 
 		SafeRelease2(&adapter);
@@ -151,8 +149,9 @@ void D3D12Test::CreateDirect3DDevice(HWND wndHandle)
 	else
 	{
 		//Create warp device if no adapter was found.
-		factory->EnumWarpAdapter(IID_PPV_ARGS(&adapter));
-		D3D12CreateDevice(adapter, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&gDevice5));
+		ThrowIfFailed(factory->EnumWarpAdapter(IID_PPV_ARGS(&adapter)));
+		ThrowIfFailed(D3D12CreateDevice(adapter, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&gDevice5)));
+		gDevice5->SetName(L"Device");
 	}
 
 	SafeRelease2(&factory);
@@ -164,26 +163,30 @@ void D3D12Test::CreateCommandInterfacesAndSwapChain(HWND wndHandle)
 {
 	//Describe and create the command queue.
 	D3D12_COMMAND_QUEUE_DESC cqd = {};
-	gDevice5->CreateCommandQueue(&cqd, IID_PPV_ARGS(&gCommandQueue));
+	ThrowIfFailed(gDevice5->CreateCommandQueue(&cqd, IID_PPV_ARGS(&gCommandQueue)));
+	gCommandQueue->SetName(L"Normal CommandQueue");
 
 	//Create command allocator. The command allocator object corresponds
 	//to the underlying allocations in which GPU commands are stored.
-	gDevice5->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&gCommandAllocator));
+	ThrowIfFailed(gDevice5->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&gCommandAllocator)));
+	gCommandAllocator->SetName(L"Normal CommandAllocator");
 
 	//Create command list.
-	gDevice5->CreateCommandList(
+	ThrowIfFailed(gDevice5->CreateCommandList(
 		0,
 		D3D12_COMMAND_LIST_TYPE_DIRECT,
 		gCommandAllocator,
 		nullptr,
-		IID_PPV_ARGS(&gCommandList4));
+		IID_PPV_ARGS(&gCommandList4)
+	));
+	gCommandList4->SetName(L"Main CommandList");
 
 	//Command lists are created in the recording state. Since there is nothing to
 	//record right now and the main loop expects it to be closed, we close it.
-	gCommandList4->Close();
+	ThrowIfFailed(gCommandList4->Close());
 
 	IDXGIFactory5*	factory = nullptr;
-	CreateDXGIFactory(IID_PPV_ARGS(&factory));
+	ThrowIfFailed(CreateDXGIFactory(IID_PPV_ARGS(&factory)));
 
 	//Create swap chain.
 	DXGI_SWAP_CHAIN_DESC1 scDesc = {};
@@ -201,18 +204,18 @@ void D3D12Test::CreateCommandInterfacesAndSwapChain(HWND wndHandle)
 	scDesc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
 
 	IDXGISwapChain1* swapChain1 = nullptr;
-	if (SUCCEEDED(factory->CreateSwapChainForHwnd(
+	ThrowIfFailed(factory->CreateSwapChainForHwnd(
 		gCommandQueue,
 		wndHandle,
 		&scDesc,
 		nullptr,
 		nullptr,
-		&swapChain1)))
+		&swapChain1
+	));
+
+	if (SUCCEEDED(swapChain1->QueryInterface(IID_PPV_ARGS(&gSwapChain4))))
 	{
-		if (SUCCEEDED(swapChain1->QueryInterface(IID_PPV_ARGS(&gSwapChain4))))
-		{
-			gSwapChain4->Release();
-		}
+		gSwapChain4->Release();
 	}
 
 	SafeRelease2(&factory);
@@ -222,7 +225,8 @@ void D3D12Test::CreateCommandInterfacesAndSwapChain(HWND wndHandle)
 #pragma region CreateFenceAndEventHandle
 void D3D12Test::CreateFenceAndEventHandle()
 {
-	gDevice5->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&gFence));
+	ThrowIfFailed(gDevice5->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&gFence)));
+	gFence->SetName(L"Fence");
 	gFenceValue = 1;
 	//Create an event handle to use for GPU synchronization.
 	gEventHandle = CreateEvent(0, false, false, 0);
@@ -237,18 +241,42 @@ void D3D12Test::CreateRenderTargets()
 	dhd.NumDescriptors = NUM_SWAP_BUFFERS;
 	dhd.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 
-	HRESULT hr = gDevice5->CreateDescriptorHeap(&dhd, IID_PPV_ARGS(&gRenderTargetsHeap));
+	ThrowIfFailed(gDevice5->CreateDescriptorHeap(&dhd, IID_PPV_ARGS(&gRenderTargetsHeap)));
+	gRenderTargetsHeap->SetName(L"RenderTargetsHeap");
 
 	//Create resources for the render targets.
 	gRenderTargetDescriptorSize = gDevice5->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	D3D12_CPU_DESCRIPTOR_HANDLE cdh = gRenderTargetsHeap->GetCPUDescriptorHandleForHeapStart();
 
+
 	//One RTV for each frame.
 	for (UINT n = 0; n < NUM_SWAP_BUFFERS; n++)
 	{
-		hr = gSwapChain4->GetBuffer(n, IID_PPV_ARGS(&gRenderTargets[n]));
+		ThrowIfFailed(gSwapChain4->GetBuffer(n, IID_PPV_ARGS(&gRenderTargets[n])));
 		gDevice5->CreateRenderTargetView(gRenderTargets[n], nullptr, cdh);
 		cdh.ptr += gRenderTargetDescriptorSize;
+
+		// Setting Name for Debugging Purposes
+		std::string stringName;
+		if (n == 0) {
+			stringName = "RenderTarget0";
+		}
+		else {
+			stringName = "RenderTarget1";
+		}
+
+		// std::string --> char* --> wchar_t* --> LPCWSTR
+		int length = strlen(stringName.c_str());
+		wchar_t* wideStringName = new wchar_t[length]; 
+		std::mbstowcs(wideStringName, stringName.c_str(), length);
+		LPCWSTR name = wideStringName;	
+		gRenderTargets[n]->SetName(name);
+		/* 
+			An argument could be made for deleting the new'd 'wideStringName',
+			however, since it is a pointer and L"asdf" is also a pointer i assume
+			that ->setName(L"asdf") handles the destruction of L"asdf", and therefore
+			also the desctrution of a given LPCWSTR
+		*/
 	}
 }
 #pragma endregion
@@ -308,23 +336,26 @@ void D3D12Test::CreateRootSignature()
 	rsDesc.pStaticSamplers = nullptr;
 
 	ID3DBlob* sBlob;
-	D3D12SerializeRootSignature(
+	ThrowIfFailed(D3D12SerializeRootSignature(
 		&rsDesc,
 		D3D_ROOT_SIGNATURE_VERSION_1,
 		&sBlob,
-		nullptr);
+		nullptr
+	));
 
-	gDevice5->CreateRootSignature(
+	ThrowIfFailed(gDevice5->CreateRootSignature(
 		0,
 		sBlob->GetBufferPointer(),
 		sBlob->GetBufferSize(),
-		IID_PPV_ARGS(&gRootSignature));
+		IID_PPV_ARGS(&gRootSignature)
+	));
+	gRootSignature->SetName(L"RootSignature");
 
-	Locator::provide(this->gRootSignature);
-	Locator::provide(this->gDevice5);
-	Locator::provide(this->gPipeLineState);
-	Locator::provide(this->gSwapChain4);
-	Locator::provide(this->gCommandList4);
+	Locator::provide(&this->gRootSignature);
+	Locator::provide(&this->gDevice5);
+	Locator::provide(&this->gPipeLineState);
+	Locator::provide(&this->gSwapChain4);
+	Locator::provide(&this->gCommandList4);
 }
 #pragma endregion
 
@@ -550,7 +581,9 @@ float4 PS_main( VSOut input ) : SV_TARGET0
 	for (UINT i = 0; i < D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT; i++)
 		gpsd.BlendState.RenderTarget[i] = defaultRTdesc;
 
-	gDevice5->CreateGraphicsPipelineState(&gpsd, IID_PPV_ARGS(&gPipeLineState));
+
+	ThrowIfFailed(gDevice5->CreateGraphicsPipelineState(&gpsd, IID_PPV_ARGS(&gPipeLineState)));
+	gPipeLineState->SetName(L"PipeLineState");
 }
 #pragma endregion
 
@@ -604,62 +637,42 @@ void D3D12Test::Update(int backBufferIndex)
 #pragma region Render
 void D3D12Test::Render(int backBufferIndex)
 {
-	//Command list allocators can only be reset when the associated command lists have
-	//finished execution on the GPU; fences are used to ensure this (See WaitForGpu method)
-	gCommandAllocator->Reset();
-	gCommandList4->Reset(gCommandAllocator, gPipeLineState);
+	/// Handle all commands and then close the commandlsit
+	{
+		D3D12_CPU_DESCRIPTOR_HANDLE cdh = gRenderTargetsHeap->GetCPUDescriptorHandleForHeapStart();
+		
+		// Reset (Open Command List)
+		this->bundle.reset(gCommandList4);
 
-	//Set root signature
-	gCommandList4->SetGraphicsRootSignature(gRootSignature);
+		// Set Back Buffer to Render
+		this->setBackBufferToRender(&cdh, gCommandList4, backBufferIndex);
 
-	m_testConstantBuffer->bind(nullptr);
+			// Append Non-Bundled Commands to the commandlist
+			this->recordNonBundledCommands(gCommandList4, &cdh);
 
-	//Set necessary states.
-	gCommandList4->RSSetViewports(1, &gViewport);
-	gCommandList4->RSSetScissorRects(1, &gScissorRect);
+			// Append Bundled Commands to the commandlist
+			this->bundle.appendBundleToCommandList(gCommandList4);
 
-	//Indicate that the back buffer will be used as render target.
-	SetResourceTransitionBarrier(gCommandList4,
-		gRenderTargets[backBufferIndex],
-		D3D12_RESOURCE_STATE_PRESENT,		//state before
-		D3D12_RESOURCE_STATE_RENDER_TARGET	//state after
-	);
+		// Set Back Buffer To Display
+		this->setBackBufferToDisplay(&cdh, gCommandList4, backBufferIndex);
 
-	//Record commands.
-	//Get the handle for the current render target used as back buffer.
-	D3D12_CPU_DESCRIPTOR_HANDLE cdh = gRenderTargetsHeap->GetCPUDescriptorHandleForHeapStart();
-	cdh.ptr += gRenderTargetDescriptorSize * backBufferIndex;
+		//Close the list to prepare it for execution.
+		ThrowIfFailed(gCommandList4->Close());
+	}
 
-	gCommandList4->OMSetRenderTargets(1, &cdh, true, nullptr);
+	/// Execute Command List & Present Frame
+	{
+		// Execute the command list.
+		ID3D12CommandList* listsToExecute[] = { gCommandList4 };
+		gCommandQueue->ExecuteCommandLists(ARRAYSIZE(listsToExecute), listsToExecute);
 
-	float clearColor[] = { 0.2f, 0.2f, 0.2f, 1.0f };
-	gCommandList4->ClearRenderTargetView(cdh, clearColor, 0, nullptr);
-
-	gCommandList4->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	m_testVertexBuffer->bind(0, 1, 0);
-
-	gCommandList4->DrawInstanced(6, 2, 0, 0); //6 Vertices, 2 triangles, start with vertex 0 and triangle 0
-
-	//Indicate that the back buffer will now be used to present.
-	SetResourceTransitionBarrier(gCommandList4,
-		gRenderTargets[backBufferIndex],
-		D3D12_RESOURCE_STATE_RENDER_TARGET,	//state before
-		D3D12_RESOURCE_STATE_PRESENT		//state after
-	);
-
-	//Close the list to prepare it for execution.
-	gCommandList4->Close();
-
-	//Execute the command list.
-	ID3D12CommandList* listsToExecute[] = { gCommandList4 };
-	gCommandQueue->ExecuteCommandLists(ARRAYSIZE(listsToExecute), listsToExecute);
-
-	//Present the frame.
-	DXGI_PRESENT_PARAMETERS pp = {};
-	gSwapChain4->Present1(0, 0, &pp);
-
-	WaitForGpu(); //Wait for GPU to finish.
-				  //NOT BEST PRACTICE, only used as such for simplicity.
+		// Present the frame.
+		DXGI_PRESENT_PARAMETERS pp = {};
+		ThrowIfFailed(gSwapChain4->Present1(0, 0, &pp));
+	}
+	
+	/// Wait for GPU
+	WaitForGpu();
 }
 #pragma endregion
 
@@ -672,6 +685,73 @@ D3D12Test::D3D12Test() {
 
 D3D12Test::~D3D12Test() {
 
+}
+
+void D3D12Test::setBackBufferToRender(
+	D3D12_CPU_DESCRIPTOR_HANDLE* cdh,
+	ID3D12GraphicsCommandList3* commandList,
+	UINT backBufferIndex
+)
+{
+	///  --------------  OLD  --------------
+	//Indicate that the back buffer will be used as render target.
+	SetResourceTransitionBarrier(
+		gCommandList4,
+		gRenderTargets[backBufferIndex],
+		D3D12_RESOURCE_STATE_PRESENT,		//state before
+		D3D12_RESOURCE_STATE_RENDER_TARGET	//state after
+	);
+
+	//Get the handle for the current render target used as back buffer.
+	cdh->ptr += gRenderTargetDescriptorSize * backBufferIndex;
+}
+
+void D3D12Test::setBackBufferToDisplay(
+	D3D12_CPU_DESCRIPTOR_HANDLE* cdh,
+	ID3D12GraphicsCommandList3* commandList,
+	UINT backBufferIndex
+)
+{
+	//Indicate that the back buffer will now be used to present.
+	SetResourceTransitionBarrier(
+		gCommandList4,
+		gRenderTargets[backBufferIndex],
+		D3D12_RESOURCE_STATE_RENDER_TARGET,	//state before
+		D3D12_RESOURCE_STATE_PRESENT		//state after
+	);
+}
+
+void D3D12Test::enableShaderBasedValidation()
+{
+	ID3D12Debug* pDebugController0;
+	ID3D12Debug1* pDebugController1;
+	
+	ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&pDebugController0)));
+	ThrowIfFailed(pDebugController0->QueryInterface(IID_PPV_ARGS(&pDebugController1)));
+	pDebugController1->SetEnableGPUBasedValidation(true);
+}
+
+void D3D12Test::recordNonBundledCommands(
+	ID3D12GraphicsCommandList3 * commandList, 
+	D3D12_CPU_DESCRIPTOR_HANDLE* cdh
+)
+{
+	/*
+	Every API-CALL that can be called by bundles does so, the API Commands
+	in this function are not compatible with bundles and therefore must 
+	be recorded 'normally'
+	*/
+	// NONBUNDLED COMMANDS 2.0
+	commandList->RSSetViewports(1, &gViewport);
+	commandList->RSSetScissorRects(1, &gScissorRect);
+	commandList->OMSetRenderTargets(
+		1,
+		cdh,
+		true,
+		nullptr
+	);
+	float clearColor[] = { 0.2f, 0.2f, 0.2f, 1.0f };
+	commandList->ClearRenderTargetView(*cdh, clearColor, 0, nullptr);
 }
 
 #pragma endregion
@@ -756,6 +836,14 @@ int D3D12Test::initialize(unsigned int width, unsigned int height)
 		CreateConstantBufferResources();					//9. Create constant buffer data
 
 		CreateTriangleData();								//10. Create vertexdata
+
+		this->bundle.initialize(				// Initialize Bundles
+			m_testVertexBuffer,
+			&gViewport,
+			&gScissorRect,
+			&gRenderTargetsHeap->GetCPUDescriptorHandleForHeapStart(),
+			m_testConstantBuffer		
+		);	
 
 		WaitForGpu();
 

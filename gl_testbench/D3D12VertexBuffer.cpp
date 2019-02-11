@@ -56,13 +56,18 @@ void D3D12VertexBuffer::setData(const void* data, size_t size, size_t offset) {
 
 	//Initialize vertex buffer view, used in the render call.
 	m_vertexBufferView.BufferLocation = m_vertexBufferResource->GetGPUVirtualAddress();
-	m_vertexBufferView.StrideInBytes = offset;
-	m_vertexBufferView.SizeInBytes = size;
+	m_vertexBufferView.StrideInBytes = (UINT)offset;
+	m_vertexBufferView.SizeInBytes = (UINT)size;
 }
 
 void D3D12VertexBuffer::bind(size_t offset, size_t size, unsigned int location) {
 	//If this doesn't work it probably is because we have to convert size to number of elements instead of data size
-	m_commandList4->IASetVertexBuffers(offset, size, &m_vertexBufferView);
+	m_commandList4->IASetVertexBuffers((UINT)offset, (UINT)size, &m_vertexBufferView);
+}
+
+void D3D12VertexBuffer::bindBundle(ID3D12GraphicsCommandList* commandList, size_t offset, size_t size, unsigned int location)
+{
+	commandList->IASetVertexBuffers((UINT)offset, (UINT)size, &m_vertexBufferView);
 }
 
 void D3D12VertexBuffer::unbind() {

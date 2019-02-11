@@ -67,6 +67,9 @@ public:
 	// activate the material for use.
 	virtual int enable();
 
+	//Allows us to send in the graphics 
+	void enable(D3D12_GRAPHICS_PIPELINE_STATE_DESC *gpsd);
+
 	// disable material
 	virtual void disable();
 };

@@ -1,0 +1,93 @@
+
+
+DANIELS GUIDE TO BUNDLES & COMMANDLISTS
+Have fun! ;)
+
+
+----------------------------------------
+YOU WILL USE THESE FUNCTIONS FOR RECORDING API-CALLS:
+	CommandList->FUNCTION:
+		Records that function which will execute in a queue-order when the specified 
+		'CommandQueue' executes CommandQueue->ExecuteCommandLists().
+
+	CommandList->ExecuteBundle(Commandlist::Type::BUNDLE)
+		Records every function inside that bundle to the commandlist.
+
+	CommandQueue->ExecuteBundle(Commandlist::type::DIRECT)
+		Executes the commandlist with all the recorded commands in the same order they
+		where recorded. 
+
+
+----------------------------------------
+GENERAL QUESTIONS:
+	When do we close a commandList?
+	- We close a commandList directly after a commandQueue executes it
+
+	When do we close a commandqueue?
+	- We don't.
+
+
+----------------------------------------
+WHAT YOU WILL NEED TO ALLOCATE, AND WHY:
+	Bundle Part:
+		ID3D12CommandAllocator(TYPE::BUNDLE)	bundleAllocator;
+		-	The 'bundleAllocator' is used purely for the creation of 'bundle'.
+		
+		ID3D12CommandAllocator(TYPE::DIRECT)	bundle_commandAllocator;
+		-	The 'bundle_commandAllocator' is used for resetting before commands
+			start being recorded in a new frame. See example below.
+		
+		ID3D12GraphicsCommandList(TYPE::BUNDLE) bundle;
+		-	The bundle is what gets recorded to, and is what is executed by the
+			'main command list' will in turn will be executed by the 'commandQueue'
+
+
+	Command List Part:
+		ID3D12CommandAllocator(TYPE::DIRECT)	commandAllocator;
+		-	The 'commandAllocator' is used purely for creating the 'commandList'.
+
+		ID3D12CommandQueue(TYPE::DIRECT)		commandQueue;
+		-	The 'commandQueue' is what executes the final 'commandList' with all
+			of the recorded API-Calls.		
+		-	It is also given to the SwapChain upon creation so 
+			that the SwapChain can force a flush on it if necessary.
+		-	It is also used for Signaling with Fences, which we don't care about here.
+
+		ID3D12GraphicsCommandList(TYPE::DIRECT)	commandList
+		-	The 'commandList' is what is records API-Calls which are later executed
+			by the 'commandQueue'.
+		-	It is also used for ResourceBarriers and, somehow, constantBuffers.
+
+
+----------------------------------------
+EXAMPLE (WITHOUT ALLOCATION, SINCE THAT SHIT EASY):
+
+	RECORD THE BUNDLE IN ADVANCE:
+
+		CommandList(TYPE::BUNDLE)->FunctionA();
+		CommandList(TYPE::BUNDLE)->FunctionB();
+		CommandList(TYPE::BUNDLE)->FunctionC();
+		CommandList(TYPE::BUNDLE)->Close();
+
+	RECORD THE MAIN COMMANDLIST:
+
+		RESET AT START:
+
+			CommandAllocator(TYPE::BUNDLE)->Reset();
+			CommandList(TYPE::DIRECT)->Reset(CommandAllocator(TYPE::BUNDLE), PipeLineState);
+		
+		RECORD THE MAIN COMMANDLIST:
+
+			CommandList(TYPE::DIRECT)->FunctionD();
+			CommandList(TYPE::DIRECT)->FunctionE();
+			CommandList(TYPE::DIRECT)->FunctionF();
+
+		ADD THE BUNDLE TO THE MAIN COMMANDLIST:
+
+			CommandList(TYPE::DIRECT)->ExecuteBundle(CommandList(TYPE::BUNDLE));
+			CommandList(TYPE::DIRECT)->Close();
+
+	EXECUTE THE MAIN COMMAND:	
+
+		ID3D12CommandList* ppCommandList[] = { CommandList(TYPE::DIRECT) };
+		CommandQueue(TYPE::DIRECT)->ExecuteCommandLists(ARRAYSIZE(ppCommandList), ppComandList);

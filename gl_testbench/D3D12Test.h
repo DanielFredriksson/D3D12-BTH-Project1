@@ -7,6 +7,7 @@
 #include <d3dcompiler.h>
 
 #include "Renderer.h"
+#include "D3D12Bundle.h"
 
 LRESULT CALLBACK wndProc2(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam); //Window Proc callback function
 
@@ -72,11 +73,13 @@ private:
 #pragma region OwnVariables
 
 	float m_clearColor[4] = { 0,0,0,0 };
-
 	ConstantBuffer* m_testConstantBuffer;
 	VertexBuffer* m_testVertexBuffer;
-
-
+	Material* m_testMaterial;
+	RenderState* m_testRenderState;
+	Technique* m_testTechnique;
+	D3D12Bundle bundle;	
+	
 #pragma endregion
 
 #pragma region MemberFunctions
@@ -102,6 +105,11 @@ private:
 
 	void	Update(int backBufferIndex);
 	void	Render(int backBufferIndex);
+
+	void recordNonBundledCommands(ID3D12GraphicsCommandList3* commandList, D3D12_CPU_DESCRIPTOR_HANDLE* cdh);
+	void setBackBufferToRender(D3D12_CPU_DESCRIPTOR_HANDLE* cdh, ID3D12GraphicsCommandList3* commandList, UINT backBufferIndex);
+	void setBackBufferToDisplay(D3D12_CPU_DESCRIPTOR_HANDLE* cdh, ID3D12GraphicsCommandList3* commandList, UINT backBufferIndex);
+	void enableShaderBasedValidation();
 	//------------------------
 #pragma endregion
 public:

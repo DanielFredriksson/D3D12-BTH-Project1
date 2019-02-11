@@ -153,9 +153,12 @@
   <ItemGroup>
     <ClCompile Include="ConstantBuffer.cpp" />
     <ClCompile Include="D3D12ConstantBuffer.cpp" />
+    <ClCompile Include="D3D12Bundle.cpp" />
     <ClCompile Include="D3D12Mesh.cpp" />
     <ClCompile Include="D3D12Material.cpp" />
     <ClCompile Include="D3D12Renderer.cpp" />
+    <ClCompile Include="D3D12RenderState.cpp" />
+    <ClCompile Include="D3D12Technique.cpp" />
     <ClCompile Include="D3D12Sampler2D.cpp" />
     <ClCompile Include="D3D12Test.cpp" />
     <ClCompile Include="D3D12Texture2D.cpp" />
@@ -188,10 +191,13 @@
   <ItemGroup>
     <ClInclude Include="..\include\stb_image.h" />
     <ClInclude Include="ConstantBuffer.h" />
+    <ClInclude Include="D3D12Bundle.h" />
     <ClInclude Include="D3D12ConstantBuffer.h" />
     <ClInclude Include="D3D12Mesh.h" />
     <ClInclude Include="D3D12Material.h" />
     <ClInclude Include="D3D12Renderer.h" />
+    <ClInclude Include="D3D12RenderState.h" />
+    <ClInclude Include="D3D12Technique.h" />
     <ClInclude Include="D3D12Sampler2D.h" />
     <ClInclude Include="D3D12Test.h" />
     <ClInclude Include="D3D12Texture2D.h" />
@@ -238,6 +244,9 @@
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
       <DisableOptimizations Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</DisableOptimizations>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="HowToCommandListsAndBundles.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
