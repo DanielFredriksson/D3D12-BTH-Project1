@@ -152,8 +152,6 @@ void D3D12Renderer::initShadersAndPipelineState()
 		gpsd.BlendState.RenderTarget[i] = defaultRTdesc;
 
 	m_device->CreateGraphicsPipelineState(&gpsd, IID_PPV_ARGS(&this->m_pipelineState));
-
-	//Locator::provide(this->m_pipelineState);
 }
 
 void D3D12Renderer::initViewportAndScissorRect()
@@ -238,6 +236,8 @@ void D3D12Renderer::initCommandQueue()
 	//Command lists are created in the recording state. Since there is nothing to
 	//record right now and the main loop expects it to be closed, we close it.
 	m_commandList->Close();
+
+	Locator::provide(&this->m_commandQueue);
 }
 
 void D3D12Renderer::initSwapChain()

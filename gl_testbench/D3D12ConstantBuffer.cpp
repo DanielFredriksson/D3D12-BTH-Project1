@@ -116,3 +116,18 @@ void D3D12ConstantBuffer::bind(Material *)
 		m_descriptorHeap[backBufferIndex]->GetGPUDescriptorHandleForHeapStart()
 	);
 }
+
+void D3D12ConstantBuffer::bindBundle(ID3D12GraphicsCommandList * pCommandList, Material *)
+{
+	int backBufferIndex = m_swapChain->GetCurrentBackBufferIndex();
+
+	//Set constant buffer descriptor heap
+	ID3D12DescriptorHeap* descriptorHeaps[] = { m_descriptorHeap[backBufferIndex] };
+	pCommandList->SetDescriptorHeaps(ARRAYSIZE(descriptorHeaps), descriptorHeaps);
+
+	//Set root descriptor table to index 0 in previously set root signature
+	pCommandList->SetGraphicsRootDescriptorTable(
+		0,
+		m_descriptorHeap[backBufferIndex]->GetGPUDescriptorHandleForHeapStart()
+	);
+}

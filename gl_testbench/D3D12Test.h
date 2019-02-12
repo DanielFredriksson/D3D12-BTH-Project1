@@ -1,6 +1,5 @@
 #pragma once
 
-#include <iostream>
 #include <windows.h>
 #include <d3d12.h>
 
@@ -8,6 +7,7 @@
 #include <d3dcompiler.h>
 
 #include "Renderer.h"
+#include "D3D12Bundle.h"
 
 LRESULT CALLBACK wndProc2(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam); //Window Proc callback function
 
@@ -87,6 +87,8 @@ private:
 	//std::vector<Mesh*> m_meshes;
 	std::unordered_map<Technique*, std::vector<Mesh*>> drawList2;
 
+	D3D12Bundle bundle;	
+	
 #pragma endregion
 
 #pragma region MemberFunctions
@@ -112,6 +114,11 @@ private:
 
 	void	Update(int backBufferIndex);
 	void	Render(int backBufferIndex);
+
+	void recordNonBundledCommands(ID3D12GraphicsCommandList3* commandList, D3D12_CPU_DESCRIPTOR_HANDLE* cdh);
+	void setBackBufferToRender(D3D12_CPU_DESCRIPTOR_HANDLE* cdh, ID3D12GraphicsCommandList3* commandList, UINT backBufferIndex);
+	void setBackBufferToDisplay(D3D12_CPU_DESCRIPTOR_HANDLE* cdh, ID3D12GraphicsCommandList3* commandList, UINT backBufferIndex);
+	void enableShaderBasedValidation();
 	//------------------------
 #pragma endregion
 public:
