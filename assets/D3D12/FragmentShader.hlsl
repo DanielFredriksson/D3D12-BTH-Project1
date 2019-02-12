@@ -5,13 +5,13 @@ struct VSOut {
 };
 
 #ifdef DIFFUSE_SLOT
-Texture2D tex : register(t0);
+//Texture2D tex : register(t0);
 //SamplerState ss : register(s0);
 #endif
 
-cbuffer DIFFUSE_TINT_NAME : register(b6) {
-	float4 diffuseTint;
-}
+//cbuffer DIFFUSE_TINT_NAME : register(b6) {
+//	float4 diffuseTint;
+//}
 
 float4 PS_main(VSOut input) : SV_TARGET0 {
 
@@ -23,5 +23,5 @@ float4 PS_main(VSOut input) : SV_TARGET0 {
 
 	float4 color = float4(1.0, 1.0, 1.0, 1.0);
 
-	return color * float4(diffuseTint.rgb, 1.0);
+	return color;// * float4(diffuseTint.rgb, 1.0);
 }

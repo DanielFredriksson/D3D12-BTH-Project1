@@ -74,17 +74,17 @@ private:
 
 	float m_clearColor[4] = { 0,0,0,0 };
 
-	ConstantBuffer* m_testConstantBuffer;
+	/*ConstantBuffer* m_testConstantBuffer;
 	VertexBuffer* m_testVertexBuffer;
 	Material* m_testMaterial;
 	RenderState* m_testRenderState;
 	RenderState* m_testRenderState2;
 	Technique* m_testTechnique;
-	Technique* m_testTechnique2;
+	Technique* m_testTechnique2;*/
 
 	bool m_firstFrame = true;
 
-	std::vector<Mesh*> m_meshes;
+	//std::vector<Mesh*> m_meshes;
 	std::unordered_map<Technique*, std::vector<Mesh*>> drawList2;
 
 #pragma endregion

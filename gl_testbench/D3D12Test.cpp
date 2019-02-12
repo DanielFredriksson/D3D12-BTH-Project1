@@ -277,48 +277,16 @@ void D3D12Test::CreateViewportAndScissorRect()
 #pragma region CreateConstantBufferResources
 void D3D12Test::CreateConstantBufferResources()
 {
-	m_testConstantBuffer = makeConstantBuffer("test", DIFFUSE_TINT);
-	m_testConstantBuffer->setData(&gConstantBufferCPU, sizeof(ConstantBufferData), nullptr, DIFFUSE_TINT);
+	//m_testConstantBuffer = makeConstantBuffer("test", DIFFUSE_TINT);
+	//m_testConstantBuffer->setData(&gConstantBufferCPU, sizeof(ConstantBufferData), nullptr, DIFFUSE_TINT);
 }
 #pragma endregion
 
 #pragma region CreateRootSignature
 void D3D12Test::CreateRootSignature()
 {
-	////define descriptor range(s)
-	//D3D12_DESCRIPTOR_RANGE  dtRanges[2];
-	//dtRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-	//dtRanges[0].NumDescriptors = 1; 
-	//dtRanges[0].BaseShaderRegister = TRANSLATION; //register b5
-	//dtRanges[0].RegisterSpace = 0;
-	//dtRanges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-	//dtRanges[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-	//dtRanges[1].NumDescriptors = 1; 
-	//dtRanges[1].BaseShaderRegister = DIFFUSE_TINT; //register b6
-	//dtRanges[1].RegisterSpace = 0;
-	//dtRanges[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-
-
-	////create a descriptor table
-	//D3D12_ROOT_DESCRIPTOR_TABLE dt;
-	//dt.NumDescriptorRanges = ARRAYSIZE(dtRanges);
-	//dt.pDescriptorRanges = dtRanges;
-
-	////create root parameter
-	//D3D12_ROOT_PARAMETER  rootParam[1];
-	//rootParam[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	//rootParam[0].DescriptorTable = dt;
-	//rootParam[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-
-	//D3D12_ROOT_SIGNATURE_DESC rsDesc;
-	//rsDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-	//rsDesc.NumParameters = ARRAYSIZE(rootParam);
-	//rsDesc.pParameters = rootParam;
-	//rsDesc.NumStaticSamplers = 0;
-	//rsDesc.pStaticSamplers = nullptr;
-
-
+	/* PIRATKOPIA
 	// Create root descriptors
 	D3D12_ROOT_DESCRIPTOR rootDescCBV = {};
 	rootDescCBV.ShaderRegister = TRANSLATION;
@@ -341,6 +309,45 @@ void D3D12Test::CreateRootSignature()
 
 	D3D12_ROOT_SIGNATURE_DESC rsDesc;
 	rsDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+	rsDesc.NumParameters = ARRAYSIZE(rootParam);
+	rsDesc.pParameters = rootParam;
+	rsDesc.NumStaticSamplers = 0;
+	rsDesc.pStaticSamplers = nullptr; */
+
+	//define descriptor range(s)
+	D3D12_DESCRIPTOR_RANGE  dtRanges[1];
+	dtRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+	dtRanges[0].NumDescriptors = 1;
+	dtRanges[0].BaseShaderRegister = TRANSLATION; //register b5
+	dtRanges[0].RegisterSpace = 0;
+	dtRanges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+	//dtRanges[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+	//dtRanges[1].NumDescriptors = 1;
+	//dtRanges[1].BaseShaderRegister = DIFFUSE_TINT; //register b6
+	//dtRanges[1].RegisterSpace = 0;
+	//dtRanges[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+
+	//create a descriptor table
+	D3D12_ROOT_DESCRIPTOR_TABLE dt;
+	dt.NumDescriptorRanges = ARRAYSIZE(dtRanges);
+	dt.pDescriptorRanges = dtRanges;
+
+	//create root parameter
+	D3D12_ROOT_PARAMETER  rootParam[1];
+	rootParam[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	rootParam[0].DescriptorTable = dt;
+	rootParam[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+	D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags =
+		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT | // Only the input assembler stage needs access to the constant buffer.
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS |
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS;
+
+	D3D12_ROOT_SIGNATURE_DESC rsDesc;
+	rsDesc.Flags = rootSignatureFlags;
 	rsDesc.NumParameters = ARRAYSIZE(rootParam);
 	rsDesc.pParameters = rootParam;
 	rsDesc.NumStaticSamplers = 0;
@@ -371,7 +378,7 @@ void D3D12Test::CreateRootSignature()
 #pragma region CreateShadersAndPipelineState
 void D3D12Test::CreateShadersAndPiplelineState()
 {
-	m_testMaterial = makeMaterial("testMaterial");
+	/*m_testMaterial = makeMaterial("testMaterial");
 	m_testMaterial->setShader("VertexShader2.hlsl", Material::ShaderType::VS);
 	m_testMaterial->setShader("PixelShader.hlsl", Material::ShaderType::PS);
 	std::string errorString;
@@ -385,48 +392,48 @@ void D3D12Test::CreateShadersAndPiplelineState()
 	m_testRenderState2->setWireFrame(true);
 
 	m_testTechnique = makeTechnique(m_testMaterial, m_testRenderState);
-	m_testTechnique2 = makeTechnique(m_testMaterial, m_testRenderState2);
+	m_testTechnique2 = makeTechnique(m_testMaterial, m_testRenderState2);*/
 }
 #pragma endregion
 
 #pragma region CreateTriangleData
 void D3D12Test::CreateTriangleData()
 {
-	Vertex triangleVertices[3] =
-	{
-		-0.5f, 0.5f, 0.0f,	//v0 pos
-		1.0f, 0.0f, 0.0f,	//v0 color
+	//Vertex triangleVertices[3] =
+	//{
+	//	-0.5f, 0.5f, 0.0f,	//v0 pos
+	//	1.0f, 0.0f, 0.0f,	//v0 color
 
-		0.0f, -0.5f, 0.0f,	//v1
-		0.0f, 1.0f, 0.0f,	//v1 color
+	//	0.0f, -0.5f, 0.0f,	//v1
+	//	0.0f, 1.0f, 0.0f,	//v1 color
 
-		-1.0f, -0.5f, 0.0f, //v2
-		0.0f, 0.0f, 1.0f	//v2 color
-	};
+	//	-1.0f, -0.5f, 0.0f, //v2
+	//	0.0f, 0.0f, 1.0f	//v2 color
+	//};
 
-	m_testVertexBuffer = makeVertexBuffer(sizeof(triangleVertices) * 100, VertexBuffer::DATA_USAGE::STATIC);
+	//m_testVertexBuffer = makeVertexBuffer(sizeof(triangleVertices) * 100, VertexBuffer::DATA_USAGE::STATIC);
 
-	for (int i = 0; i < 6; i++) {
-		Mesh* m = makeMesh();
+	//for (int i = 0; i < 6; i++) {
+	//	Mesh* m = makeMesh();
 
-		constexpr auto numberOfPosElements = 3;
-		size_t offset = i * sizeof(triangleVertices);
-		m_testVertexBuffer->setData(triangleVertices, sizeof(triangleVertices), offset);
-		m->addIAVertexBufferBinding(m_testVertexBuffer, offset, numberOfPosElements, sizeof(Vertex), 0);
-		if (i % 2 == 0) {
-			m->technique = m_testTechnique;
-		}
-		else {
-			m->technique = m_testTechnique2;
-		}
-		m_meshes.push_back(m);
+	//	constexpr auto numberOfPosElements = 3;
+	//	size_t offset = i * sizeof(triangleVertices);
+	//	m_testVertexBuffer->setData(triangleVertices, sizeof(triangleVertices), offset);
+	//	m->addIAVertexBufferBinding(m_testVertexBuffer, offset, numberOfPosElements, sizeof(Vertex), 0);
+	//	if (i % 2 == 0) {
+	//		m->technique = m_testTechnique;
+	//	}
+	//	else {
+	//		m->technique = m_testTechnique2;
+	//	}
+	//	m_meshes.push_back(m);
 
-		triangleVertices[0].x += 0.1f;
-		triangleVertices[1].x += 0.1f;
-		triangleVertices[2].x += 0.1f;
-	}
+	//	triangleVertices[0].x += 0.1f;
+	//	triangleVertices[1].x += 0.1f;
+	//	triangleVertices[2].x += 0.1f;
+	//}
 
-	
+	//
 }
 #pragma endregion
 
@@ -444,17 +451,18 @@ void D3D12Test::Update(int backBufferIndex)
 	}
 
 	//Update GPU memory
-	m_testConstantBuffer->setData(&gConstantBufferCPU, sizeof(ConstantBufferData), nullptr, 5);
+	//m_testConstantBuffer->setData(&gConstantBufferCPU, sizeof(ConstantBufferData), nullptr, 5);
 
-	for (auto m : m_meshes) {
+	/*for (auto m : m_meshes) {
 		submit(m);
-	}
+	}*/
 }
 #pragma endregion
 
 #pragma region Render
 void D3D12Test::Render(int backBufferIndex)
 {
+	/*
 	//Command list allocators can only be reset when the associated command lists have
 	//finished execution on the GPU; fences are used to ensure this (See WaitForGpu method)
 	gCommandAllocator->Reset();
@@ -516,6 +524,8 @@ void D3D12Test::Render(int backBufferIndex)
 
 	WaitForGpu(); //Wait for GPU to finish.
 				  //NOT BEST PRACTICE, only used as such for simplicity.
+				  
+	*/
 }
 #pragma endregion
 
@@ -529,13 +539,13 @@ D3D12Test::D3D12Test() {
 
 	//gConstantBufferCPU.colorChannel[0] = 1.0f;
 
-	m_testConstantBuffer = nullptr;
+	/*m_testConstantBuffer = nullptr;
 	m_testVertexBuffer = nullptr;
 	m_testMaterial = nullptr;
 	m_testRenderState = nullptr;
 	m_testRenderState2 = nullptr;
 	m_testTechnique = nullptr;
-	m_testTechnique2 = nullptr;
+	m_testTechnique2 = nullptr;*/
 }
 
 D3D12Test::~D3D12Test() {
@@ -620,7 +630,7 @@ int D3D12Test::initialize(unsigned int width, unsigned int height)
 
 		//CreateShadersAndPiplelineState();					//8. Set up the pipeline state
 
-		CreateConstantBufferResources();					//9. Create constant buffer data
+		//CreateConstantBufferResources();					//9. Create constant buffer data
 
 		//CreateTriangleData();								//10. Create vertexdata
 
@@ -691,7 +701,7 @@ int D3D12Test::shutdown()
 
 
 
-	if (m_testConstantBuffer != nullptr) {
+	/*if (m_testConstantBuffer != nullptr) {
 		delete m_testConstantBuffer;
 	}
 
@@ -713,7 +723,7 @@ int D3D12Test::shutdown()
 
 	for (unsigned int i = 0; i < m_meshes.size(); i++) {
 		delete m_meshes[i];
-	}
+	}*/
 
 	return 420;
 }
@@ -787,25 +797,12 @@ void D3D12Test::frame()
 
 	gCommandList4->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	//bool firstDraw = true;
-
 	for (auto work : drawList2) //Loop through 4 different techniques
 	{
 		//Enable technique
-		work.first->enable(this); //Resets the command list
+		work.first->enable(this); 
 
-		m_testConstantBuffer->bind(nullptr);
-
-
-
-		//RECORD COMMANDS
-
-
-
-		/*if (firstDraw) {
-
-			firstDraw = false;
-		}*/
+		//work.first->getMaterial()->enable();
 
 		for (auto mesh : work.second) //Loop through all meshes that uses the "work" technique
 		{
@@ -815,7 +812,7 @@ void D3D12Test::frame()
 			}
 
 			//Bind cb - not yet completely implemented
-			mesh->txBuffer->bind(work.first->getMaterial());
+			mesh->txBuffer->bind(work.first->getMaterial()); //Translation
 
 			//Add draw command to command list
 			gCommandList4->DrawInstanced(3, 1, 0, 0); //3 Vertices, 1 triangle, start with vertex 0 and triangle 0
