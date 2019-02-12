@@ -12,10 +12,7 @@ D3D12ConstantBuffer::D3D12ConstantBuffer(std::string NAME, unsigned int location
 
 	m_lastMat = nullptr;
 
-	//m_hasBeenInitialized = false;
 
-	//if this is the first time we are running setData - do this.
-	//if (!m_hasBeenInitialized) {
 	for (unsigned int i = 0; i < m_frameCount; i++)
 	{
 		D3D12_DESCRIPTOR_HEAP_DESC heapDescriptorDesc = {};
@@ -65,14 +62,11 @@ D3D12ConstantBuffer::D3D12ConstantBuffer(std::string NAME, unsigned int location
 		// Create Constant Buffer
 		m_device->CreateConstantBufferView(&cbvDesc, m_descriptorHeap[i]->GetCPUDescriptorHandleForHeapStart());
 	}
-
-	//}
-
 }
 
 D3D12ConstantBuffer::~D3D12ConstantBuffer()
 {
-	for (int i = 0; i < 2; i++) {
+	for (unsigned int i = 0; i < m_frameCount; i++) {
 		if (m_descriptorHeap[i] != NULL) {
 			m_descriptorHeap[i]->Release();
 		}
@@ -86,20 +80,21 @@ void D3D12ConstantBuffer::setData(const void * data, size_t size, Material * m, 
 {
 	m_location = location;
 
-	int backBufferIndex = m_swapChain->GetCurrentBackBufferIndex();
+	//int backBufferIndex = m_swapChain->GetCurrentBackBufferIndex();
+	
+	for (unsigned int i = 0; i < m_frameCount; i++) {
+		//Update GPU memory
+		void* mappedMem = nullptr;
+		D3D12_RANGE readRange = { 0, 0 }; //We do not intend to read this resource on the CPU.
+		if (SUCCEEDED(m_constantBufferResource[i]->Map(0, &readRange, &mappedMem)))
+		{
+			memcpy(mappedMem, data, size);
 
-	//Update GPU memory
-	void* mappedMem = nullptr;
-	D3D12_RANGE readRange = { 0, 0 }; //We do not intend to read this resource on the CPU.
-	if (SUCCEEDED(m_constantBufferResource[backBufferIndex]->Map(0, &readRange, &mappedMem)))
-	{
-		memcpy(mappedMem, data, size);
-
-		D3D12_RANGE writeRange = { 0, size };
-		m_constantBufferResource[backBufferIndex]->Unmap(0, &writeRange);
+			D3D12_RANGE writeRange = { 0, size };
+			m_constantBufferResource[i]->Unmap(0, &writeRange);
+		}
 	}
-
-	//m_hasBeenInitialized = true;
+	
 }
 
 void D3D12ConstantBuffer::bind(Material *)
@@ -117,13 +112,7 @@ void D3D12ConstantBuffer::bind(Material *)
 	}
 	else {
 		rootIndex = 1;
-	}
-
-	//Set root descriptor table to index 0 in previously set root signature
-	/*m_commandList4->SetGraphicsRootDescriptorTable(
-		0,
-		m_descriptorHeap[backBufferIndex]->GetGPUDescriptorHandleForHeapStart()
-	);*/
+	}	
 
 	m_commandList4->SetGraphicsRootConstantBufferView(
 		rootIndex,

@@ -24,7 +24,7 @@ namespace CLEAR_BUFFER_FLAGS {
 
 class Renderer {
 public:
-	enum class BACKEND { GL45, VULKAN, DX11, DX12, DX12TEST };
+	enum class BACKEND { GL45, VULKAN, DX11, DX12};
 
 	/*
 	Return concrete objects of the BACKEND
