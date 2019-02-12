@@ -13,6 +13,8 @@
 /// TESTING
 #include "D3D12Renderer.h"
 #include "D3D12Test.h"
+#include <chrono>
+#include <iostream>
 
 /// MEMORY LEAKS
 #include <crtdbg.h>
@@ -83,8 +85,15 @@ typedef union {
 void run() {
 
 	SDL_Event windowEvent;
+	std::vector<long long> vector; // TESTING
+	vector.resize(10);
+	int iteration = 0;
+	long long average = 0;
+	long long delta = 0;
+
 	while (true)
 	{
+		auto start = chrono::steady_clock::now(); 			// TESTING
 		if (SDL_PollEvent(&windowEvent))
 		{
 			if (windowEvent.type == SDL_QUIT) break;
@@ -92,6 +101,25 @@ void run() {
 		}
 		updateScene();
 		renderScene();
+		auto end = chrono::steady_clock::now();			// TESTING
+
+		delta = chrono::duration_cast<chrono::microseconds>(end - start).count();
+
+		// Every 10th iteration...
+		if ((iteration %= 10) == 0) {
+			// ... Gather the average
+			for (int i = 0; i < vector.size(); i++) {
+				average += delta;
+			}
+			average /= vector.size();
+			// ... Print it
+			cout << "Elapsed Average: " << delta << " MicroSeconds " << endl;
+			// Reset average
+			average = 0;
+		}
+
+		// Otherwise replace the current iteration with a new value
+		vector[iteration] = chrono::duration_cast<chrono::microseconds>(end - start).count();		
 	}
 }
 
@@ -125,6 +153,7 @@ void updateScene()
 
 void renderScene()
 {
+	
 	renderer->clearBuffer(CLEAR_BUFFER_FLAGS::COLOR | CLEAR_BUFFER_FLAGS::DEPTH);
 	for (auto m : scene)
 	{

@@ -1,7 +1,7 @@
 #include "D3D12Technique.h"
-
-
 #include "Locator.h"
+
+#include <functional>
 
 D3D12Technique::D3D12Technique(Material* m, RenderState* r) : Technique(m,r) {
 	material = m;
@@ -62,6 +62,9 @@ D3D12Technique::D3D12Technique(Material* m, RenderState* r) : Technique(m,r) {
 
 	Locator::getDevice()->CreateGraphicsPipelineState(&gpsd, IID_PPV_ARGS(&m_pipeLineState));
 
+
+	/// Initialize Bundle
+	this->initBundle();
 }
 
 D3D12Technique::~D3D12Technique() {
@@ -70,8 +73,15 @@ D3D12Technique::~D3D12Technique() {
 	}
 }
 
-void D3D12Technique::enable(Renderer* renderer) {
+void D3D12Technique::initBundle()
+{
+	if (m_Bundle == nullptr) {
+		m_Bundle = new D3D12Bundle(m_pipeLineState);
+	}
+}
 
-	//Locator::getCommandList()->Reset(Locator::getCommandAllocator(), m_pipeLineState);
-	Locator::getCommandList()->SetPipelineState(m_pipeLineState);
+
+void D3D12Technique::enable(Renderer* renderer) {
+	// Adds pre-recorded bundle to the commandlist
+	this->m_Bundle->appendBundleToCommandList(Locator::getCommandList());
 }
