@@ -9,14 +9,14 @@
 
 #include "Renderer.h"
 
-LRESULT CALLBACK wndProc2(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam); //Window Proc callback function
+LRESULT CALLBACK wndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam); //Window Proc callback function
 
 #pragma region globals
 const unsigned int NUM_SWAP_BUFFERS = 2; //Number of buffers
 #pragma endregion
 
 
-template<class T> inline void SafeRelease2(T **ppInterface) {
+template<class T> inline void SafeRelease(T **ppInterface) {
 	if (*ppInterface != NULL)
 	{
 		(*ppInterface)->Release();

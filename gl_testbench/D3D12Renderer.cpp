@@ -9,8 +9,8 @@
 #include "D3D12RenderState.h"
 #include "D3D12Technique.h"
 
-#pragma region wndProc2
-LRESULT CALLBACK wndProc2(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+#pragma region wndProc
+LRESULT CALLBACK wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message)
 	{
@@ -30,7 +30,7 @@ HWND D3D12Renderer::initWindow(unsigned int width, unsigned int height)
 
 	WNDCLASSEX wcex = { 0 };
 	wcex.cbSize = sizeof(WNDCLASSEX);
-	wcex.lpfnWndProc = wndProc2;
+	wcex.lpfnWndProc = wndProc;
 	wcex.hInstance = hInstance;
 	wcex.lpszClassName = L"D3D12_Proj";
 	if (!RegisterClassEx(&wcex))
@@ -121,7 +121,7 @@ void D3D12Renderer::CreateDirect3DDevice(HWND wndHandle)
 		debugController->EnableDebugLayer();
 		debugController->SetEnableGPUBasedValidation(true);
 	}
-	SafeRelease2(&debugController);
+	SafeRelease(&debugController);
 #endif
 #endif
 
@@ -144,7 +144,7 @@ void D3D12Renderer::CreateDirect3DDevice(HWND wndHandle)
 			break;
 		}
 
-		SafeRelease2(&adapter);
+		SafeRelease(&adapter);
 	}
 	if (adapter)
 	{
@@ -155,7 +155,7 @@ void D3D12Renderer::CreateDirect3DDevice(HWND wndHandle)
 
 		}
 
-		SafeRelease2(&adapter);
+		SafeRelease(&adapter);
 	}
 	else
 	{
@@ -164,7 +164,7 @@ void D3D12Renderer::CreateDirect3DDevice(HWND wndHandle)
 		D3D12CreateDevice(adapter, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&gDevice5));
 	}
 
-	SafeRelease2(&factory);
+	SafeRelease(&factory);
 }
 #pragma endregion
 
@@ -224,7 +224,7 @@ void D3D12Renderer::CreateCommandInterfacesAndSwapChain(HWND wndHandle)
 		}
 	}
 
-	SafeRelease2(&factory);
+	SafeRelease(&factory);
 }
 #pragma endregion
 
@@ -449,21 +449,21 @@ int D3D12Renderer::shutdown()
 {
 	WaitForGpu();
 	CloseHandle(gEventHandle);
-	SafeRelease2(&gDevice5);
-	SafeRelease2(&gCommandQueue);
-	SafeRelease2(&gCommandAllocator);
-	SafeRelease2(&gCommandList4);
-	SafeRelease2(&gSwapChain4);
+	SafeRelease(&gDevice5);
+	SafeRelease(&gCommandQueue);
+	SafeRelease(&gCommandAllocator);
+	SafeRelease(&gCommandList4);
+	SafeRelease(&gSwapChain4);
 
-	SafeRelease2(&gFence);
+	SafeRelease(&gFence);
 
-	SafeRelease2(&gRenderTargetsHeap);
+	SafeRelease(&gRenderTargetsHeap);
 	for (int i = 0; i < NUM_SWAP_BUFFERS; i++)
 	{
-		SafeRelease2(&gRenderTargets[i]);
+		SafeRelease(&gRenderTargets[i]);
 	}
 
-	SafeRelease2(&gRootSignature);
+	SafeRelease(&gRootSignature);
 
 	return 0;
 }
