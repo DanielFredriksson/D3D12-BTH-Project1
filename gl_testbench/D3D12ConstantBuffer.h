@@ -16,7 +16,6 @@ public:
 private:
 	const unsigned int m_frameCount = 2;
 	ID3D12Device4 *m_device;
-	//ID3D12CommandQueue *m_commandQueue;
 	IDXGISwapChain3 *m_swapChain;
 
 	ID3D12DescriptorHeap* m_descriptorHeap[2] = {};

@@ -1,99 +1,108 @@
 #pragma once
 
+#include <iostream>
+#include <windows.h>
+#include <d3d12.h>
+
+#include <dxgi1_6.h> //Only used for initialization of the device and swap chain.
+#include <d3dcompiler.h>
+
 #include "Renderer.h"
 
-/// D3D12
-#include <d3d12.h> 
-//#include <C:/Program Files (x86)/Windows Kits/10/Include/10.0.16299.0/um/d3d12.h>
+LRESULT CALLBACK wndProc2(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam); //Window Proc callback function
 
-#include <dxgi.h>		// DirectX Graphics Infrastructure
-#include <dxgi1_4.h>	// Enables IDXGIFactory4
+#pragma region globals
+const unsigned int NUM_SWAP_BUFFERS = 2; //Number of buffers
+#pragma endregion
 
-/// DEBUGGING
-#include <exception>
 
-/// WHAT IS THIS FOR?
-template<class T> inline void SafeRelease(T **ppInterface);
+template<class T> inline void SafeRelease(T **ppInterface) {
+	if (*ppInterface != NULL)
+	{
+		(*ppInterface)->Release();
 
-LRESULT CALLBACK wndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam); //Window Proc callback function
-
-struct Vertex {
-	float x, y, z;
-	float r, g, b;
-};
+		(*ppInterface) = NULL;
+	}
+}
 
 class D3D12Renderer : public Renderer {
 private:
-	static const UINT frameCount = 2;
-	int SCREEN_WIDTH;
-	int SCREEN_HEIGHT;
-
-	// Pipeline Objects
-	D3D12_VIEWPORT m_viewPort;
-	D3D12_RECT m_scissorRect;
-	IDXGISwapChain3 *m_swapChain = nullptr;
-	ID3D12Device4 *m_device = nullptr;
-	IDXGIFactory4 *m_factory = nullptr;
-
-	ID3D12Resource *m_renderTargets[frameCount];
-
-	ID3D12CommandAllocator *m_commandAllocator = nullptr;
-	ID3D12CommandQueue *m_commandQueue;
-
-	ID3D12RootSignature *m_rootSignature = nullptr;
-	ID3D12DescriptorHeap *m_rtvHeap;
-	ID3D12PipelineState *m_pipelineState = nullptr;
-	ID3D12GraphicsCommandList *m_commandList = nullptr;
-	UINT m_rtvDescriptorSize;
-
-	ID3D12DescriptorHeap *m_descriptorHeap[frameCount];
-	ID3D12Resource1 *m_constantBufferResource[frameCount];
-	ConstantBuffer *m_constantBufferCPU;
-
-	// App Resources
-	ID3D12Resource *m_vertexBuffer = nullptr;
-	D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
-
-	// Synchronization Objects
-	UINT m_frameIndex;
-	HANDLE m_fenceEvent;
-	ID3D12Fence *m_fence;
-	UINT64 m_fenceValue;
+	struct Vertex
+	{
+		float x, y, z; // Position
+		float r, g, b; // Color
+	};
 
 	// Window- & HWND related data
-	HWND m_wndHandle;
+	HWND wndHandle;
 
-	// Used by Private Functions
-	void getHardwareAdapter(IDXGIFactory4 * pFactory, IDXGIAdapter1 ** ppAdapter);
+	unsigned int SCREEN_WIDTH, SCREEN_HEIGHT;
 
-	// Used when clearing RTV
+
+	ID3D12Device4*				gDevice5 = nullptr;
+	ID3D12GraphicsCommandList3*	gCommandList4 = nullptr;
+
+	ID3D12CommandQueue*			gCommandQueue = nullptr;
+	ID3D12CommandAllocator*		gCommandAllocator = nullptr;
+	IDXGISwapChain4*			gSwapChain4 = nullptr;
+
+	ID3D12Fence1*				gFence = nullptr;
+	HANDLE						gEventHandle = nullptr;
+	UINT64						gFenceValue = 0;
+
+	ID3D12DescriptorHeap*		gRenderTargetsHeap = nullptr;
+	ID3D12Resource1*			gRenderTargets[NUM_SWAP_BUFFERS] = {};
+	UINT						gRenderTargetDescriptorSize = 0;
+	//UINT						gFrameIndex							= 0;
+
+	D3D12_VIEWPORT				gViewport = {};
+	D3D12_RECT					gScissorRect = {};
+
+	ID3D12RootSignature*		gRootSignature = nullptr;
+	ID3D12PipelineState*		gPipeLineState = nullptr;
+
+#pragma region ConstantBufferGlobals
+	struct ConstantBufferData
+	{
+		float colorChannel[4];
+	};
+
+	ConstantBufferData		gConstantBufferCPU = {};
+#pragma endregion
+
+#pragma region OwnVariables
+
 	float m_clearColor[4] = { 0,0,0,0 };
+	bool m_firstFrame = true;
+	std::unordered_map<Technique*, std::vector<Mesh*>> drawList2;
 
-	// Init sub-functions
-	HWND initWindow(unsigned int width = 800, unsigned int height = 600); //Creates and returns a window
-	void enableDebugLayer();
-	void initDevice();
-	void initCommandQueue();
-	void initSwapChain();
-	void initFenceAndEventHandle();
-	void initRenderTargets();
-	void initViewportAndScissorRect();
-	void initRootSignature();
-	void initShadersAndPipelineState();
-	void initConstantBuffers();
+#pragma endregion
 
-	void loadPipeline();
-	void loadAssets();
-	void waitForGpu();
+#pragma region MemberFunctions
+	//----Member functions----
+	HWND initWindow(unsigned int width = 800, unsigned int height = 600); // 1. Creates and returns a window
 
-	void printError(ID3DBlob* errorBlob);
+	//Helper function for syncronization of GPU/CPU
+	void WaitForGpu();
+	//Helper function for resource transitions - what?
 
+	void SetResourceTransitionBarrier(ID3D12GraphicsCommandList* commandList, ID3D12Resource* resource,
+		D3D12_RESOURCE_STATES StateBefore, D3D12_RESOURCE_STATES StateAfter);
+
+	void CreateDirect3DDevice(HWND wndHandle);				//2. Create Device
+	void CreateCommandInterfacesAndSwapChain(HWND wndHandle);	//3. Create CommandQueue and SwapChain
+	void CreateFenceAndEventHandle();							//4. Create Fence and Event handle
+	void CreateRenderTargets();									//5. Create render targets for backbuffer
+	void CreateViewportAndScissorRect();						//6. Create viewport and rect
+	void CreateRootSignature();
+	//------------------------
+#pragma endregion
 public:
 	D3D12Renderer();
 	~D3D12Renderer();
 
+#pragma region InheritedFunctions
 	///  ------  Inherited Functions  ------ 
-#pragma region
 	virtual Material* makeMaterial(const std::string& name);
 	virtual Mesh* makeMesh();
 	virtual VertexBuffer* makeVertexBuffer(size_t size, VertexBuffer::DATA_USAGE usage);
@@ -117,17 +126,6 @@ public:
 	//
 	virtual void submit(Mesh* mesh);
 	virtual void frame();
-#pragma endregion
 	/// ------------------------------------
-
+#pragma endregion
 };
-
-template<class T>
-inline void SafeRelease(T ** ppInterface)
-{
-	if (*ppInterface != NULL) {
-		if ((*ppInterface)->Release() == 0) {
-			(*ppInterface) = NULL;
-		}
-	}
-}
