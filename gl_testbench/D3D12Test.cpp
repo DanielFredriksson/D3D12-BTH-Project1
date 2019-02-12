@@ -290,6 +290,7 @@ void D3D12Test::CreateConstantBufferResources()
 #pragma region CreateRootSignature
 void D3D12Test::CreateRootSignature()
 {
+	/*
 	//define descriptor range(s)
 	D3D12_DESCRIPTOR_RANGE  dtRanges[2];
 	dtRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
@@ -324,6 +325,34 @@ void D3D12Test::CreateRootSignature()
 
 	D3D12_ROOT_SIGNATURE_DESC rsDesc;
 	rsDesc.Flags = rootSignatureFlags;
+	rsDesc.NumParameters = ARRAYSIZE(rootParam);
+	rsDesc.pParameters = rootParam;
+	rsDesc.NumStaticSamplers = 0;
+	rsDesc.pStaticSamplers = nullptr;
+	*/
+
+	// Create root descriptors
+	D3D12_ROOT_DESCRIPTOR rootDescCBV = {};
+	rootDescCBV.ShaderRegister = TRANSLATION;
+	rootDescCBV.RegisterSpace = 0;
+	D3D12_ROOT_DESCRIPTOR rootDescCBV2 = {};
+	rootDescCBV2.ShaderRegister = DIFFUSE_TINT;
+	rootDescCBV2.RegisterSpace = 0;
+
+	// Create root parameters
+	D3D12_ROOT_PARAMETER rootParam[2];
+
+	rootParam[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	rootParam[0].Descriptor = rootDescCBV;
+	rootParam[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+	rootParam[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	rootParam[1].Descriptor = rootDescCBV2;
+	rootParam[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+
+	D3D12_ROOT_SIGNATURE_DESC rsDesc;
+	rsDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 	rsDesc.NumParameters = ARRAYSIZE(rootParam);
 	rsDesc.pParameters = rootParam;
 	rsDesc.NumStaticSamplers = 0;
@@ -779,6 +808,7 @@ void D3D12Test::frame()
 		work.first->enable(this); 
 
 		work.first->getMaterial()->enable(); //Colour
+
 
 		for (auto mesh : work.second) //Loop through all meshes that uses the "work" technique
 		{

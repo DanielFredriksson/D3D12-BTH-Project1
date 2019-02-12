@@ -199,16 +199,21 @@ int D3D12Material::compileMaterial(std::string& errString)
 
 void D3D12Material::addConstantBuffer(std::string name, unsigned int location)
 {
+	m_constantBufferIndex = location;
 	this->constantBuffers[location] = new D3D12ConstantBuffer(name, location);
 }
 
 void D3D12Material::updateConstantBuffer(const void* data, size_t size, unsigned int location)
 {
+	m_constantBufferIndex = location;
 	this->constantBuffers[location]->setData(data, size, this, location);
 }
 
 int D3D12Material::enable()
 {
+	if (m_constantBufferIndex != -1) {
+		this->constantBuffers[m_constantBufferIndex]->bind(nullptr);
+	}
 	return 0;
 }
 

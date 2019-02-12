@@ -24,5 +24,5 @@ float4 PS_main(VSOut input) : SV_TARGET0 {
 	float4 color = float4(1.0, 1.0, 1.0, 1.0);
 	//float4 color = diffuseTint;
 
-	return color;// * float4(diffuseTint.rgb, 1.0);
+	return color * float4(diffuseTint.rgb, 1.0);
 }
