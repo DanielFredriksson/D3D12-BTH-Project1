@@ -8,6 +8,8 @@
 #include "D3D12VertexBuffer.h"
 #include "D3D12RenderState.h"
 #include "D3D12Technique.h"
+#include "D3D12Texture2D.h"
+#include "D3D12Sampler2D.h"
 
 #pragma region wndProc
 LRESULT CALLBACK wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -118,8 +120,8 @@ void D3D12Renderer::CreateDirect3DDevice(HWND wndHandle)
 	PFN_D3D12_GET_DEBUG_INTERFACE f = (PFN_D3D12_GET_DEBUG_INTERFACE)GetProcAddress(mD3D12, "D3D12GetDebugInterface");
 	if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))
 	{
-		debugController->EnableDebugLayer();
-		debugController->SetEnableGPUBasedValidation(true);
+		//debugController->EnableDebugLayer();
+		//debugController->SetEnableGPUBasedValidation(true);
 	}
 	SafeRelease(&debugController);
 #endif
@@ -364,12 +366,12 @@ VertexBuffer * D3D12Renderer::makeVertexBuffer(size_t size, VertexBuffer::DATA_U
 
 Texture2D * D3D12Renderer::makeTexture2D()
 {
-	return nullptr;
+	return new D3D12Texture2D;
 }
 
 Sampler2D * D3D12Renderer::makeSampler2D()
 {
-	return nullptr;
+	return new D3D12Sampler2D;
 }
 
 RenderState * D3D12Renderer::makeRenderState()

@@ -30,7 +30,7 @@ D3D12ConstantBuffer::D3D12ConstantBuffer(std::string NAME, unsigned int location
 	heapProperties.VisibleNodeMask = 1;		// Used when multi-gpu
 	heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
 	// Resource Description
-	UINT cbSizeAligned = 1024 * 64; //???
+	UINT cbSizeAligned = 1024 * 64;
 	D3D12_RESOURCE_DESC resourceDesc = {};
 	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
 	resourceDesc.Width = cbSizeAligned;

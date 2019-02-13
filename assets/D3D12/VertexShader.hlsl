@@ -17,7 +17,6 @@ cbuffer TRANSLATION_NAME : register(b5) {
 VSOut VS_main(VSIn input) {
 	VSOut output = (VSOut)0;
 	output.position = input.position + translate;
-	//output.position = input.position;
 
 	#ifdef NORMAL
 	 	output.normal = input.normal;

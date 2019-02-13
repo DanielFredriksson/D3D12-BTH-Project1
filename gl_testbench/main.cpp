@@ -10,13 +10,6 @@
 #include "Texture2D.h"
 #include <math.h>
 
-/// TESTING
-#include "D3D12Renderer.h"
-
-/// MEMORY LEAKS
-#include <crtdbg.h>
-
-
 using namespace std;
 Renderer* renderer;
 
@@ -27,8 +20,8 @@ Renderer* renderer;
 vector<Mesh*> scene;
 vector<Material*> materials;
 vector<Technique*> techniques;
-//vector<Texture2D*> textures;
-//vector<Sampler2D*> samplers;
+vector<Texture2D*> textures;
+vector<Sampler2D*> samplers;
 
 VertexBuffer* pos;
 VertexBuffer* nor;
@@ -43,7 +36,7 @@ double gLastDelta = 0.0;
 
 void updateDelta()
 {
-	#define WINDOW_SIZE 10
+#define WINDOW_SIZE 10
 	static Uint64 start = 0;
 	static Uint64 last = 0;
 	static double avg[WINDOW_SIZE] = { 0.0 };
@@ -68,12 +61,12 @@ constexpr int TOTAL_PLACES = 2 * TOTAL_TRIS;
 float xt[TOTAL_PLACES], yt[TOTAL_PLACES];
 
 // lissajous points
-typedef union { 
+typedef union {
 	struct { float x, y, z, w; };
 	struct { float r, g, b, a; };
 } float4;
 
-typedef union { 
+typedef union {
 	struct { float x, y; };
 	struct { float u, v; };
 } float2;
@@ -100,23 +93,23 @@ void run() {
 void updateScene()
 {
 	/*
-	    For each mesh in scene list, update their position 
+		For each mesh in scene list, update their position
 	*/
 	{
 		static long long shift = 0;
 		const int size = scene.size();
 		for (int i = 0; i < size; i++)
 		{
-			const float4 trans { 
-				xt[(int)(float)(i + shift) % (TOTAL_PLACES)], 
-				yt[(int)(float)(i + shift) % (TOTAL_PLACES)], 
+			const float4 trans{
+				xt[(int)(float)(i + shift) % (TOTAL_PLACES)],
+				yt[(int)(float)(i + shift) % (TOTAL_PLACES)],
 				i * (-1.0 / TOTAL_PLACES),
 				0.0
 			};
 			scene[i]->txBuffer->setData(&trans, sizeof(trans), scene[i]->technique->getMaterial(), TRANSLATION);
 		}
 		// just to make them move...
-		shift+=max(TOTAL_TRIS / 1000.0,TOTAL_TRIS / 100.0);
+		shift += max(TOTAL_TRIS / 1000.0, TOTAL_TRIS / 100.0);
 	}
 	return;
 };
@@ -144,7 +137,7 @@ int initialiseTestbench()
 
 	std::string defineTX = "#define TRANSLATION " + std::to_string(TRANSLATION) + "\n";
 	std::string defineTXName = "#define TRANSLATION_NAME " + std::string(TRANSLATION_NAME) + "\n";
-	
+
 	std::string defineDiffCol = "#define DIFFUSE_TINT " + std::to_string(DIFFUSE_TINT) + "\n";
 	std::string defineDiffColName = "#define DIFFUSE_TINT_NAME " + std::string(DIFFUSE_TINT_NAME) + "\n";
 
@@ -155,31 +148,31 @@ int initialiseTestbench()
 		// shader filename extension must be asked to the renderer
 		// these strings should be constructed from the IA.h file!!!
 
-		{ "VertexShader", "FragmentShader", definePos + defineNor + defineUV + defineTX + 
-		   defineTXName + defineDiffCol + defineDiffColName }, 
+		{ "VertexShader", "FragmentShader", definePos + defineNor + defineUV + defineTX +
+		   defineTXName + defineDiffCol + defineDiffColName },
 
-		{ "VertexShader", "FragmentShader", definePos + defineNor + defineUV + defineTX + 
-		   defineTXName + defineDiffCol + defineDiffColName }, 
+		{ "VertexShader", "FragmentShader", definePos + defineNor + defineUV + defineTX +
+		   defineTXName + defineDiffCol + defineDiffColName },
 
-		{ "VertexShader", "FragmentShader", definePos + defineNor + defineUV + defineTX + 
+		{ "VertexShader", "FragmentShader", definePos + defineNor + defineUV + defineTX +
 		   defineTXName + defineDiffCol + defineDiffColName + defineDiffuse	},
 
-		{ "VertexShader", "FragmentShader", definePos + defineNor + defineUV + defineTX + 
-		   defineTXName + defineDiffCol + defineDiffColName }, 
+		{ "VertexShader", "FragmentShader", definePos + defineNor + defineUV + defineTX +
+		   defineTXName + defineDiffCol + defineDiffColName },
 	};
 
 	float degToRad = M_PI / 180.0;
 	float scale = (float)TOTAL_PLACES / 359.9;
 	for (int a = 0; a < TOTAL_PLACES; a++)
 	{
-		xt[a] = 0.8f * cosf(degToRad * ((float)a/scale) * 3.0);
-		yt[a] = 0.8f * sinf(degToRad * ((float)a/scale) * 2.0);
+		xt[a] = 0.8f * cosf(degToRad * ((float)a / scale) * 3.0);
+		yt[a] = 0.8f * sinf(degToRad * ((float)a / scale) * 2.0);
 	};
 
 	// triangle geometry:
 	float4 triPos[3] = { { 0.0f,  0.05, 0.0f, 1.0f },{ 0.05, -0.05, 0.0f, 1.0f },{ -0.05, -0.05, 0.0f, 1.0f } };
 	float4 triNor[3] = { { 0.0f,  0.0f, 1.0f, 0.0f },{ 0.0f, 0.0f, 1.0f, 0.0f },{ 0.0f, 0.0f, 1.0f, 0.0f } };
-	float2 triUV[3] =  { { 0.5f,  -0.99f },{ 1.49f, 1.1f },{ -0.51, 1.1f } };
+	float2 triUV[3] = { { 0.5f,  -0.99f },{ 1.49f, 1.1f },{ -0.51, 1.1f } };
 
 	// load Materials.
 	std::string shaderPath = renderer->getShaderPath();
@@ -210,7 +203,7 @@ int initialiseTestbench()
 		// when material is bound, this buffer should be also bound for access.
 
 		m->updateConstantBuffer(diffuse[i], 4 * sizeof(float), DIFFUSE_TINT);
-		
+
 		materials.push_back(m);
 	}
 
@@ -225,14 +218,14 @@ int initialiseTestbench()
 	techniques.push_back(renderer->makeTechnique(materials[3], renderer->makeRenderState()));
 
 	// create texture
-	/*Texture2D* fatboy = renderer->makeTexture2D();
+	Texture2D* fatboy = renderer->makeTexture2D();
 	fatboy->loadFromFile("../assets/textures/fatboy.png");
 	Sampler2D* sampler = renderer->makeSampler2D();
 	sampler->setWrap(WRAPPING::REPEAT, WRAPPING::REPEAT);
 	fatboy->sampler = sampler;
 
 	textures.push_back(fatboy);
-	samplers.push_back(sampler);*/
+	samplers.push_back(sampler);
 
 	// pre-allocate one single vertex buffer for ALL triangles
 	pos = renderer->makeVertexBuffer(TOTAL_TRIS * sizeof(triPos), VertexBuffer::DATA_USAGE::STATIC);
@@ -257,14 +250,14 @@ int initialiseTestbench()
 		constexpr auto numberOfUVElements = std::extent<decltype(triUV)>::value;
 		offset = i * sizeof(triUV);
 		uvs->setData(triUV, sizeof(triUV), offset);
-		m->addIAVertexBufferBinding(uvs, offset, numberOfUVElements , sizeof(float2), TEXTCOORD);
+		m->addIAVertexBufferBinding(uvs, offset, numberOfUVElements, sizeof(float2), TEXTCOORD);
 
 		// we can create a constant buffer outside the material, for example as part of the Mesh.
 		m->txBuffer = renderer->makeConstantBuffer(std::string(TRANSLATION_NAME), TRANSLATION);
-		
-		m->technique = techniques[ i % 4];
-		/*if (i % 4 == 2)
-			m->addTexture(textures[0], DIFFUSE_SLOT);*/
+
+		m->technique = techniques[i % 4];
+		if (i % 4 == 2)
+			m->addTexture(textures[0], DIFFUSE_SLOT);
 
 		scene.push_back(m);
 	}
@@ -292,44 +285,27 @@ void shutdown() {
 	delete nor;
 	assert(uvs->refCount() == 0);
 	delete uvs;
-	
-	/*for (auto s : samplers)
+
+	for (auto s : samplers)
 	{
 		delete s;
-	}*/
+	}
 
-	/*for (auto t : textures)
+	for (auto t : textures)
 	{
 		delete t;
-	}*/
+	}
 	renderer->shutdown();
 };
 
 int main(int argc, char *argv[])
 {
-	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-
-	// ------  ORIGINAL  ------ 
-	/*renderer = Renderer::makeRenderer(Renderer::BACKEND::GL45);
+	renderer = Renderer::makeRenderer(Renderer::BACKEND::DX12);
 	renderer->initialize(800, 600);
 	renderer->setWinTitle("OpenGL");
 	renderer->setClearColor(0.0, 0.1, 0.1, 1.0);
 	initialiseTestbench();
 	run();
-	shutdown();*/
-	// ------------------------
-
-
-	// ------  MODIFIED  ------ 
-	renderer = Renderer::makeRenderer(Renderer::BACKEND::DX12);
-	renderer->initialize(800, 600);
-	renderer->setWinTitle("Direct3D 12");
-	renderer->setClearColor(0.0f, 0.1f, 0.1f, 1.0f);
-
-	initialiseTestbench();
-	run();
 	shutdown();
-	// ------------------------
-
 	return 0;
 };
