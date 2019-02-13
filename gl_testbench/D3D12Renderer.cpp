@@ -8,6 +8,8 @@
 #include "D3D12VertexBuffer.h"
 #include "D3D12RenderState.h"
 #include "D3D12Technique.h"
+#include "D3D12Sampler2D.h"
+#include "D3D12Texture2D.h"
 
 #pragma region wndProc2
 LRESULT CALLBACK wndProc2(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -364,12 +366,14 @@ VertexBuffer * D3D12Renderer::makeVertexBuffer(size_t size, VertexBuffer::DATA_U
 
 Texture2D * D3D12Renderer::makeTexture2D()
 {
-	return nullptr;
+	D3D12Texture2D* returnValue = new D3D12Texture2D();
+	return static_cast<Texture2D*>(returnValue);
 }
 
 Sampler2D * D3D12Renderer::makeSampler2D()
 {
-	return nullptr;
+	D3D12Sampler2D* returnValue = new D3D12Sampler2D();
+	return static_cast<Sampler2D*>(returnValue);
 }
 
 RenderState * D3D12Renderer::makeRenderState()

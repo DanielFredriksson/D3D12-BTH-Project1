@@ -181,7 +181,12 @@ UINT64 D3D12Texture2D::updateSubresourcesInternal(
 
 D3D12Texture2D::D3D12Texture2D()
 {
-
+	// Describe and create a shader resource view (SRV) heap for the texture.
+	D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
+	srvHeapDesc.NumDescriptors = 1;
+	srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	ThrowIfFailed(Locator::getDevice()->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&this->m_srvHeap)));
 }
 
 D3D12Texture2D::~D3D12Texture2D()
@@ -307,7 +312,7 @@ int D3D12Texture2D::loadFromFile(std::string fileName)
 	srvDesc.Format = textureDesc.Format;
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Texture2D.MipLevels = 1;
-	Locator::getDevice()->CreateShaderResourceView(this->textureResource.Get(), &srvDesc, m_srvHeap->GetCPUDescriptorHandleForHeapStart());
+	Locator::getDevice()->CreateShaderResourceView(this->textureResource.Get(), &srvDesc, m_srvHeap.Get()->GetCPUDescriptorHandleForHeapStart());
 
 	// Close the command list and execute it to begin the initial GPU setup
 	ThrowIfFailed(Locator::getCommandList()->Close());
