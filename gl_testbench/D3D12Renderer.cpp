@@ -576,6 +576,19 @@ void D3D12Renderer::frame()
 	gCommandQueue->ExecuteCommandLists(ARRAYSIZE(listsToExecute), listsToExecute);
 
 	drawList2.clear();
+
+	MSG msg = {};
+	if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+	{
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
+
+	if (WM_QUIT == msg.message) {
+		//Force quit SDL
+		
+	}
+
 }
 
 #pragma endregion
