@@ -17,7 +17,7 @@ class D3D12Texture2D : public Texture2D
 {
 private:
 	unsigned char* rgbTextureData;
-	static const UINT TexturePixelSize = 4;    // The number of bytes used to represent a pixel in the texture.
+	static const UINT TexturePixelSize = 4; // The number of bytes used to represent a pixel in the texture.
 
 	// Pipeline objects.
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_srvHeap;

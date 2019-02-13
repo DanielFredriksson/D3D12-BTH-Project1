@@ -22,11 +22,11 @@ class Locator {
 private:
 	static ID3D12RootSignature** gRootSignature;
 	static ID3D12Device4** gDevice;
-	static ID3D12PipelineState** gPipelineState;
 	static IDXGISwapChain4** gSwapChain;
 	static ID3D12GraphicsCommandList3** gCommandList;
 	static ID3D12CommandAllocator** gCommandAllocator;
 	static ID3D12CommandQueue** gCommandQueue;
+	static ID3D12PipelineState** gTexturePipelineState;
 
 public:
 	Locator() {}
@@ -38,9 +38,6 @@ public:
 	}
 	static void provide(ID3D12Device4** device) {
 		gDevice = device;
-	}
-	static void provide(ID3D12PipelineState** pipelineState) {
-		gPipelineState = pipelineState;
 	}
 	static void provide(IDXGISwapChain4** swapChain) {
 		gSwapChain = swapChain;
@@ -54,6 +51,9 @@ public:
 	static void provide(ID3D12CommandQueue** commandQueue) {
 		gCommandQueue = commandQueue;
 	}
+	static void provide(ID3D12PipelineState** texturePipelineState) {
+		gTexturePipelineState = texturePipelineState;
+	}
 
 	// GET
 	static ID3D12RootSignature* getRootSignature() {
@@ -61,9 +61,6 @@ public:
 	}
 	static ID3D12Device4* getDevice() {
 		return *gDevice;
-	}
-	static ID3D12PipelineState* getPipelineState() {
-		return *gPipelineState;
 	}
 	static IDXGISwapChain4* getSwapChain() {
 		return *gSwapChain;
@@ -76,5 +73,8 @@ public:
 	}
 	static ID3D12CommandQueue* getCommandQueue() {
 		return *gCommandQueue;
+	}
+	static ID3D12PipelineState* getTexturePipelineState() {
+		return *gTexturePipelineState;
 	}
 };

@@ -284,6 +284,20 @@ void D3D12Renderer::CreateViewportAndScissorRect()
 #pragma region CreateRootSignature
 void D3D12Renderer::CreateRootSignature()
 {
+	this->samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
+	this->samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+	this->samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+	this->samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+	this->samplerDesc.MipLODBias = 0;
+	this->samplerDesc.MaxAnisotropy = 0;
+	this->samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+	this->samplerDesc.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
+	this->samplerDesc.MinLOD = 0.0f;
+	this->samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
+	this->samplerDesc.ShaderRegister = 0;
+	this->samplerDesc.RegisterSpace = 0;
+	this->samplerDesc.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
 	// Create root descriptors
 	D3D12_ROOT_DESCRIPTOR rootDescCBV = {};
 	rootDescCBV.ShaderRegister = TRANSLATION;
@@ -303,13 +317,12 @@ void D3D12Renderer::CreateRootSignature()
 	rootParam[1].Descriptor = rootDescCBV2;
 	rootParam[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
-
 	D3D12_ROOT_SIGNATURE_DESC rsDesc;
 	rsDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 	rsDesc.NumParameters = ARRAYSIZE(rootParam);
 	rsDesc.pParameters = rootParam;
-	rsDesc.NumStaticSamplers = 0;
-	rsDesc.pStaticSamplers = nullptr;
+	rsDesc.NumStaticSamplers = 1;
+	rsDesc.pStaticSamplers = &this->samplerDesc;
 
 	ID3DBlob* sBlob;
 	D3D12SerializeRootSignature(

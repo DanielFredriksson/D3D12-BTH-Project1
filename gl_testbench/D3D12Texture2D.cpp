@@ -292,6 +292,8 @@ int D3D12Texture2D::loadFromFile(std::string fileName)
 	textureData.RowPitch = (sizeof(char) * textureWidth * this->TexturePixelSize);
 	textureData.SlicePitch = (textureData.RowPitch * textureHeight * this->TexturePixelSize);
 
+	Locator::getCommandList()->Reset(Locator::getCommandAllocator(), Locator::getTexturePipelineState());
+
 	// Updates the resource data (see the function definition for more details)
 	updateSubresources(Locator::getCommandList(), this->textureResource.Get(), textureUploadHeap.Get(), 0, 0, 1, &textureData);
 

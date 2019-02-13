@@ -61,7 +61,6 @@ D3D12Technique::D3D12Technique(Material* m, RenderState* r) : Technique(m,r) {
 	//m_pipeLineState = Locator::getPipelineState();
 
 	Locator::getDevice()->CreateGraphicsPipelineState(&gpsd, IID_PPV_ARGS(&m_pipeLineState));
-
 }
 
 D3D12Technique::~D3D12Technique() {

@@ -38,6 +38,8 @@ private:
 
 	unsigned int SCREEN_WIDTH, SCREEN_HEIGHT;
 
+	// SAMPLER
+	D3D12_STATIC_SAMPLER_DESC	samplerDesc;
 
 	ID3D12Device4*				gDevice5 = nullptr;
 	ID3D12GraphicsCommandList3*	gCommandList4 = nullptr;
