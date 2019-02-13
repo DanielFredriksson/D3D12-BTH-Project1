@@ -284,9 +284,9 @@ void D3D12Renderer::CreateViewportAndScissorRect()
 #pragma region CreateRootSignature
 void D3D12Renderer::CreateRootSignature()
 {
-	this->samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
-	this->samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
-	this->samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+	this->samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+	this->samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	this->samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 	this->samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
 	this->samplerDesc.MipLODBias = 0;
 	this->samplerDesc.MaxAnisotropy = 0;
@@ -296,7 +296,7 @@ void D3D12Renderer::CreateRootSignature()
 	this->samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
 	this->samplerDesc.ShaderRegister = 0;
 	this->samplerDesc.RegisterSpace = 0;
-	this->samplerDesc.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	this->samplerDesc.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
 	// Create root descriptors
 	D3D12_ROOT_DESCRIPTOR rootDescCBV = {};

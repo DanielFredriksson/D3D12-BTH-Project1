@@ -222,7 +222,6 @@ void D3D12Material::enable(D3D12_GRAPHICS_PIPELINE_STATE_DESC *gpsd) {
 	gpsd->VS.BytecodeLength = this->m_shaderDataBlob_VS->GetBufferSize();
 	gpsd->PS.pShaderBytecode = reinterpret_cast<void*>(this->m_shaderDataBlob_PS->GetBufferPointer());
 	gpsd->PS.BytecodeLength = this->m_shaderDataBlob_PS->GetBufferSize();
-	
 }
 
 void D3D12Material::disable()

@@ -3,7 +3,7 @@
 
 #include "Locator.h"
 
-D3D12Technique::D3D12Technique(Material* m, RenderState* r) : Technique(m,r) {
+D3D12Technique::D3D12Technique(Material* m, RenderState* r) : Technique(m, r) {
 	material = m;
 	renderState = r;
 

@@ -26,7 +26,6 @@ private:
 	static ID3D12GraphicsCommandList3** gCommandList;
 	static ID3D12CommandAllocator** gCommandAllocator;
 	static ID3D12CommandQueue** gCommandQueue;
-	static ID3D12PipelineState** gTexturePipelineState;
 
 public:
 	Locator() {}
@@ -51,9 +50,6 @@ public:
 	static void provide(ID3D12CommandQueue** commandQueue) {
 		gCommandQueue = commandQueue;
 	}
-	static void provide(ID3D12PipelineState** texturePipelineState) {
-		gTexturePipelineState = texturePipelineState;
-	}
 
 	// GET
 	static ID3D12RootSignature* getRootSignature() {
@@ -73,8 +69,5 @@ public:
 	}
 	static ID3D12CommandQueue* getCommandQueue() {
 		return *gCommandQueue;
-	}
-	static ID3D12PipelineState* getTexturePipelineState() {
-		return *gTexturePipelineState;
 	}
 };

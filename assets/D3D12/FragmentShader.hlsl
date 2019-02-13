@@ -4,10 +4,8 @@ struct VSOut {
 	float2 texCoord : TEXCOORD0;
 };
 
-#ifdef DIFFUSE_SLOT
 Texture2D tex : register(t0);
 SamplerState ss : register(s0);
-#endif
 
 cbuffer DIFFUSE_TINT_NAME : register(b6) {
 	float4 diffuseTint;
