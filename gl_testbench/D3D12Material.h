@@ -34,6 +34,8 @@ private:
 	std::vector<std::string> expandShaderText(std::string& shaderText, ShaderType type);
 	std::map<unsigned int, D3D12ConstantBuffer*> constantBuffers;
 
+	unsigned int m_constantBufferIndex = -1;
+
 public:
 	D3D12Material(std::string name) : Material() { this->name = name; }
 	virtual ~D3D12Material() { this->m_shaderDataBlob_VS->Release(); this->m_shaderDataBlob_PS->Release(); };

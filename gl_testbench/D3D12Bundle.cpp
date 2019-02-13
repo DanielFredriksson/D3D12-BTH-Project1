@@ -3,6 +3,8 @@
 #include "Locator.h"
 #include <d3d12.h>
 #include <functional>
+#include "D3D12Renderer.h"
+
 
 void D3D12Bundle::createD3D12BundleObjects()
 {
@@ -86,9 +88,9 @@ D3D12Bundle::~D3D12Bundle()
 void D3D12Bundle::clean()
 {
 	// Release Intenal Objects
-	SafeRelease(&bundleAllocator);
-	SafeRelease(&bundleCommandAllocator);
-	SafeRelease(&bundle);
+	SafeRelease2(&bundleAllocator);
+	SafeRelease2(&bundleCommandAllocator);
+	SafeRelease2(&bundle);
 }
 
 void D3D12Bundle::populateBundle(

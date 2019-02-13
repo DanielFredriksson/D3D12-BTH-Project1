@@ -1,7 +1,6 @@
 #include "OpenGL/OpenGLRenderer.h"
 #include "Renderer.h"
 #include "D3D12Renderer.h"
-#include "D3D12Test.h"
 
 Renderer* Renderer::makeRenderer(BACKEND option)
 {
@@ -9,9 +8,6 @@ Renderer* Renderer::makeRenderer(BACKEND option)
 		return new OpenGLRenderer();
 	else if (option == BACKEND::DX12) {
 		return new D3D12Renderer();
-	}
-	else if (option == BACKEND::DX12TEST) {
-		return new D3D12Test();
 	}
 }
 

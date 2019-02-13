@@ -4,7 +4,7 @@
 #include <functional>
 
 D3D12Technique::D3D12Technique(Material* m, RenderState* r) : Technique(m,r) {
-	material = m;
+		material = m;
 	renderState = r;
 
 	//Create pipeline state
@@ -60,10 +60,9 @@ D3D12Technique::D3D12Technique(Material* m, RenderState* r) : Technique(m,r) {
 
 	//m_pipeLineState = Locator::getPipelineState();
 
-	Locator::getDevice()->CreateGraphicsPipelineState(&gpsd, IID_PPV_ARGS(&m_pipeLineState));
+	ThrowIfFailed(Locator::getDevice()->CreateGraphicsPipelineState(&gpsd, IID_PPV_ARGS(&m_pipeLineState)));
 
-
-	/// Initialize Bundle
+	// Also init bundle
 	this->initBundle();
 }
 
@@ -83,5 +82,6 @@ void D3D12Technique::initBundle()
 
 void D3D12Technique::enable(Renderer* renderer) {
 	// Adds pre-recorded bundle to the commandlist
-	this->m_Bundle->appendBundleToCommandList(Locator::getCommandList());
+	m_Bundle->appendBundleToCommandList(Locator::getCommandList());
+//	material->enable();
 }

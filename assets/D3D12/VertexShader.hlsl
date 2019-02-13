@@ -19,13 +19,13 @@ VSOut VS_main(VSIn input) {
 	output.position = input.position + translate;
 	//output.position = input.position;
 
-	#ifdef NORMAL
-	 	output.normal = input.normal;
-	#endif
+#ifdef NORMAL
+	output.normal = input.normal;
+#endif
 
-	#ifdef TEXTCOORD
-	 	output.texCoord = input.texCoord;
-	 #endif
+#ifdef TEXTCOORD
+	output.texCoord = input.texCoord;
+#endif
 
 	return output;
 }

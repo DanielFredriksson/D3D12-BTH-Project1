@@ -9,9 +9,9 @@ struct VSOut {
 //SamplerState ss : register(s0);
 #endif
 
-//cbuffer DIFFUSE_TINT_NAME : register(b6) {
-//	float4 diffuseTint;
-//}
+cbuffer DIFFUSE_TINT_NAME : register(b6) {
+	float4 diffuseTint;
+}
 
 float4 PS_main(VSOut input) : SV_TARGET0 {
 
@@ -22,6 +22,7 @@ float4 PS_main(VSOut input) : SV_TARGET0 {
 #endif
 
 	float4 color = float4(1.0, 1.0, 1.0, 1.0);
+	//float4 color = diffuseTint;
 
-	return color;// * float4(diffuseTint.rgb, 1.0);
+	return color * float4(diffuseTint.rgb, 1.0);
 }
