@@ -586,7 +586,10 @@ void D3D12Renderer::frame()
 
 	if (WM_QUIT == msg.message) {
 		//Force quit SDL
-		
+		SDL_Event quit_ev;
+		quit_ev.type = SDL_QUIT;
+
+		SDL_PushEvent(&quit_ev);
 	}
 
 }
