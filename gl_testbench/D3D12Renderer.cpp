@@ -11,6 +11,8 @@
 #include "D3D12Sampler2D.h"
 #include "D3D12Texture2D.h"
 
+#include "d3dx12.h"
+
 #pragma region wndProc2
 LRESULT CALLBACK wndProc2(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -284,6 +286,7 @@ void D3D12Renderer::CreateViewportAndScissorRect()
 #pragma region CreateRootSignature
 void D3D12Renderer::CreateRootSignature()
 {
+	// Define static sampler in its description
 	this->samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
 	this->samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 	this->samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
@@ -305,6 +308,66 @@ void D3D12Renderer::CreateRootSignature()
 	D3D12_ROOT_DESCRIPTOR rootDescCBV2 = {};
 	rootDescCBV2.ShaderRegister = DIFFUSE_TINT;
 	rootDescCBV2.RegisterSpace = 0;
+
+	//  ---------------------  NEW FOR TEXTURES  ---------------------  
+	//D3D12_FEATURE_DATA_ROOT_SIGNATURE featureData = {};
+	//featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_1;
+	//if (FAILED(gDevice5->CheckFeatureSupport(
+	//	D3D12_FEATURE_ROOT_SIGNATURE,
+	//	&featureData,
+	//	sizeof(featureData)
+	//))) {
+	//	featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_0;
+	//}
+
+
+
+	//// Construct range for texture-srv's
+	//CD3DX12_DESCRIPTOR_RANGE1 textureRange[1];
+	//textureRange->Init(
+	//	D3D12_DESCRIPTOR_RANGE_TYPE_SRV,
+	//	1,
+	//	0,
+	//	0,
+	//	D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC
+	//);
+
+	//CD3DX12_ROOT_PARAMETER1 rootParam0[1];
+	//rootParam0[0].InitAsDescriptorTable(
+	//	1,
+	//	&textureRange[0],
+	//	D3D12_SHADER_VISIBILITY_PIXEL
+	//);
+
+	//CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rsDesc0 = {};
+	//rsDesc0.Init_1_1(
+	//	ARRAYSIZE(rootParam0),
+	//	rootParam0,
+	//	1,
+	//	&this->samplerDesc,
+	//	D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT
+	//);
+
+	//ID3DBlob* signature;
+	//ID3DBlob* error;
+
+	//ThrowIfFailed(D3DX12SerializeVersionedRootSignature(
+	//	&rsDesc0,
+	//	featureData.HighestVersion,
+	//	&signature,
+	//	&error
+	//));
+	//
+	//ThrowIfFailed(gDevice5->CreateRootSignature(
+	//	0,
+	//	signature->GetBufferPointer(),
+	//	signature->GetBufferSize(),
+	//	IID_PPV_ARGS(&gRootSignature)
+	//));
+
+
+	
+	//  ---------------------  NEW FOR TEXTURES  ---------------------  
 
 	// Create root parameters
 	D3D12_ROOT_PARAMETER rootParam[2];

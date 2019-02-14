@@ -75,7 +75,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>..\include;..\GLEW\include;..\SDL\include;$(IncludePath);..\;</IncludePath>
+    <IncludePath>C:\Program Files %28x86%29\Windows Kits\10\Include\10.0.17763.0\um;C:\Program Files %28x86%29\Windows Kits\10\Include\10.0.17763.0\shared;..\include;..\GLEW\include;..\SDL\include;$(IncludePath);..\</IncludePath>
     <LibraryPath>..\GLEW\lib\Release\x64;C:\Program Files %28x86%29\Windows Kits\10\Lib\10.0.17134.0\um\x64;..\SDL\lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -199,6 +199,7 @@
     <ClInclude Include="D3D12Texture2D.h" />
     <ClInclude Include="D3D12Transform.h" />
     <ClInclude Include="D3D12VertexBuffer.h" />
+    <ClInclude Include="d3dx12.h" />
     <ClInclude Include="Locator.h" />
     <ClInclude Include="OpenGL\ConstantBufferGL.h" />
     <ClInclude Include="OpenGL\MaterialGL.h" />
