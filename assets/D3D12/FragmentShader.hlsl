@@ -16,7 +16,7 @@ float4 PS_main(VSOut input) : SV_TARGET0 {
 float4 color;
 
 #ifdef DIFFUSE_SLOT
-    color = tex.Sample(ss, input.texCoord);
+    //color = tex.Sample(ss, input.texCoord);
 	return color;
 #else
  	color = float4(1.0, 1.0, 1.0, 1.0);
