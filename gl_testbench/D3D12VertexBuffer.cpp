@@ -62,12 +62,14 @@ void D3D12VertexBuffer::bind(size_t offset, size_t size, unsigned int location) 
 
 	//Initialize vertex buffer view, used in the render call.
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
-		
+
 	vertexBufferView.BufferLocation = m_vertexBufferResource->GetGPUVirtualAddress() + offset;
 	vertexBufferView.StrideInBytes = (UINT)(m_stride);
 	vertexBufferView.SizeInBytes = (UINT)size;
 
-	m_commandList4->IASetVertexBuffers(location, 1, &vertexBufferView);
+//	if (location != 2) {
+		m_commandList4->IASetVertexBuffers(location, 1, &vertexBufferView);
+//	}
 }
 
 void D3D12VertexBuffer::bindBundle(ID3D12GraphicsCommandList* commandList, size_t offset, size_t size, unsigned int location)

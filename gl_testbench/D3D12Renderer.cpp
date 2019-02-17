@@ -286,20 +286,7 @@ void D3D12Renderer::CreateViewportAndScissorRect()
 #pragma region CreateRootSignature
 void D3D12Renderer::CreateRootSignature()
 {
-	// Define static sampler in its description
-	this->samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
-	this->samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	this->samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	this->samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
-	this->samplerDesc.MipLODBias = 0;
-	this->samplerDesc.MaxAnisotropy = 0;
-	this->samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
-	this->samplerDesc.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
-	this->samplerDesc.MinLOD = 0.0f;
-	this->samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
-	this->samplerDesc.ShaderRegister = 0;
-	this->samplerDesc.RegisterSpace = 0;
-	this->samplerDesc.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
 
 	// Create root descriptors
 	D3D12_ROOT_DESCRIPTOR rootDescCBV = {};
@@ -310,95 +297,115 @@ void D3D12Renderer::CreateRootSignature()
 	rootDescCBV2.RegisterSpace = 0;
 
 	//  ---------------------  NEW FOR TEXTURES  ---------------------  
-	//D3D12_FEATURE_DATA_ROOT_SIGNATURE featureData = {};
-	//featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_1;
-	//if (FAILED(gDevice5->CheckFeatureSupport(
-	//	D3D12_FEATURE_ROOT_SIGNATURE,
-	//	&featureData,
-	//	sizeof(featureData)
-	//))) {
-	//	featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_0;
-	//}
-
-
+	D3D12_FEATURE_DATA_ROOT_SIGNATURE featureData = {};
+	featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_1;
+	if (FAILED(gDevice5->CheckFeatureSupport(
+		D3D12_FEATURE_ROOT_SIGNATURE,
+		&featureData,
+		sizeof(featureData)
+	))) {
+		featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_0;
+	}
 
 	//// Construct range for texture-srv's
-	//CD3DX12_DESCRIPTOR_RANGE1 textureRange[1];
-	//textureRange->Init(
-	//	D3D12_DESCRIPTOR_RANGE_TYPE_SRV,
-	//	1,
-	//	0,
-	//	0,
-	//	D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC
-	//);
+	CD3DX12_DESCRIPTOR_RANGE1 textureRange[1];
+	textureRange->Init(
+		D3D12_DESCRIPTOR_RANGE_TYPE_SRV,
+		1,
+		0,
+		0,
+		D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC
+	);
 
-	//CD3DX12_ROOT_PARAMETER1 rootParam0[1];
-	//rootParam0[0].InitAsDescriptorTable(
-	//	1,
-	//	&textureRange[0],
-	//	D3D12_SHADER_VISIBILITY_PIXEL
-	//);
+	CD3DX12_ROOT_PARAMETER1 rootParam0[3];
+	rootParam0[0].InitAsConstantBufferView(TRANSLATION, 0);
+	rootParam0[1].InitAsConstantBufferView(DIFFUSE_TINT, 0);
+	rootParam0[2].InitAsDescriptorTable(
+		1,
+		&textureRange[0],
+		D3D12_SHADER_VISIBILITY_PIXEL
+	);
 
-	//CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rsDesc0 = {};
-	//rsDesc0.Init_1_1(
-	//	ARRAYSIZE(rootParam0),
-	//	rootParam0,
-	//	1,
-	//	&this->samplerDesc,
-	//	D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT
-	//);
+	// Define static sampler in its description
+	this->samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+	this->samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	this->samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	this->samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	this->samplerDesc.MipLODBias = 0;
+	this->samplerDesc.MaxAnisotropy = 0;
+	this->samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+	this->samplerDesc.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
+	this->samplerDesc.MinLOD = 0.0f;
+	this->samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
+	this->samplerDesc.ShaderRegister = 0;
+	this->samplerDesc.RegisterSpace = 0;
+	this->samplerDesc.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
-	//ID3DBlob* signature;
-	//ID3DBlob* error;
+	CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rsDesc0 = {};
+	rsDesc0.Init_1_1(
+		ARRAYSIZE(rootParam0),
+		rootParam0,
+		1,
+		&this->samplerDesc,
+		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT
+	);
 
-	//ThrowIfFailed(D3DX12SerializeVersionedRootSignature(
-	//	&rsDesc0,
-	//	featureData.HighestVersion,
-	//	&signature,
-	//	&error
-	//));
-	//
-	//ThrowIfFailed(gDevice5->CreateRootSignature(
-	//	0,
-	//	signature->GetBufferPointer(),
-	//	signature->GetBufferSize(),
-	//	IID_PPV_ARGS(&gRootSignature)
-	//));
+	ID3DBlob* signature;
+	ID3DBlob* error;
+
+	ThrowIfFailed(D3DX12SerializeVersionedRootSignature(
+		&rsDesc0,
+		featureData.HighestVersion,
+		&signature,
+		&error
+	));
+	
+	ThrowIfFailed(gDevice5->CreateRootSignature(
+		0,
+		signature->GetBufferPointer(),
+		signature->GetBufferSize(),
+		IID_PPV_ARGS(&gRootSignature)
+	));
 
 
 	
 	//  ---------------------  NEW FOR TEXTURES  ---------------------  
+	/*D3D12_ROOT_CONSTANTS rootConstants = {};
+	rootConstants.Num32BitValues;
+	rootConstants.RegisterSpace = 5;
+	rootConstants.ShaderRegister = 1*/;
 
-	// Create root parameters
-	D3D12_ROOT_PARAMETER rootParam[2];
+	//// Create root parameters
+	//D3D12_ROOT_PARAMETER rootParam[2];
+	//rootParam[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	//rootParam[0].Descriptor = rootDescCBV;
+	//rootParam[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
-	rootParam[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-	rootParam[0].Descriptor = rootDescCBV;
-	rootParam[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+	//rootParam[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	//rootParam[1].Descriptor = rootDescCBV2;
+	//rootParam[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
-	rootParam[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-	rootParam[1].Descriptor = rootDescCBV2;
-	rootParam[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+	//D3D12_ROOT_SIGNATURE_DESC rsDesc;
+	//rsDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+	//rsDesc.NumParameters = ARRAYSIZE(rootParam);
+	//rsDesc.pParameters = rootParam;
+	//rsDesc.NumStaticSamplers = 1;
+	//rsDesc.pStaticSamplers = &this->samplerDesc;
 
-	D3D12_ROOT_SIGNATURE_DESC rsDesc;
-	rsDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-	rsDesc.NumParameters = ARRAYSIZE(rootParam);
-	rsDesc.pParameters = rootParam;
-	rsDesc.NumStaticSamplers = 1;
-	rsDesc.pStaticSamplers = &this->samplerDesc;
+	//ID3DBlob* sBlob;
+	//ThrowIfFailed(D3D12SerializeRootSignature(
+	//	&rsDesc,
+	//	D3D_ROOT_SIGNATURE_VERSION_1,
+	//	&sBlob,
+	//	nullptr
+	//));
 
-	ID3DBlob* sBlob;
-	D3D12SerializeRootSignature(
-		&rsDesc,
-		D3D_ROOT_SIGNATURE_VERSION_1,
-		&sBlob,
-		nullptr);
-
-	gDevice5->CreateRootSignature(
-		0,
-		sBlob->GetBufferPointer(),
-		sBlob->GetBufferSize(),
-		IID_PPV_ARGS(&gRootSignature));
+	//ThrowIfFailed(gDevice5->CreateRootSignature(
+	//	0,
+	//	sBlob->GetBufferPointer(),
+	//	sBlob->GetBufferSize(),
+	//	IID_PPV_ARGS(&gRootSignature)
+	//));
 
 	Locator::provide(&this->gRootSignature);
 	Locator::provide(&this->gDevice5);
@@ -624,7 +631,6 @@ void D3D12Renderer::frame()
 
 		work.first->getMaterial()->enable(); //Binds colour constant buffer
 
-
 		for (auto mesh : work.second) //Loop through all meshes that uses the "work" technique
 		{
 			//Bind vertex buffers
@@ -634,6 +640,11 @@ void D3D12Renderer::frame()
 
 			//Bind cb - not yet completely implemented
 			mesh->txBuffer->bind(work.first->getMaterial()); //Binds translation constant buffer
+
+			// Bind Texture
+			if (mesh->textures[0] != nullptr) {
+				mesh->textures[0]->bind(0);
+			}
 
 			//Add draw command to command list
 			gCommandList4->DrawInstanced(3, 1, 0, 0); //3 Vertices, 1 triangle, start with vertex 0 and triangle 0

@@ -117,6 +117,7 @@ void updateScene()
 		}
 		// just to make them move...
 		shift+=max(TOTAL_TRIS / 1000.0,TOTAL_TRIS / 100.0);
+		shift /= 2;
 	}
 	return;
 };

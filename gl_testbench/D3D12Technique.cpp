@@ -22,7 +22,6 @@ D3D12Technique::D3D12Technique(Material* m, RenderState* r) : Technique(m, r) {
 	};*/
 
 	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc;
-	//inputLayoutDesc.pInputElementDescs.
 	inputLayoutDesc.pInputElementDescs = inputElementDesc;
 	inputLayoutDesc.NumElements = ARRAYSIZE(inputElementDesc);
 
@@ -61,7 +60,7 @@ D3D12Technique::D3D12Technique(Material* m, RenderState* r) : Technique(m, r) {
 
 	//m_pipeLineState = Locator::getPipelineState();
 
-	Locator::getDevice()->CreateGraphicsPipelineState(&gpsd, IID_PPV_ARGS(&m_pipeLineState));
+	ThrowIfFailed(Locator::getDevice()->CreateGraphicsPipelineState(&gpsd, IID_PPV_ARGS(&m_pipeLineState)));
 }
 
 D3D12Technique::~D3D12Technique() {

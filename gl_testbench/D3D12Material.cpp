@@ -94,6 +94,7 @@ int D3D12Material::compileShader(ShaderType type, std::string& errString)
 	/////////////////////////////////////////////
 	ID3DBlob* shaderDataBlob;
 	ID3DBlob* errorDataBlob;
+	UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
 
 	if (FAILED(D3DCompile(
 		allDataToBeConverted.data(), // A pointer to uncompiled shader data; either ASCII HLSL code or a compiled effect.
@@ -103,7 +104,7 @@ int D3D12Material::compileShader(ShaderType type, std::string& errString)
 		nullptr,			// Optional. A pointer to an ID3DInclude for handling include files (ALREADY ADDED TO 'shaderSrcData')
 		entryPoint,			// The name of the shader entry point function where shader execution begins.
 		shaderModel,		// A string that specifies the shader target or set of shader features to compile against.
-		0,					// Flags defined by D3D compile constants.
+		compileFlags,		// Flags defined by D3D compile constants.
 		0,					// Flags defined by D3D compile effect constants.
 		&shaderDataBlob,	// A pointer to a variable that receives a pointer to the ID3DBlob interface that you can use to access the compiled code.
 		&errorDataBlob		// A pointer to a variable that receives a pointer to the ID3DBlob interface that you can use to access compiler error messages.

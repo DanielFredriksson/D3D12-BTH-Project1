@@ -3,6 +3,12 @@
   <ItemGroup>
     <FxCompile Include="PixelShader.hlsl" />
     <FxCompile Include="VertexShader.hlsl" />
+    <FxCompile Include="..\assets\D3D12\VertexShader.hlsl">
+      <Filter>AssetHLSLs</Filter>
+    </FxCompile>
+    <FxCompile Include="..\assets\D3D12\FragmentShader.hlsl">
+      <Filter>AssetHLSLs</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ConstantBuffer.cpp" />
@@ -84,5 +90,10 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="HowToCommandListsAndBundles.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="AssetHLSLs">
+      <UniqueIdentifier>{bc1756e7-1c91-4f4a-bf3b-406305a4229f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>

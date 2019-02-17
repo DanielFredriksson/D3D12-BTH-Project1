@@ -4,32 +4,7 @@
 #include "Locator.h"
 //#include "../include/d3dx12.h"
 
-struct CD3DX12_TEXTURE_COPY_LOCATION : public D3D12_TEXTURE_COPY_LOCATION
-{
-	CD3DX12_TEXTURE_COPY_LOCATION() = default;
-	explicit CD3DX12_TEXTURE_COPY_LOCATION(const D3D12_TEXTURE_COPY_LOCATION &o) :
-		D3D12_TEXTURE_COPY_LOCATION(o)
-	{}
-	CD3DX12_TEXTURE_COPY_LOCATION(_In_ ID3D12Resource* pRes)
-	{
-		pResource = pRes;
-		Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
-		PlacedFootprint = {};
-	}
-	CD3DX12_TEXTURE_COPY_LOCATION(_In_ ID3D12Resource* pRes, D3D12_PLACED_SUBRESOURCE_FOOTPRINT const& Footprint)
-	{
-		pResource = pRes;
-		Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
-		PlacedFootprint = Footprint;
-	}
-	CD3DX12_TEXTURE_COPY_LOCATION(_In_ ID3D12Resource* pRes, UINT Sub)
-	{
-		pResource = pRes;
-		Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
-		SubresourceIndex = Sub;
-	}
-};
-
+#include "d3dx12.h"
 
 
 
@@ -187,7 +162,11 @@ D3D12Texture2D::D3D12Texture2D()
 	srvHeapDesc.NumDescriptors = 1;
 	srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 
-	ThrowIfFailed(Locator::getDevice()->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&this->m_srvHeap)));
+	ThrowIfFailed(Locator::getDevice()->CreateDescriptorHeap(
+		&srvHeapDesc,
+		IID_PPV_ARGS(&this->m_srvHeap)
+	));
+	m_srvHeap->SetName(L"m_srvHeap");
 }
 
 D3D12Texture2D::~D3D12Texture2D()
@@ -206,8 +185,15 @@ int D3D12Texture2D::loadFromFile(std::string fileName)
 		fprintf(stderr, "Error loading texture file: %s\n", fileName.c_str());
 		return -1;
 	}
+	unsigned char* empty = &rgbTextureData[0];
+	int size = textureWidth * textureHeight;
+	for (int i = 0; i < size; i++) {
+		rgbTextureData[i] = (unsigned char)"200";
+	}
 #pragma endregion LOAD THE TEXTURE FROM FILE
 
+
+	/// -------------  Create Committed Resource  --------------------
 	// Create the description for the Texture Resource
 	D3D12_RESOURCE_DESC textureDesc = {};
 	textureDesc.MipLevels = 1;
@@ -236,7 +222,11 @@ int D3D12Texture2D::loadFromFile(std::string fileName)
 		D3D12_RESOURCE_STATE_COPY_DEST,
 		nullptr,
 		IID_PPV_ARGS(&this->textureResource)));
+	textureResource->SetName(L"TextureResource");
+	// --------------------------------------------------------------
 
+
+	// --------------------------------------------------------------
 	// Naming and storing some variables we will need
 	auto Desc = this->textureResource->GetDesc();
 	UINT64 RequiredSize = 0;
@@ -286,6 +276,7 @@ int D3D12Texture2D::loadFromFile(std::string fileName)
 		D3D12_RESOURCE_STATE_GENERIC_READ,
 		nullptr,
 		IID_PPV_ARGS(&textureUploadHeap)));
+	textureUploadHeap->SetName(L"TextureUploadHeap");
 
 	// Describing the texture data
 	D3D12_SUBRESOURCE_DATA textureData = {};
@@ -304,9 +295,8 @@ int D3D12Texture2D::loadFromFile(std::string fileName)
 	resourceBarriar.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
 	resourceBarriar.Transition.pResource = this->textureResource.Get();
 	resourceBarriar.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-	resourceBarriar.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 	resourceBarriar.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
-	
+	resourceBarriar.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 	Locator::getCommandList()->ResourceBarrier(1, &resourceBarriar);
 
 	// Describe and create a SRV for the texture
@@ -315,7 +305,11 @@ int D3D12Texture2D::loadFromFile(std::string fileName)
 	srvDesc.Format = textureDesc.Format;
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Texture2D.MipLevels = 1;
-	Locator::getDevice()->CreateShaderResourceView(this->textureResource.Get(), &srvDesc, m_srvHeap.Get()->GetCPUDescriptorHandleForHeapStart());
+	Locator::getDevice()->CreateShaderResourceView(
+		this->textureResource.Get(),
+		&srvDesc,
+		m_srvHeap.Get()->GetCPUDescriptorHandleForHeapStart()
+	);
 
 	// Close the command list and execute it to begin the initial GPU setup
 	ThrowIfFailed(Locator::getCommandList()->Close());
@@ -345,5 +339,13 @@ int D3D12Texture2D::loadFromFile(std::string fileName)
 
 void D3D12Texture2D::bind(unsigned int slot)
 {
-
+	// Fetch commandlist so that we can attach commands to it
+	ID3D12GraphicsCommandList3* pCommandList = Locator::getCommandList();
+	// Set SRV's Description Heap
+	ID3D12DescriptorHeap* ppHeaps[] = { m_srvHeap.Get() };
+	pCommandList->SetDescriptorHeaps(ARRAYSIZE(ppHeaps), ppHeaps);
+	pCommandList->SetGraphicsRootDescriptorTable(
+		2,
+		m_srvHeap->GetGPUDescriptorHandleForHeapStart()
+	);
 }

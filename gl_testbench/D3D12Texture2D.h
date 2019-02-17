@@ -25,6 +25,7 @@ private:
 
 	// Resource Data
 	Microsoft::WRL::ComPtr<ID3D12Resource> textureResource;
+	Microsoft::WRL::ComPtr<ID3D12Resource> m_textureUploadHeap;
 
 	// Synchronization objects.
 	UINT m_frameIndex;

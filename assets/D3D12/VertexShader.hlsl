@@ -22,9 +22,31 @@ VSOut VS_main(VSIn input) {
 	 	output.normal = input.normal;
 	#endif
 
-	#ifdef TEXCOORD
-	 	output.texCoord = input.texCoord;
+	#ifdef TEXTCOORD
+		
+		output.texCoord = input.texCoord;
+		if (input.texCoord.r == -0.05f &&
+			input.texCoord.g == -0.05f) {
+			output.texCoord = float2(1.0, 1.0);
+		}
+		/*if (input.texCoord.r == 0.5f &&
+			input.texCoord.g == 0.99f) {
+			output.texCoord = float2(1.0, 1.0);
+		}
+		else if (
+			input.texCoord.r == 0.49f &&
+			input.texCoord.g == 0.1f
+		) {
+			output.texCoord = float2(0.8, 1.0);
+		}
+		else if (
+			input.texCoord.r == 0.51f &&
+			input.texCoord.g == 0.1f
+			) {
+			output.texCoord = float2(0.7, 1.0);
+		}*/
 	 #endif
+
 
 	return output;
 }
