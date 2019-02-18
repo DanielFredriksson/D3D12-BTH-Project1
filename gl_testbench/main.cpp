@@ -117,7 +117,7 @@ void updateScene()
 		}
 		// just to make them move...
 		shift+=max(TOTAL_TRIS / 1000.0,TOTAL_TRIS / 100.0);
-		shift /= 2;
+
 	}
 	return;
 };
@@ -242,7 +242,6 @@ int initialiseTestbench()
 
 	// Create a mesh array with 3 basic vertex buffers.
 	for (int i = 0; i < TOTAL_TRIS; i++) {
-
 		Mesh* m = renderer->makeMesh();
 
 		constexpr auto numberOfPosElements = std::extent<decltype(triPos)>::value;
@@ -308,19 +307,6 @@ void shutdown() {
 
 int main(int argc, char *argv[])
 {
-	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-
-	// ------  ORIGINAL  ------ 
-	/*renderer = Renderer::makeRenderer(Renderer::BACKEND::GL45);
-	renderer->initialize(800, 600);
-	renderer->setWinTitle("OpenGL");
-	renderer->setClearColor(0.0, 0.1, 0.1, 1.0);
-	initialiseTestbench();
-	run();
-	shutdown();*/
-	// ------------------------
-
-
 	// ------  MODIFIED  ------ 
 	renderer = Renderer::makeRenderer(Renderer::BACKEND::DX12);
 	renderer->initialize(800, 600);

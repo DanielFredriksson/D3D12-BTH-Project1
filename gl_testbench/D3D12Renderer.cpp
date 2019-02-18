@@ -367,46 +367,6 @@ void D3D12Renderer::CreateRootSignature()
 		IID_PPV_ARGS(&gRootSignature)
 	));
 
-
-	
-	//  ---------------------  NEW FOR TEXTURES  ---------------------  
-	/*D3D12_ROOT_CONSTANTS rootConstants = {};
-	rootConstants.Num32BitValues;
-	rootConstants.RegisterSpace = 5;
-	rootConstants.ShaderRegister = 1*/;
-
-	//// Create root parameters
-	//D3D12_ROOT_PARAMETER rootParam[2];
-	//rootParam[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-	//rootParam[0].Descriptor = rootDescCBV;
-	//rootParam[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-
-	//rootParam[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-	//rootParam[1].Descriptor = rootDescCBV2;
-	//rootParam[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-
-	//D3D12_ROOT_SIGNATURE_DESC rsDesc;
-	//rsDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-	//rsDesc.NumParameters = ARRAYSIZE(rootParam);
-	//rsDesc.pParameters = rootParam;
-	//rsDesc.NumStaticSamplers = 1;
-	//rsDesc.pStaticSamplers = &this->samplerDesc;
-
-	//ID3DBlob* sBlob;
-	//ThrowIfFailed(D3D12SerializeRootSignature(
-	//	&rsDesc,
-	//	D3D_ROOT_SIGNATURE_VERSION_1,
-	//	&sBlob,
-	//	nullptr
-	//));
-
-	//ThrowIfFailed(gDevice5->CreateRootSignature(
-	//	0,
-	//	sBlob->GetBufferPointer(),
-	//	sBlob->GetBufferSize(),
-	//	IID_PPV_ARGS(&gRootSignature)
-	//));
-
 	Locator::provide(&this->gRootSignature);
 	Locator::provide(&this->gDevice5);
 	Locator::provide(&this->gSwapChain4);
@@ -582,22 +542,9 @@ void D3D12Renderer::frame()
 {
 	UINT backBufferIndex = gSwapChain4->GetCurrentBackBufferIndex();
 
-	if (m_firstFrame) {
-		////Close the list to prepare it for execution.
-		//gCommandList4->Close();
-
-		////Execute the command list.
-		//ID3D12CommandList* listsToExecute[] = { gCommandList4 };
-		//gCommandQueue->ExecuteCommandLists(ARRAYSIZE(listsToExecute), listsToExecute);
-
-		//WaitForGpu();
-		m_firstFrame = false;
-	}
-
 	//Command list allocators can only be reset when the associated command lists have
 	//finished execution on the GPU; fences are used to ensure this (See WaitForGpu method)
 	gCommandAllocator->Reset();
-
 	gCommandList4->Reset(gCommandAllocator, nullptr);
 
 	//Indicate that the back buffer will be used as render target.
@@ -648,7 +595,6 @@ void D3D12Renderer::frame()
 
 			//Add draw command to command list
 			gCommandList4->DrawInstanced(3, 1, 0, 0); //3 Vertices, 1 triangle, start with vertex 0 and triangle 0
-
 		}
 	}
 
@@ -667,6 +613,20 @@ void D3D12Renderer::frame()
 	gCommandQueue->ExecuteCommandLists(ARRAYSIZE(listsToExecute), listsToExecute);
 
 	drawList2.clear();
+
+	MSG msg = {};
+	if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
+
+	if (WM_QUIT == msg.message) {
+		//Force quit SDL
+		SDL_Event quit_ev;
+		quit_ev.type = SDL_QUIT;
+
+		SDL_PushEvent(&quit_ev);
+	}
 }
 
 #pragma endregion

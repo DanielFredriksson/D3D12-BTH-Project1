@@ -27,12 +27,6 @@ template<class T> inline void SafeRelease(T **ppInterface) {
 
 class D3D12Renderer : public Renderer {
 private:
-	struct Vertex
-	{
-		float x, y, z; // Position
-		float r, g, b; // Color
-	};
-
 	// Window- & HWND related data
 	HWND wndHandle;
 
@@ -63,19 +57,10 @@ private:
 	ID3D12RootSignature*		gRootSignature = nullptr;
 	ID3D12PipelineState*		gPipeLineState = nullptr;
 
-#pragma region ConstantBufferGlobals
-	struct ConstantBufferData
-	{
-		float colorChannel[4];
-	};
-
-	ConstantBufferData		gConstantBufferCPU = {};
-#pragma endregion
 
 #pragma region OwnVariables
 
 	float m_clearColor[4] = { 0,0,0,0 };
-	bool m_firstFrame = true;
 	std::unordered_map<Technique*, std::vector<Mesh*>> drawList2;
 
 #pragma endregion
