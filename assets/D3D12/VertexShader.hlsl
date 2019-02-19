@@ -23,7 +23,7 @@ VSOut VS_main(VSIn input) {
 	 	output.normal = input.normal;
 	#endif
 
-	#ifdef TEXTCOORD
+	#ifdef TEXCOORD
 	 	output.texCoord = input.texCoord;
 	 #endif
 
